@@ -1,0 +1,212 @@
+# ============================================================
+# 量化策略配置文件
+# 修改后无需重启程序，引擎会每隔 config.reload_interval_sec 秒
+# 自动热重载本文件（symbols / risk / strategy 参数均支持热更新）
+# ============================================================
+
+mode: paper              # paper=模拟盘(默认，强烈建议先跑一段时间) | live=实盘下单
+settle: usdt              # Gate.io 合约结算币种，USDT本位合约填 usdt
+
+# --------------------------------------------------------------
+# 交易标的：自由增删，支持任意 Gate.io USDT 本位合约代码
+# 黄金请使用 XAU_USDT；白银 XAG_USDT；原油等同理，
+# 具体以 Gate 官网"贵金属/大宗商品"合约区实际上线代码为准。
+# --------------------------------------------------------------
+symbols:
+  - BTC_USDT
+  - ETH_USDT
+  - XAU_USDT      # 黄金永续合约
+
+poll_interval_sec: 15          # 保留字段，新版引擎的主循环节奏由 systematic.tick_interval_sec 控制
+reload_interval_sec: 30        # 配置文件热重载检查间隔
+
+# ================================================================
+# 新版策略：多资产 Trend(EWMAC多周期动量) + Carry(资金费率) +
+# 波动率目标(volatility targeting) + 相关性感知组合风险分配
+#
+# 设计思路参考 Moskowitz/Ooi/Pedersen 的 Time-Series Momentum 研究、
+# Koijen/Moskowitz/Pedersen/Vrugt 的 Carry 研究，以及 Robert Carver
+# 的开源系统性交易框架 pysystemtrade 的整体架构(不是照抄代码，是照抄
+# "分层设计+因果性+波动率目标"的方法论)，针对 Gate.io 只有加密货币
+# 永续合约(+黄金/白银等少数贵金属永续)的实际情况做了适配：
+#   - 没有到期日价差可用，Carry 信号改用永续合约资金费率(funding rate)
+#   - 多周期方案(与你确认过的执行节奏一致):
+#       执行/复核周期 = 15分钟(tick_interval_sec)
+#       短趋势 EWMAC = 1H K线(short_trend_interval)
+#       主趋势 EWMAC = 4H K线(main_trend_interval)
+#       大周期Regime过滤 = 1D K线(regime_interval)
+#       组合协方差矩阵 = 4H 或 1D K线(covariance_interval)
+#       Carry(资金费率) 按各标的实际 funding 结算周期更新
+#   - 这是唯一默认运行的策略引擎(src/systematic_engine.py)；
+#     旧版"15分钟多因子打分+双向持仓对冲"策略代码整体保留在
+#     src/engine_legacy_hedge.py，默认不再使用，仅供参考/需要时切回。
+# ================================================================
+systematic:
+  # ---- 资金 ----
+  initial_capital_usdt: 10000       # 仅 paper模式/回测 默认初始资金，live模式直接读取账户真实权益
+
+  # ---- 信号权重：趋势 vs Carry，以及趋势内部 短周期(1H) vs 主周期(4H) ----
+  # trend_weight 调高：carry信号强度天然远小于趋势，混合太多会在强趋势期间稀释趋势信号、拖慢入场；
+  # short_trend_weight 调高：1H比4H更快响应新趋势的启动，减少"半路才上车"的滞后。
+  trend_weight: 0.8                 # 最终合成预测 F = trend_weight*F_trend + carry_weight*F_carry
+  carry_weight: 0.2
+  short_trend_weight: 0.6           # F_trend = short_trend_weight*F_1H + main_trend_weight*F_4H
+  main_trend_weight: 0.4
+
+  # ---- EWMAC 多周期趋势 / 预测缩放 ----
+  ewma_lambda: 0.94                 # 波动率与协方差的EWMA衰减因子(RiskMetrics经典默认值)
+  forecast_scale_lookback: 1500     # 预测缩放(使 E|F|≈10)用的滚动窗口根数，纯因果、不看未来；
+                                     # 缩短是为了让"标定基准"更快跟上最近的波动率环境，不被几个月前的
+                                     # 旧波动率环境压低当前趋势的forecast强度
+  forecast_scale_min_periods: 100   # 滚动窗口最少样本数，不足时不产生有效预测
+  fdm_max: 2.5                      # Forecast Diversification Multiplier 上限(多周期子预测合并时的分散化加成)
+  fdm_lookback: 500                 # FDM 用到的子预测相关性回看窗口
+  fdm_min_periods: 60
+  # 注：EWMAC 的4组(快,慢)周期对暂不支持网页表单直接改，默认 (8,32)/(16,64)/(32,128)/(64,256)，
+  # 如需调整请直接修改 src/config.py 里 SystematicConfig.ewmac_horizons 的 default_factory。
+
+  # ---- 大周期 Regime 过滤(1D)：EMA(快/慢/长期)+ADX 判定 趋势向上/趋势向下/震荡 ----
+  # 门槛/衰减系数都调松：regime是日线级别的判断，天然滞后于1H/4H趋势信号，新趋势刚启动时regime
+  # 可能还没转向——压得太死正好会错过趋势最早、往往也是最赚钱的一段，是"漏趋势"的主要原因之一。
+  regime_ema_fast: 21
+  regime_ema_slow: 55
+  regime_ema_long: 200
+  regime_adx_period: 14
+  regime_adx_trend_threshold: 15    # ADX高于此值才判定为"趋势市"，否则为"震荡市"(原20，调低让更多真实趋势更早被认出来)
+  regime_oppose_dampen: 0.5         # regime方向与趋势预测符号相反时，把预测衰减到原来的这个比例(原0.3)
+  regime_range_dampen: 0.8          # regime为"震荡市"时，把预测整体衰减到原来的这个比例(原0.6)
+
+  # ---- Carry(资金费率) ----
+  carry_scale_lookback: 1000
+
+  # ---- 组合层风险分配 / 波动率目标(核心) ----
+  target_annual_vol_pct: 15         # 组合目标年化波动率：sigma_p = sqrt(w'Σw)，缩放k=target/sigma_p
+  covariance_interval: "4h"         # 组合协方差矩阵(EWMA)计算用的K线周期: "4h" 或 "1d"
+  # ⚠️ 杠杆/敞口上限适度放宽(3→4 / 40→55)：让真正被高置信度识别出的强趋势能拿到更接近目标仓位的
+  # 实际仓位，而不是提前被约束砍掉一部分。这会直接提高最大回撤/爆仓风险，先用回测/模拟盘观察，
+  # 觉得偏激进可以在设置页随时调回3/40。
+  max_leverage: 4                   # 组合总名义敞口/权益 的杠杆硬上限
+  max_instrument_exposure_pct: 55   # 单标的名义敞口占权益上限(%)
+  max_correlated_group_exposure_pct: 60   # 同相关分组(如BTC/ETH属加密大盘)名义敞口占权益上限(%)
+  # ⚠️ 这个缓冲区是相对"满预测(F=10)时的仓位规模"算的，所以 6% 只相当于 forecast 抖动
+  # 0.6 个单位就触发调仓，而 forecast 每根1H K线都重算 —— 会产生海量零信息交易。
+  # 实测(90天双标的、多随机路径)：6% -> 116笔/换手61/毛利618；25% -> 29笔/换手38/毛利951。
+  # 注意毛利也变好了：频繁再平衡不只是费钱，它在系统性砍掉盈利仓位(价格涨->名义值涨->触发减仓)。
+  # 20%~30% 是一片平坦最优区间(不是尖峰)，取中值。
+  no_trade_buffer_pct: 25           # 目标仓位相对当前仓位变化小于这个比例(%)则不调仓
+  exit_buffer_multiplier: 3         # 减仓/平仓用的缓冲 = 上面的值 × 这个倍数(比加仓更迟钝，让趋势走满)
+  invert_direction: false           # ⚠️ 反向执行(人工干预开关)：预测/风险分配/约束照常计算，
+                                     # 只在下单这一步把方向对调(算出来该开多，实际执行开空，反之亦然)。
+                                     # 默认关闭；开启前务必先用"回测"页验证过确实更好，不要凭感觉直接开实盘。
+
+  # ---- 执行节奏(一般无需修改，已按你确认的多周期方案设好默认值) ----
+  tick_interval_sec: 900            # 主循环复核间隔(秒)，900=15分钟
+  short_trend_interval: "1h"
+  main_trend_interval: "4h"
+  regime_interval: "1d"
+  min_bars_short: 300               # 对应周期K线数不足该值时跳过该标的本轮信号(数据不够可靠)
+  min_bars_main: 300
+  min_bars_regime: 220
+
+  # ---- 高波动震荡自适应风险覆盖层（只缩仓，不改多空方向） ----
+  adaptive_risk_enabled: true
+  adaptive_er_lookback: 24          # ER=|首尾价差|/路径总波动，近24根1H线
+  adaptive_er_full_risk: 0.35       # ER达到0.35表示方向较清晰，不因高波动降仓
+  adaptive_vol_fast_lambda: 0.75    # 1H OHLC影线波动率快EWMA
+  adaptive_vol_slow_lambda: 0.995   # 慢EWMA基准，约6天半衰期，防止持续乱扎过快被当成新常态
+  adaptive_vol_ratio_start: 1.10    # 快/慢波动率比超过该值开始降风险
+  adaptive_vol_ratio_full: 1.60     # 比值到1.6视为完整波动压力
+  adaptive_max_risk_reduction: 0.65 # 最多缩掉65%目标仓位，最少保留35%
+  adaptive_multiplier_smoothing_span: 4
+  adaptive_fast_reduce_threshold: 0.45 # 仅极端压力快速减仓，避免轻微折扣制造过度换手
+
+  # ---- 执行层盘口保护（不参与多空方向判断） ----
+  depth_guard_enabled: true          # 只保护开/加仓；减仓和平仓永远不被阻断
+  depth_levels: 20                   # 估算市价单时读取的买卖盘档数
+  max_entry_spread_bps: 5            # 点差超过该值则拒绝新增风险
+  max_entry_slippage_bps: 8          # 按当前盘口估算的VWAP冲击上限
+  min_depth_fill_ratio: 1.0          # 前N档必须完整覆盖计划张数
+
+# --------------------------------------------------------------
+# 以下 timeframes / risk / strategy / hedge 四段是旧版"15分钟多因子打分
+# + 双向持仓对冲"策略的参数，代码保留在 src/engine_legacy_hedge.py，
+# 默认不再运行；新版 systematic 策略引擎完全不读取这四段，可以整体删除，
+# 留着也不影响新策略——仅供你想临时切回旧策略时参考。
+# --------------------------------------------------------------
+timeframes:
+  entry: "15m"
+  trend_mid: "1h"
+  trend_high: "4h"
+  candles_lookback: 300
+
+risk:
+  initial_capital_usdt: 10000       # 仅 paper 模式使用，作为虚拟初始资金
+  risk_per_trade_pct: 5.0           # 单笔交易止损触发时最大亏损=账户权益的百分之几
+  max_leverage: 15                  # 单标的最大杠杆倍数（isolated逐仓）
+  max_concurrent_positions: 6       # 同时最多持仓数
+  max_portfolio_heat_pct: 20.0      # 所有持仓"止损前潜在总亏损"占权益上限
+  daily_loss_limit_pct: 8.0         # 当日亏损达到此比例，当天停止开新仓（熔断）
+  max_correlated_positions: 3       # 同向、强相关（如BTC/ETH/SOL）标的最多同时持有数
+  atr_stop_multiplier: 1.6          # 止损 = ATR * 该倍数
+  atr_trail_multiplier: 2.2         # 移动止盈(Chandelier Exit) ATR倍数
+  time_stop_bars: 8                 # 开仓后N根15m K线仍未达到0.5R盈利则主动离场
+  tp1_r_multiple: 1.0               # 第一止盈目标（R倍数），到达后减仓一半
+  tp1_close_ratio: 0.5
+
+strategy:
+  min_score_to_enter: 65            # 综合评分(0-100)达到此阈值才开仓
+  ema_fast: 21
+  ema_slow: 55
+  ema_regime: 200
+  adx_period: 14
+  adx_trend_threshold: 20
+  rsi_period: 14
+  rsi_oversold: 35
+  rsi_overbought: 65
+  bb_period: 20
+  bb_std: 2.0
+  keltner_period: 20
+  keltner_atr_mult: 1.5
+  atr_period: 14
+  volume_ma_period: 20
+  volume_spike_mult: 1.5
+  min_net_edge_r: 0.15              # 预期净收益(扣除成本后)必须 >= 0.15R 才开仓
+
+hedge:
+  enabled: true
+  trigger_loss_r: 0.6               # 主仓浮亏达到止损距离的这个倍数(R)时触发对冲
+  require_regime_flip: true         # true=还要求高周期市场状态走弱/反转才对冲，更保守
+  hedge_ratio: 1.0                  # 对冲仓位占主仓名义价值比例，1.0=完全对冲
+  max_hedge_bars: 12                # 对冲最长持续15m K线数，到期强制平掉两条腿
+  unwind_recovery_r: 0.2            # 主仓浮亏收窄到此R值以内，撤销对冲恢复正常管理
+  max_active_hedges: 3              # 同时最多几组对冲
+
+# --------------------------------------------------------------
+# 交易成本模型（务必据实调整，新版引擎的实盘/模拟盘/回测都用它；
+# 直接影响 no_trade_buffer 换算和策略是否值得下单）
+# --------------------------------------------------------------
+costs:
+  taker_fee_rate: 0.0005            # 若留空则程序自动从合约详情实时获取，这里作为兜底默认值
+  use_account_fee_rate: true        # true=优先读取当前账户/VIP等级的实际吃单费率
+  use_contract_fee_rate: false      # false=用上面填的真实费率(推荐)；true=用交易所公开基础费率(通常偏高)
+  maker_fee_rate: 0.0002            # 挂单费率 0.02%
+  slippage_bps: 2                   # 滑点(bps)。这项不计入"手续费"，直接体现在成交价里。
+                                     # BTC/ETH几千U的市价单真实滑点约1bp，原来的5bp过于悲观
+  use_live_funding_rate: true       # true=用交易所实时资金费率计入成本估算与模拟盘扣费
+
+# --------------------------------------------------------------
+# 数据持久化
+# --------------------------------------------------------------
+storage:
+  db_path: "./data/state.sqlite3"
+  log_path: "./data/bot.log"
+  kline_cache_dir: "./data/klines"        # 回测下载的历史K线本地缓存目录
+  backtest_result_dir: "./data/backtests"  # 回测任务结果持久化目录（网页“回测”页历史记录）
+
+# --------------------------------------------------------------
+# Web 仪表盘
+# --------------------------------------------------------------
+web:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8765
