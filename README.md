@@ -33,7 +33,20 @@ Carry 研究，以及 Robert Carver 的开源系统性交易框架 [pysystemtrad
 **Windows**：双击 `启动.bat`
 
 第一次运行会自动创建 Python 虚拟环境并安装依赖（1-2分钟），完成后自动打开浏览器网页控制台。
-之后每次双击都是秒开。如果电脑没装 Python 3，请先从 [python.org](https://www.python.org/downloads/) 安装（勾选"Add to PATH"）。
+之后每次双击都是秒开。
+
+**如果电脑没装 Python**，启动脚本会检测到并给你三个选择：自动下载安装 Python 3.12（Windows 上
+只装给当前用户，不需要管理员权限）、打开官网自己装、或退出。macOS 上如果检测到 Homebrew 会
+问你要不要 `brew install python@3.12`。
+
+几个已经处理好的常见坑：
+
+- **Windows 未装 Python 时输入 `python` 会弹出 Microsoft Store**（系统的应用执行别名），
+  脚本会识别并跳过这个假程序，优先用 `py` 启动器。
+- **依赖装到一半失败**（断网/公司代理）时，`venv` 目录已经建好了。脚本用 `venv/.deps_ok`
+  标记文件判断是否真的装完，没装完下次会自动重试，而不是永远跳过安装、卡在 ImportError。
+- **装依赖失败会明确提示原因**，并给出清华镜像源的重装命令，而不是甩一串 traceback。
+- Windows 批处理已设为 UTF-8 代码页 + CRLF 行尾，中文提示不会乱码。
 
 打开网页后：
 
