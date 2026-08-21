@@ -588,7 +588,18 @@ class SystematicEngine:
                     continue
             try:
                 if action == "open":
-                    self.exchange.set_leverage(symbol, sys_cfg.max_leverage)
+                    # 每次开/加仓前都强制设为全仓并**回读校验**。
+                    # 只发设置请求是不够的：如果该合约已经有逐仓持仓，Gate 会拒绝切换，
+                    # 请求"成功返回"但模式没变，我们就会在毫不知情的情况下按逐仓下单——
+                    # 逐仓和全仓的爆仓逻辑完全不同，这是必须挡住的风险差异。
+                    margin = self.exchange.ensure_cross_margin(symbol, sys_cfg.max_leverage)
+                    if margin.get("margin_mode") == "isolated":
+                        self.state.add_log(
+                            f"{symbol} 保证金模式校验未通过，拒绝开/加仓：{margin['message']}", "ERROR")
+                        continue          # 只挡开仓，不影响后面的减仓/平仓动作
+                    if not margin.get("verified"):
+                        self.state.add_log(
+                            f"{symbol} 保证金模式未能确认：{margin['message']}", "WARN")
                     result = self.exchange.open_dual(symbol, side, qty)
                 elif action == "reduce":
                     result = self.exchange.reduce_dual(symbol, side, qty)

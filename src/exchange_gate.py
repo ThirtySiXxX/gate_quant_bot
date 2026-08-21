@@ -255,22 +255,82 @@ class GateExchange:
             if size == 0:
                 continue
             side = MODE_TO_SIDE.get(p.mode, "long" if size > 0 else "short")
+            lev = float(p.leverage or 0)
             out.append({
                 "contract": p.contract, "side": side, "size": abs(size),
                 "entry_price": float(p.entry_price or 0),
                 "mark_price": float(p.mark_price or 0),
-                "leverage": float(p.leverage or 0),
+                "leverage": lev,
                 "unrealised_pnl": float(p.unrealised_pnl or 0),
                 "mode": p.mode,
+                # Gate 用 leverage 字段本身区分保证金模式：0 = 全仓，非0 = 逐仓(数值即杠杆倍数)
+                "margin_mode": "cross" if lev == 0 else "isolated",
+                "cross_leverage_limit": float(getattr(p, "cross_leverage_limit", 0) or 0),
             })
         return out
 
-    # ---------------------------------------------------------- 交易（双向）
-    def set_leverage(self, contract: str, leverage: float) -> None:
+    # ---------------------------------------------------------- 保证金模式（全仓）
+    def set_cross_margin(self, contract: str, leverage_limit: float) -> dict:
+        """把该合约切到**全仓(cross margin)**。
+
+        Gate 的约定容易踩坑：保证金模式不是一个独立开关，而是用 leverage 字段编码的——
+            leverage = "0"     -> 全仓，此时用 cross_leverage_limit 指定杠杆上限
+            leverage = "N"(N>0) -> 逐仓，N 就是该仓位的杠杆倍数
+        所以之前传 str(int(leverage)) 实际上是把仓位设成了逐仓，这就是你看到"开进去是逐仓"的原因。
+        """
+        info = self.get_contract(contract)
+        lim = max(float(info["leverage_min"]), min(float(leverage_limit), float(info["leverage_max"])))
         try:
-            self.api.update_dual_mode_position_leverage(self.settle, contract, str(int(leverage)))
+            self.api.update_dual_mode_position_leverage(
+                self.settle, contract, "0", cross_leverage_limit=str(int(lim)))
+            return {"ok": True, "leverage_limit": lim,
+                    "message": f"已设为全仓，杠杆上限 {int(lim)}x"
+                                + ("（已按合约允许范围调整）" if abs(lim - float(leverage_limit)) > 1e-9 else "")}
         except (ApiException, GateApiException) as e:
-            logger.warning("设置杠杆失败 %s: %s", contract, e)
+            return {"ok": False, "leverage_limit": lim,
+                    "message": f"切换全仓失败: {_err_text(e)}"}
+
+    def get_margin_mode(self, contract: str) -> dict:
+        """查询该合约当前的保证金模式。没有持仓时交易所不一定返回记录，
+        这种情况返回 unknown —— 调用方应把它当作"还没确认"，而不是当成全仓。"""
+        try:
+            raw = self.api.list_positions(self.settle, holding=False)
+        except (ApiException, GateApiException) as e:
+            return {"ok": False, "margin_mode": "unknown", "message": f"查询保证金模式失败: {_err_text(e)}"}
+        for p in raw:
+            if p.contract != contract:
+                continue
+            lev = float(p.leverage or 0)
+            mode = "cross" if lev == 0 else "isolated"
+            return {"ok": True, "margin_mode": mode, "leverage": lev,
+                    "cross_leverage_limit": float(getattr(p, "cross_leverage_limit", 0) or 0),
+                    "message": f"当前为{'全仓' if mode == 'cross' else '逐仓'}"}
+        return {"ok": True, "margin_mode": "unknown",
+                "message": "交易所没有返回该合约的仓位记录（通常是从未交易过）"}
+
+    def ensure_cross_margin(self, contract: str, leverage_limit: float) -> dict:
+        """设置全仓并**回读校验**。开仓前每次都应该调一次——只发设置请求不校验的话，
+        请求被静默忽略(比如已有逐仓持仓时Gate可能拒绝切换)就会在不知情的情况下按逐仓下单。"""
+        setr = self.set_cross_margin(contract, leverage_limit)
+        chk = self.get_margin_mode(contract)
+        if chk.get("margin_mode") == "cross":
+            return {"ok": True, "verified": True, "margin_mode": "cross",
+                    "message": f"已确认全仓（杠杆上限 {int(chk.get('cross_leverage_limit') or leverage_limit)}x）"}
+        if chk.get("margin_mode") == "isolated":
+            return {"ok": False, "verified": True, "margin_mode": "isolated",
+                    "message": ("仍然是逐仓！" + setr["message"]
+                                 + "。最常见原因是该合约已有逐仓持仓——Gate 不允许有仓位时切换保证金模式，"
+                                   "请先在 Gate 官网手动平掉该合约的仓位再重试")}
+        # 拿不到确认（从未交易过该合约等），只能如实说明，不能假装成功
+        return {"ok": setr["ok"], "verified": False,
+                "margin_mode": chk.get("margin_mode", "unknown"),
+                "message": setr["message"] + f"；但未能回读确认（{chk.get('message','')}）"}
+
+    def set_leverage(self, contract: str, leverage: float) -> None:
+        """[保留兼容旧版对冲策略] 现在统一走全仓，这里直接转发到 ensure_cross_margin。"""
+        r = self.set_cross_margin(contract, leverage)
+        if not r["ok"]:
+            logger.warning("设置全仓失败 %s: %s", contract, r["message"])
 
     def open_dual(self, contract: str, side: str, size: int, text: str = "t-quantbot") -> dict:
         """开/加仓一条腿。side='long' 用正数张数下单，'short' 用负数张数下单。"""
@@ -300,17 +360,9 @@ class GateExchange:
 
     # ------------------------------------------------- 手动测试下单（供"手动开单"页面用）
     def set_leverage_checked(self, contract: str, leverage: float) -> dict:
-        """设置杠杆并把结果如实返回（不像 set_leverage 那样吞掉异常），
+        """设为全仓 + 指定杠杆上限，并回读校验。结果如实返回（不吞异常），
         方便手动测试页逐步显示每一步到底成功没有。"""
-        info = self.get_contract(contract)
-        lev = max(float(info["leverage_min"]), min(float(leverage), float(info["leverage_max"])))
-        try:
-            self.api.update_dual_mode_position_leverage(self.settle, contract, str(int(lev)))
-            return {"ok": True, "leverage": lev,
-                    "message": f"杠杆已设为 {int(lev)}x"
-                                + ("（已按合约允许范围调整）" if abs(lev - float(leverage)) > 1e-9 else "")}
-        except (ApiException, GateApiException) as e:
-            return {"ok": False, "leverage": lev, "message": f"设置杠杆失败: {_err_text(e)}"}
+        return self.ensure_cross_margin(contract, leverage)
 
     def open_market(self, contract: str, side: str, size: int,
                      text: str = "t-manual") -> dict:

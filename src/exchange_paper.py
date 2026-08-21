@@ -31,6 +31,8 @@ class PaperExchange:
         self._positions: Dict[Tuple[str, str], dict] = {}
         # (contract, side) -> [{kind, price}]，模拟盘只记录手动挂的止盈止损，不做撮合
         self._tpsl: Dict[Tuple[str, str], list] = {}
+        # contract -> 全仓杠杆上限；模拟盘统一按全仓运行，和实盘口径保持一致
+        self._cross: Dict[str, float] = {}
 
     # ---------------------------------------------------------- 行情：直接转发底层真实行情源
     # data_fetcher.fetch_candles() 需要直接访问 exchange.api / exchange.settle 做分页K线下载
@@ -97,10 +99,34 @@ class PaperExchange:
             out.append({
                 "contract": contract, "side": side, "size": pos["size"],
                 "entry_price": pos["entry_price"], "mark_price": mark,
-                "leverage": pos.get("leverage", 1), "unrealised_pnl": upnl,
+                "leverage": pos.get("leverage", 0), "unrealised_pnl": upnl,
                 "mode": "dual_long" if side == "long" else "dual_short",
+                "margin_mode": "cross" if contract in self._cross else "isolated",
+                "cross_leverage_limit": self._cross.get(contract, 0.0),
             })
         return out
+
+    # ---------------------------------------------------------- 保证金模式（模拟盘）
+    def set_cross_margin(self, contract: str, leverage_limit: float) -> dict:
+        info = self.md.get_contract(contract)
+        lim = max(float(info["leverage_min"]), min(float(leverage_limit), float(info["leverage_max"])))
+        for key, pos in self._positions.items():
+            if key[0] == contract:
+                pos["leverage"] = 0          # 0 = 全仓，和实盘口径一致
+                pos["cross_leverage_limit"] = lim
+        self._cross[contract] = lim
+        return {"ok": True, "leverage_limit": lim, "message": f"[模拟盘] 已设为全仓，杠杆上限 {int(lim)}x"}
+
+    def get_margin_mode(self, contract: str) -> dict:
+        if contract in self._cross:
+            return {"ok": True, "margin_mode": "cross", "leverage": 0.0,
+                    "cross_leverage_limit": self._cross[contract], "message": "[模拟盘] 全仓"}
+        return {"ok": True, "margin_mode": "unknown", "message": "[模拟盘] 尚未设置过该合约"}
+
+    def ensure_cross_margin(self, contract: str, leverage_limit: float) -> dict:
+        r = self.set_cross_margin(contract, leverage_limit)
+        return {"ok": True, "verified": True, "margin_mode": "cross",
+                "message": f"[模拟盘] 已确认全仓（杠杆上限 {int(r['leverage_limit'])}x）"}
 
     def set_leverage(self, contract: str, leverage: float) -> None:
         for key, pos in self._positions.items():
@@ -126,7 +152,7 @@ class PaperExchange:
             existing["entry_price"] = (existing["entry_price"] * existing["size"] + fill_price * size) / total_size
             existing["size"] = total_size
         else:
-            self._positions[key] = {"size": size, "entry_price": fill_price, "leverage": 1}
+            self._positions[key] = {"size": size, "entry_price": fill_price, "leverage": 0}
 
         logger.info("[PAPER] 开仓/加仓 %s side=%s size=%s fill=%.4f fee=%.4f", contract, side, size, fill_price, fee)
         return {"id": "paper-open", "status": "finished", "fill_price": fill_price, "fee": fee}
@@ -167,10 +193,7 @@ class PaperExchange:
 
     # ------------------------------------------------- 手动测试下单（模拟盘版本）
     def set_leverage_checked(self, contract: str, leverage: float) -> dict:
-        info = self.md.get_contract(contract)
-        lev = max(float(info["leverage_min"]), min(float(leverage), float(info["leverage_max"])))
-        self.set_leverage(contract, lev)
-        return {"ok": True, "leverage": lev, "message": f"[模拟盘] 杠杆已设为 {int(lev)}x"}
+        return self.ensure_cross_margin(contract, leverage)
 
     def open_market(self, contract: str, side: str, size: int, text: str = "t-manual") -> dict:
         r = self.open_dual(contract, side, int(size), text=text)

@@ -1239,7 +1239,7 @@ MANUAL_PAGE = """
       <span class="hint" id="pos-msg"></span>
     </div>
     <table id="positions"><thead><tr>
-      <th>合约</th><th>方向</th><th>张数</th><th>开仓价</th><th>标记价</th><th>杠杆</th><th>未实现盈亏</th><th>操作</th>
+      <th>合约</th><th>方向</th><th>张数</th><th>开仓价</th><th>标记价</th><th>保证金模式</th><th>未实现盈亏</th><th>操作</th>
     </tr></thead><tbody></tbody></table>
   </section>
 </main>
@@ -1336,7 +1336,8 @@ async function loadPositions(){
   document.getElementById('pos-msg').textContent = `共 ${r.positions.length} 条持仓`;
   el.innerHTML = r.positions.map(p=>`<tr>
     <td>${p.contract}</td><td>${p.side==='long'?'多':'空'}</td><td>${p.size}</td>
-    <td>${p.entry_price}</td><td>${p.mark_price}</td><td>${p.leverage}x</td>
+    <td>${p.entry_price}</td><td>${p.mark_price}</td>
+    <td class="${p.margin_mode==='cross'?'pos':'neg'}">${p.margin_mode==='cross'?('全仓 '+(p.cross_leverage_limit||'')+'x'):'⚠️ 逐仓'}</td>
     <td class="${p.unrealised_pnl>=0?'pos':'neg'}">${Number(p.unrealised_pnl).toFixed(4)}</td>
     <td><button class="btn danger" onclick="closePos('${p.contract}','${p.side}')">平掉</button></td>
   </tr>`).join('') || '<tr><td colspan="8" class="hint">当前无持仓</td></tr>';
@@ -1502,7 +1503,11 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
         symbol, side, contracts = calc["symbol"], calc["side"], calc["contracts"]
 
         r = ex.set_leverage_checked(symbol, calc["leverage"])
-        steps.append({"name": "设置杠杆", "ok": r["ok"], "message": r["message"]})
+        steps.append({"name": "设为全仓并校验", "ok": r["ok"], "message": r["message"]})
+        if r.get("margin_mode") == "isolated":
+            state.add_log(f"[手动测试] {symbol} 仍是逐仓，已拒绝开仓", "ERROR")
+            return jsonify({"ok": False, "steps": steps,
+                             "message": "保证金模式仍是逐仓，已中止下单（不会在逐仓下开单）"})
 
         r = ex.open_market(symbol, side, contracts, text="t-manual")
         steps.append({"name": f"市价开仓 {contracts}张", "ok": r["ok"], "message": r["message"]})
