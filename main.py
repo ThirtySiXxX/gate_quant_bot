@@ -107,6 +107,23 @@ def main():
     print("  保持它开着即可（关闭窗口会停止程序）。")
     print("=" * 60)
 
+    # 启动时在后台静默检查一次更新。刻意放在后台线程并全程吞异常——
+    # 更新检查是锦上添花的功能，绝不能因为它失败/超时而拖慢或阻断交易程序启动。
+    def _bg_check_update():
+        try:
+            from src import updater
+            ucfg = cfg.get("update") or {}
+            if not ucfg.get("auto_check", True):
+                return
+            info = updater.check_for_update(ucfg.get("repo") or None,
+                                             ucfg.get("branch", "main"))
+            if info.has_update and not info.skipped:
+                state.add_log(f"发现新版本 {info.latest}（当前 {info.current}），"
+                               f"可在「检查更新」页查看更新内容", "INFO")
+        except Exception:
+            pass
+    threading.Thread(target=_bg_check_update, daemon=True, name="update-check").start()
+
     if not args.no_browser:
         open_browser_later(url)
 

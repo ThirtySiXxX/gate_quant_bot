@@ -22,6 +22,109 @@ from .state import StateStore
 
 logger = logging.getLogger("bot.web")
 
+
+# ============================================================ 共享 UI 片段
+# 四个页面以前各自复制了一份 CSS 和导航，改一处要改四处、还容易漏。
+# 这里抽成公共常量，样式统一、维护也只需改一个地方。
+BASE_CSS = """
+  :root { --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --border:#30363d;
+          --text:#c9d1d9; --muted:#8b949e; --accent:#58a6ff; --accent2:#a371f7;
+          --pos:#3fb950; --neg:#f85149; --warn:#e3b341; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); margin:0;
+         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',Arial,sans-serif;
+         font-size:14px; line-height:1.6; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:16px;
+           padding:12px 24px; border-bottom:1px solid var(--border);
+           position:sticky; top:0; background:rgba(13,17,23,.92);
+           backdrop-filter:blur(8px); z-index:50; }
+  .brand { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600;
+           color:var(--accent); white-space:nowrap; }
+  .brand .ver { font-size:11px; color:var(--muted); font-weight:400; }
+  nav { display:flex; gap:4px; flex-wrap:wrap; }
+  nav a, nav button { background:transparent; border:1px solid transparent; color:var(--muted);
+        padding:7px 14px; border-radius:7px; cursor:pointer; font-size:13.5px;
+        text-decoration:none; transition:all .15s; white-space:nowrap; }
+  nav a:hover, nav button:hover { color:var(--text); background:var(--panel); }
+  nav a.active, nav button.active { background:var(--accent); color:#04121f;
+        border-color:var(--accent); font-weight:600; }
+  main { padding:20px 24px 60px; max-width:1300px; margin:0 auto; }
+  section { background:var(--panel); border:1px solid var(--border); border-radius:10px;
+            padding:16px 18px; margin-bottom:16px; }
+  section h3 { margin:0 0 12px; font-size:15px; color:var(--accent); font-weight:600; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+          gap:10px; margin-bottom:16px; }
+  .card { background:var(--panel2); border:1px solid var(--border); border-radius:9px; padding:11px 14px; }
+  .card .label { font-size:11.5px; color:var(--muted); }
+  .card .value { font-size:19px; font-weight:600; margin-top:3px; }
+  .pos { color:var(--pos); } .neg { color:var(--neg); } .warn { color:var(--warn); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { border-bottom:1px solid #21262d; padding:7px 8px; text-align:left; }
+  th { color:var(--muted); font-weight:500; font-size:12px; }
+  tbody tr:hover { background:rgba(255,255,255,.02); }
+  input,select { background:#0d1117; color:var(--text); border:1px solid var(--border);
+        border-radius:7px; padding:8px 11px; font-size:13.5px; font-family:inherit; }
+  input:focus,select:focus { outline:none; border-color:var(--accent); }
+  button.btn { background:#0d1117; color:var(--text); border:1px solid var(--border);
+        border-radius:7px; padding:8px 15px; font-size:13.5px; cursor:pointer;
+        font-family:inherit; transition:all .15s; }
+  button.btn:hover { border-color:var(--accent); background:var(--panel2); }
+  button.primary { background:var(--accent); color:#04121f; border-color:var(--accent); font-weight:600; }
+  button.primary:hover { background:#79b8ff; }
+  button.success { background:#12351f; color:var(--pos); border-color:#1a5c30; font-weight:600; }
+  button.danger { background:#3a0d0d; color:var(--neg); border-color:#5c1a1a; font-weight:600; }
+  button.btn:disabled { opacity:.45; cursor:not-allowed; }
+  .row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:12px; }
+  .field { display:flex; flex-direction:column; gap:4px; }
+  .field label { font-size:11.5px; color:var(--muted); }
+  .hint { font-size:12px; color:var(--muted); line-height:1.65; }
+  .badge { padding:2px 9px; border-radius:10px; font-size:11.5px; font-weight:600; }
+  .badge.paper { background:#4b3b00; color:var(--warn); }
+  .badge.live { background:#4a0d0d; color:var(--neg); }
+  .badge.on { background:#0d3b1f; color:var(--pos); }
+  .badge.off { background:#30363d; color:var(--muted); }
+  .badge.upd { background:var(--accent2); color:#0d1117; }
+  .warnbox { background:#3a2400; border:1px solid var(--warn); color:var(--warn);
+             padding:11px 14px; border-radius:9px; margin-bottom:14px; font-size:13px; }
+  .okbox { background:#0d3b1f; border:1px solid var(--pos); color:var(--pos);
+           padding:11px 14px; border-radius:9px; margin-bottom:14px; font-size:13px; }
+  .errbox { background:#3a0d0d; border:1px solid var(--neg); color:#ff9d97;
+            padding:11px 14px; border-radius:9px; margin-bottom:14px; font-size:13px; }
+"""
+
+
+def nav_html(active: str) -> str:
+    """生成统一的顶部导航。active 用于高亮当前页。"""
+    items = [("/", "dashboard", "仪表盘"), ("/backtest", "backtest", "回测"),
+             ("/charts", "charts", "K线图"), ("/manual", "manual", "手动开单"),
+             ("/update", "update", "检查更新")]
+    out = []
+    for href, key, label in items:
+        if key == "backtest":
+            continue          # 回测是仪表盘内的标签页，不单独占导航位
+        cls = " class='active'" if key == active else ""
+        out.append(f"<a href='{href}'{cls}>{label}</a>")
+    return "<nav>" + "".join(out) + "</nav>"
+
+
+def header_html(active: str, extra_badges: str = "") -> str:
+    return f"""<header>
+  <div class="brand">⚙️ Gate.io 量化控制台
+    <span class="ver" id="app-version"></span>
+    <span class="badge upd" id="upd-badge" style="display:none;cursor:pointer"
+          onclick="location.href='/update'">有新版本</span>
+    {extra_badges}
+  </div>
+  {nav_html(active)}
+</header>
+<script>
+fetch('/api/version').then(r=>r.json()).then(v=>{{
+  document.getElementById('app-version').textContent = 'v' + v.current;
+  if(v.update_available) document.getElementById('upd-badge').style.display='inline-block';
+}}).catch(()=>{{}});
+</script>"""
+
+
 PAGE = """
 <!doctype html>
 <html lang="zh-CN">
@@ -102,13 +205,17 @@ PAGE = """
 </head>
 <body>
 <header>
-  <h1>⚙️ Gate.io 多资产 Trend+Carry+波动率目标 控制台 <span id="mode-badge" class="badge"></span> <span id="engine-badge" class="badge"></span> <span id="invert-badge" class="badge live" style="display:none;">⚠️ 反向执行已开启</span></h1>
+  <h1>⚙️ Gate.io 多资产 Trend+Carry+波动率目标 控制台 <span id="mode-badge" class="badge"></span> <span id="engine-badge" class="badge"></span> <span id="invert-badge" class="badge live" style="display:none;">⚠️ 反向执行已开启</span>
+  <span class="ver" id="app-version" style="font-size:11px;color:var(--muted);font-weight:400;"></span>
+  <span class="badge" id="upd-badge" style="display:none;background:#a371f7;color:#0d1117;cursor:pointer;"
+        onclick="location.href='/update'">有新版本</span></h1>
   <nav>
     <button id="nav-dashboard" onclick="showTab('dashboard')">仪表盘</button>
     <button id="nav-backtest" onclick="showTab('backtest')">回测</button>
     <button id="nav-settings" onclick="showTab('settings')">设置</button>
     <button onclick="window.location.href='/charts'">📈 K线图</button>
     <button onclick="window.location.href='/manual'">🧪 手动开单</button>
+    <button onclick="window.location.href='/update'">⬆️ 检查更新</button>
   </nav>
 </header>
 
@@ -799,6 +906,11 @@ async function refresh(){
   document.getElementById('logs').innerText = (data.logs||[]).join('\\n');
 }
 
+fetch('/api/version').then(r=>r.json()).then(v=>{
+  document.getElementById('app-version').textContent = 'v'+v.current;
+  if(v.update_available) document.getElementById('upd-badge').style.display='inline-block';
+}).catch(()=>{});
+
 refreshBootstrap().then(() => showTab(ACTIVE_TAB));
 refresh();
 refreshBacktestList();
@@ -863,7 +975,11 @@ CHARTS_PAGE = """
 <body>
 <header>
   <h1>📈 K线图 —— 买卖点可视化</h1>
-  <a href="/">← 返回控制台</a>
+  <div style="display:flex;gap:6px;align-items:center">
+    <a href="/manual" style="color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:14px;">🧪 手动开单</a>
+    <a href="/update" style="color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:14px;">⬆️ 检查更新</a>
+    <a href="/">← 返回控制台</a>
+  </div>
 </header>
 <main>
   <nav>
@@ -1203,7 +1319,11 @@ MANUAL_PAGE = """
 <body>
 <header>
   <h1>🧪 手动开单测试 <span id="mode-badge" class="badge"></span></h1>
-  <a href="/">← 返回控制台</a>
+  <div style="display:flex;gap:6px;align-items:center">
+    <a href="/charts" style="color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:14px;">📈 K线图</a>
+    <a href="/update" style="color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:14px;">⬆️ 检查更新</a>
+    <a href="/">← 返回控制台</a>
+  </div>
 </header>
 <main>
   <div id="mode-warn"></div>
@@ -1371,6 +1491,239 @@ async function closePos(symbol, side){
 """
 
 
+UPDATE_PAGE = """
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>检查更新 · Gate.io 量化控制台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>__BASE_CSS__
+  .verbox { display:flex; align-items:center; gap:24px; flex-wrap:wrap;
+            background:var(--panel2); border:1px solid var(--border);
+            border-radius:10px; padding:18px 22px; margin-bottom:16px; }
+  .verbox .big { font-size:30px; font-weight:700; letter-spacing:.5px; }
+  .verbox .arrow { font-size:22px; color:var(--muted); }
+  .verbox .col { display:flex; flex-direction:column; gap:2px; }
+  .verbox .col span:first-child { font-size:11.5px; color:var(--muted); }
+  .changelog { background:#0d1117; border:1px solid var(--border); border-radius:9px;
+               padding:16px 20px; max-height:440px; overflow-y:auto; font-size:13.5px; }
+  .changelog h2 { font-size:16px; color:var(--accent); margin:0 0 10px; }
+  .changelog h3 { font-size:14px; color:var(--accent2); margin:18px 0 8px; }
+  .changelog ul { margin:6px 0; padding-left:22px; }
+  .changelog li { margin:5px 0; }
+  .changelog code { background:var(--panel2); padding:1px 5px; border-radius:4px; font-size:12.5px; }
+  .changelog strong { color:#e6edf3; }
+  .steps li { margin:7px 0; }
+  .spin { display:inline-block; width:13px; height:13px; border:2px solid var(--border);
+          border-top-color:var(--accent); border-radius:50%; animation:sp .7s linear infinite;
+          vertical-align:-2px; margin-right:6px; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+__HEADER__
+<main>
+  <div id="banner"></div>
+
+  <section>
+    <h3>版本信息</h3>
+    <div class="verbox">
+      <div class="col"><span>当前版本</span><span class="big" id="cur">—</span></div>
+      <div class="arrow" id="arrow" style="display:none">→</div>
+      <div class="col" id="latest-col" style="display:none">
+        <span>最新版本</span><span class="big pos" id="latest">—</span>
+      </div>
+      <div style="flex:1"></div>
+      <div class="col" style="align-items:flex-end">
+        <span id="lastcheck" class="hint"></span>
+        <div class="row" style="margin:6px 0 0">
+          <button class="btn primary" id="btn-check" onclick="doCheck()">立即检查</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field" style="flex:1;min-width:260px">
+        <label>GitHub 仓库（用户名/仓库名）</label>
+        <input id="repo" placeholder="例如 someone/gate_quant_bot">
+      </div>
+      <div class="field" style="max-width:120px">
+        <label>分支</label><input id="branch" value="main">
+      </div>
+      <button class="btn" onclick="saveCfg()">保存</button>
+      <label class="hint" style="display:flex;align-items:center;gap:6px">
+        <input type="checkbox" id="autocheck"> 启动时自动检查
+      </label>
+    </div>
+    <div class="hint">留空会自动从 git remote 推断。私有仓库无法用匿名接口检查。</div>
+  </section>
+
+  <section id="action-sec" style="display:none">
+    <h3>更新操作</h3>
+    <div id="action-body"></div>
+    <div id="steps-box"></div>
+  </section>
+
+  <section>
+    <h3 id="cl-title">更新内容</h3>
+    <div class="changelog" id="changelog"><span class="hint">加载中…</span></div>
+  </section>
+</main>
+
+<script>
+let INFO = null;
+
+function md2html(md){
+  if(!md) return '<span class="hint">（没有提供更新说明）</span>';
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let out = [], inList = false;
+  for(let raw of md.split('\n')){
+    let t = esc(raw.trimEnd());
+    if(/^###\s+/.test(t)){ if(inList){out.push('</ul>');inList=false;} out.push('<h3>'+t.replace(/^###\s+/,'')+'</h3>'); continue; }
+    if(/^##\s+/.test(t)){ if(inList){out.push('</ul>');inList=false;} out.push('<h2>'+t.replace(/^##\s+/,'')+'</h2>'); continue; }
+    if(/^\s*[-*]\s+/.test(t)){
+      if(!inList){ out.push('<ul>'); inList=true; }
+      out.push('<li>'+inline(t.replace(/^\s*[-*]\s+/,''))+'</li>'); continue;
+    }
+    if(inList){ out.push('</ul>'); inList=false; }
+    if(t.trim()==='' ) { out.push(''); continue; }
+    if(/^---+$/.test(t.trim())) { out.push('<hr style="border:none;border-top:1px solid var(--border);margin:14px 0">'); continue; }
+    out.push('<p style="margin:8px 0">'+inline(t)+'</p>');
+  }
+  if(inList) out.push('</ul>');
+  return out.join('\n');
+  function inline(x){
+    return x.replace(/`([^`]+)`/g,'<code>$1</code>')
+            .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  }
+}
+
+function fmtTs(t){ return t ? new Date(t*1000).toLocaleString() : '从未检查过'; }
+
+async function loadInit(){
+  const cfg = await (await fetch('/api/update/config')).json();
+  document.getElementById('repo').value = cfg.repo || '';
+  document.getElementById('branch').value = cfg.branch || 'main';
+  document.getElementById('autocheck').checked = !!cfg.auto_check;
+  document.getElementById('cur').textContent = 'v' + cfg.current;
+  document.getElementById('lastcheck').textContent = '上次检查：' + fmtTs(cfg.last_check_ts);
+  const cl = await (await fetch('/api/update/changelog')).json();
+  document.getElementById('changelog').innerHTML = md2html(cl.changelog);
+  document.getElementById('cl-title').textContent = '当前版本的更新内容（v' + cfg.current + '）';
+  if(cfg.cached) render(cfg.cached);
+}
+
+async function doCheck(){
+  const btn = document.getElementById('btn-check');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>检查中…';
+  try{
+    const r = await (await fetch('/api/update/check',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({repo:document.getElementById('repo').value.trim(),
+                            branch:document.getElementById('branch').value.trim()||'main'})})).json();
+    render(r);
+    document.getElementById('lastcheck').textContent = '上次检查：' + fmtTs(r.last_check_ts||Date.now()/1000);
+  } finally { btn.disabled=false; btn.textContent='立即检查'; }
+}
+
+function render(r){
+  INFO = r;
+  const banner = document.getElementById('banner');
+  const sec = document.getElementById('action-sec');
+  const body = document.getElementById('action-body');
+  document.getElementById('steps-box').innerHTML = '';
+
+  if(!r.ok){
+    banner.innerHTML = '<div class="errbox">'+r.message+'</div>';
+    sec.style.display='none'; return;
+  }
+  if(!r.has_update){
+    banner.innerHTML = '<div class="okbox">✔ '+r.message+'</div>';
+    document.getElementById('arrow').style.display='none';
+    document.getElementById('latest-col').style.display='none';
+    sec.style.display='none'; return;
+  }
+
+  document.getElementById('arrow').style.display='block';
+  document.getElementById('latest-col').style.display='flex';
+  document.getElementById('latest').textContent = 'v'+r.latest;
+  banner.innerHTML = r.skipped
+    ? '<div class="warnbox">发现新版本 v'+r.latest+'，但你之前选择了跳过这个版本。想装的话点下面的「仍要更新」。</div>'
+    : '<div class="warnbox">🎉 '+r.message+'</div>';
+
+  if(r.changelog){
+    document.getElementById('cl-title').textContent = '新版本更新内容（v'+r.latest+'）';
+    document.getElementById('changelog').innerHTML = md2html(r.changelog);
+  }
+
+  sec.style.display='block';
+  let html = '';
+  if(r.can_auto_update){
+    html += '<div class="hint" style="margin-bottom:12px">'
+         +  '检测到本地是 git 克隆，可以直接一键更新（<code>git pull</code>）。'
+         +  '你的 <code>data/</code>（API Key、数据库、缓存）和 <code>config.yaml</code> '
+         +  '都被 gitignore 忽略，<b>不会被更新覆盖</b>。</div>'
+         +  '<div class="row">'
+         +  '<button class="btn success" onclick="doUpdate()">立即更新到 v'+r.latest+'</button>'
+         +  '<button class="btn" onclick="doSkip()">跳过这个版本</button>'
+         +  '<a class="btn" href="'+r.html_url+'" target="_blank" style="text-decoration:none">在 GitHub 查看</a>'
+         +  '</div>';
+  } else {
+    html += '<div class="warnbox">当前目录不是 git 克隆（可能是下载 zip 解压的），'
+         +  '无法一键更新。请手动下载新版，解压后<b>把旧目录里的 <code>data/</code> 和 '
+         +  '<code>config.yaml</code> 复制过去</b>——这两个是你的密钥和配置。</div>'
+         +  '<div class="row">'
+         +  '<a class="btn primary" href="'+r.download_url+'" target="_blank" style="text-decoration:none">下载 v'+r.latest+'</a>'
+         +  '<button class="btn" onclick="doSkip()">跳过这个版本</button>'
+         +  '<a class="btn" href="'+r.html_url+'" target="_blank" style="text-decoration:none">在 GitHub 查看</a>'
+         +  '</div>';
+  }
+  body.innerHTML = html;
+}
+
+async function doUpdate(){
+  if(!confirm('确认更新到 v'+INFO.latest+'？\n\n更新前请确保：\n· 交易引擎已停止\n· 没有未平仓的持仓\n\n更新后需要重启程序。')) return;
+  const box = document.getElementById('steps-box');
+  box.innerHTML = '<div class="hint"><span class="spin"></span>正在更新…</div>';
+  const r = await (await fetch('/api/update/perform',{method:'POST'})).json();
+  const steps = (r.steps||[]).map(s=>
+    '<li>'+(s.ok?'<span class="pos">✔</span>':'<span class="neg">✘</span>')+' <b>'+s.name+'</b>：'
+    + String(s.message).replace(/\n/g,'<br>')+'</li>').join('');
+  box.innerHTML = '<div class="'+(r.ok?'okbox':'errbox')+'" style="margin-top:12px">'+r.message+'</div>'
+                + (steps ? '<ul class="steps">'+steps+'</ul>' : '');
+}
+
+async function doSkip(){
+  await fetch('/api/update/skip',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({version:INFO.latest})});
+  document.getElementById('banner').innerHTML =
+    '<div class="okbox">已跳过 v'+INFO.latest+'，之后不会再提醒这个版本。'
+    +'<a href="#" onclick="unskip();return false" style="color:inherit;text-decoration:underline"> 取消跳过</a></div>';
+  document.getElementById('action-sec').style.display='none';
+}
+
+async function unskip(){
+  await fetch('/api/update/unskip',{method:'POST'});
+  doCheck();
+}
+
+async function saveCfg(){
+  await fetch('/api/update/config',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({repo:document.getElementById('repo').value.trim(),
+                         branch:document.getElementById('branch').value.trim()||'main',
+                         auto_check:document.getElementById('autocheck').checked})});
+  document.getElementById('banner').innerHTML='<div class="okbox">设置已保存</div>';
+  setTimeout(()=>{document.getElementById('banner').innerHTML='';},2000);
+}
+
+loadInit();
+</script>
+</body>
+</html>
+"""
+
+
 def create_app(state: StateStore, config_store: ConfigStore, cred_store: CredentialStore,
                controller: EngineController, backtest_controller: BacktestController) -> Flask:
     app = Flask(__name__)
@@ -1388,6 +1741,98 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
     @app.route("/manual")
     def manual_page():
         return render_template_string(MANUAL_PAGE)
+
+
+    # ---------------------------------------------------------- 版本 / 在线更新
+    def _upd_cfg() -> dict:
+        return (config_store.snapshot().get("update") or {})
+
+    @app.route("/update")
+    def update_page():
+        html = (UPDATE_PAGE.replace("__BASE_CSS__", BASE_CSS)
+                            .replace("__HEADER__", header_html("update")))
+        return render_template_string(html)
+
+    @app.route("/api/version")
+    def api_version():
+        """顶栏用：显示版本号，以及是否有可用更新（只读缓存，不发网络请求，
+        避免每次翻页都去连 GitHub）。"""
+        from . import updater
+        cached = (updater._load_state().get("last_result") or {})
+        has = bool(cached.get("has_update")) and not updater.is_skipped(cached.get("latest", ""))
+        return jsonify({"current": updater.current_version(), "update_available": has,
+                         "latest": cached.get("latest", "")})
+
+    @app.route("/api/update/config", methods=["GET"])
+    def api_update_config_get():
+        from . import updater
+        cfg = _upd_cfg()
+        cached = (updater._load_state().get("last_result") or {})
+        return jsonify({
+            "current": updater.current_version(),
+            "repo": cfg.get("repo") or (updater.detect_repo_slug() or ""),
+            "branch": cfg.get("branch", "main"),
+            "auto_check": cfg.get("auto_check", True),
+            "last_check_ts": updater.last_check_ts(),
+            "cached": cached or None,
+        })
+
+    @app.route("/api/update/config", methods=["POST"])
+    def api_update_config_post():
+        d = request.get_json(force=True) or {}
+        config_store.save({"update": {
+            "repo": (d.get("repo") or "").strip(),
+            "branch": (d.get("branch") or "main").strip(),
+            "auto_check": bool(d.get("auto_check", True)),
+        }})
+        return jsonify({"ok": True})
+
+    @app.route("/api/update/check", methods=["POST"])
+    def api_update_check():
+        from . import updater
+        d = request.get_json(force=True) or {}
+        cfg = _upd_cfg()
+        repo = (d.get("repo") or cfg.get("repo") or "").strip() or None
+        branch = (d.get("branch") or cfg.get("branch") or "main").strip()
+        info = updater.check_for_update(repo, branch).to_dict()
+        info["last_check_ts"] = updater.last_check_ts()
+        if info.get("has_update"):
+            state.add_log(f"检查更新：发现新版本 {info.get('latest')}（当前 {info.get('current')}）")
+        return jsonify(info)
+
+    @app.route("/api/update/changelog")
+    def api_update_changelog():
+        from . import updater
+        return jsonify({"changelog": updater.local_changelog()})
+
+    @app.route("/api/update/skip", methods=["POST"])
+    def api_update_skip():
+        from . import updater
+        v = (request.get_json(force=True) or {}).get("version", "")
+        if v:
+            updater.skip_version(v)
+            state.add_log(f"已跳过版本 {v}")
+        return jsonify({"ok": True})
+
+    @app.route("/api/update/unskip", methods=["POST"])
+    def api_update_unskip():
+        from . import updater
+        updater.unskip_all()
+        return jsonify({"ok": True})
+
+    @app.route("/api/update/perform", methods=["POST"])
+    def api_update_perform():
+        from . import updater
+        # 两道闸：引擎在跑 / 还有持仓时不允许自动更新（详见 updater.perform_update 的说明）
+        running = controller.is_running()
+        try:
+            has_pos = len(state.positions_view()) > 0
+        except Exception:
+            has_pos = False
+        r = updater.perform_update(running, has_pos)
+        state.add_log(("更新成功: " if r.get("ok") else "更新未执行: ") + str(r.get("message"))[:200],
+                       "INFO" if r.get("ok") else "WARN")
+        return jsonify(r)
 
     # ---------------------------------------------------------- 手动开单测试
     def _manual_exchange():
