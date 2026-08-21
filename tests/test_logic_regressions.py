@@ -9,7 +9,7 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 
-from src import data_fetcher
+from src import data_fetcher, updater
 from src.backtest import SymbolBacktestInputs, run_portfolio_backtest
 from src.config import CostConfig, SystematicConfig
 from src.exchange_gate import estimate_book_fill
@@ -23,6 +23,20 @@ from src.portfolio import (
 from src.systematic_engine import SystematicEngine
 from src.vol import adaptive_chop_risk_series
 from src.walkforward import run_walk_forward
+
+
+class UpdaterVersionTests(unittest.TestCase):
+    def test_parse_version_requires_an_exact_semver(self):
+        self.assertEqual(updater.parse_version("v1.2.3"), (1, 2, 3))
+        self.assertEqual(updater.parse_version("1.2.3"), (1, 2, 3))
+        self.assertEqual(updater.parse_version("release-1.2.3"), (0, 0, 0))
+        self.assertEqual(updater.parse_version("1.2.3-beta"), (0, 0, 0))
+
+    def test_changelog_matching_does_not_use_version_substrings(self):
+        text = "## 11.0.0 — later\nwrong\n\n## 1.0.0 — wanted\nright\n"
+        section = updater.extract_changelog_section(text, "1.0.0")
+        self.assertIn("right", section)
+        self.assertNotIn("wrong", section)
 
 
 class PortfolioConvictionTests(unittest.TestCase):

@@ -47,7 +47,7 @@ def parse_version(text: str) -> Tuple[int, ...]:
     这样它一定不会被判定成"更新"，避免因为格式异常给用户推送假更新。"""
     if not text:
         return (0, 0, 0)
-    m = re.search(r"(\d+)\.(\d+)\.(\d+)", str(text).strip().lstrip("vV"))
+    m = re.fullmatch(r"[vV]?(\d+)\.(\d+)\.(\d+)", str(text).strip())
     if not m:
         return (0, 0, 0)
     return tuple(int(x) for x in m.groups())
@@ -247,8 +247,10 @@ def extract_changelog_section(text: str, version: str) -> str:
         return ""
     lines = text.splitlines()
     start = None
+    wanted = str(version).strip().lstrip("vV")
     for i, ln in enumerate(lines):
-        if ln.startswith("## ") and version in ln:
+        m = re.match(r"^##\s+[vV]?(\d+\.\d+\.\d+)(?:\s|$)", ln)
+        if m and m.group(1) == wanted:
             start = i
             break
     if start is None:

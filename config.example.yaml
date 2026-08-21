@@ -26,8 +26,8 @@ reload_interval_sec: 30        # 配置文件热重载检查间隔
 #
 # 设计思路参考 Moskowitz/Ooi/Pedersen 的 Time-Series Momentum 研究、
 # Koijen/Moskowitz/Pedersen/Vrugt 的 Carry 研究，以及 Robert Carver
-# 的开源系统性交易框架 pysystemtrade 的整体架构(不是照抄代码，是照抄
-# "分层设计+因果性+波动率目标"的方法论)，针对 Gate.io 只有加密货币
+# 的开源系统性交易框架 pysystemtrade 的整体架构（未复用其代码，主要参考
+# "分层设计+因果性+波动率目标"的方法论），针对 Gate.io 只有加密货币
 # 永续合约(+黄金/白银等少数贵金属永续)的实际情况做了适配：
 #   - 没有到期日价差可用，Carry 信号改用永续合约资金费率(funding rate)
 #   - 多周期方案(与你确认过的执行节奏一致):
@@ -142,7 +142,7 @@ timeframes:
 risk:
   initial_capital_usdt: 10000       # 仅 paper 模式使用，作为虚拟初始资金
   risk_per_trade_pct: 5.0           # 单笔交易止损触发时最大亏损=账户权益的百分之几
-  max_leverage: 15                  # 单标的最大杠杆倍数（isolated逐仓）
+  max_leverage: 15                  # [旧版策略] 单标的杠杆上限；下单前仍强制校验为全仓
   max_concurrent_positions: 6       # 同时最多持仓数
   max_portfolio_heat_pct: 20.0      # 所有持仓"止损前潜在总亏损"占权益上限
   daily_loss_limit_pct: 8.0         # 当日亏损达到此比例，当天停止开新仓（熔断）

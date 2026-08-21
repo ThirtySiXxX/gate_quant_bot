@@ -1,6 +1,7 @@
 #!/bin/bash
 # 发布新版本。用法：
-#     ./scripts/release.sh 1.0.0
+#     ./scripts/release.sh 1.0.1 --check   # 只检查
+#     ./scripts/release.sh 1.0.1           # 正式发布
 #
 # 这个脚本把"发版容易忘的事"全部做成强制检查，任何一步不过就中止：
 #   - 版本号格式对不对、是不是真的比当前版本新
@@ -18,8 +19,15 @@ ok()  { echo "${GRN}✔${RST} $*"; }
 info(){ echo "${DIM}  $*${RST}"; }
 
 NEW_VERSION="${1:-}"
-[ -n "$NEW_VERSION" ] || die "用法: ./scripts/release.sh <版本号>   例如 ./scripts/release.sh 1.0.0"
+[ -n "$NEW_VERSION" ] || die "用法: ./scripts/release.sh <版本号> [--check]   例如 ./scripts/release.sh 1.0.1 --check"
 NEW_VERSION="${NEW_VERSION#v}"
+CHECK_ONLY=false
+[ "${2:-}" = "--check" ] && CHECK_ONLY=true
+[ -z "${2:-}" ] || [ "${2:-}" = "--check" ] || die "不支持的参数：${2:-}"
+
+PY=python3
+[ -x "venv/bin/python" ] && PY="venv/bin/python"
+[ -x "venv/Scripts/python.exe" ] && PY="venv/Scripts/python.exe"
 
 # ---------- 1. 版本号 ----------
 echo "${YLW}[1/6]${RST} 检查版本号"
@@ -29,24 +37,27 @@ echo "${YLW}[1/6]${RST} 检查版本号"
 CUR_VERSION="$(cat VERSION 2>/dev/null | tr -d '[:space:]')"
 [ -n "$CUR_VERSION" ] || die "读不到 VERSION 文件"
 
-# 用 sort -V 做语义化版本比较，避免 1.10.0 被当成小于 1.9.0
-NEWEST="$(printf '%s\n%s\n' "$CUR_VERSION" "$NEW_VERSION" | sort -V | tail -1)"
-[ "$NEWEST" = "$NEW_VERSION" ] && [ "$CUR_VERSION" != "$NEW_VERSION" ] \
+# 用 Python 数字元组比较，兼容 macOS / Linux / Windows Git Bash。
+"$PY" -c 'import sys; a=tuple(map(int,sys.argv[1].split("."))); b=tuple(map(int,sys.argv[2].split("."))); raise SystemExit(0 if b>a else 1)' \
+  "$CUR_VERSION" "$NEW_VERSION" \
   || die "新版本号必须大于当前版本。当前 $CUR_VERSION，你给的 $NEW_VERSION"
 ok "版本号 $CUR_VERSION → $NEW_VERSION"
 
 # ---------- 2. CHANGELOG ----------
 echo "${YLW}[2/6]${RST} 检查 CHANGELOG"
 # 客户端靠"## 开头且包含版本号"的行来定位章节，这里用同样的规则校验
-grep -q "^##.*${NEW_VERSION}" CHANGELOG.md \
+awk -v v="$NEW_VERSION" '$1 == "##" { h=$2; sub(/^v/, "", h); if (h == v) found=1 } END { exit !found }' CHANGELOG.md \
   || die "CHANGELOG.md 里找不到 $NEW_VERSION 的章节。
      请先加一节，标题格式必须是：
          ## ${NEW_VERSION} — $(date +%Y-%m-%d)
      用户在「检查更新」页看到的更新说明就是这一节的内容，不写用户就不知道改了什么。"
 
 SECTION_LINES="$(awk -v v="$NEW_VERSION" '
-  $0 ~ "^##.*"v {f=1; next}
-  f && /^## / {exit}
+  $1 == "##" {
+    h=$2; sub(/^v/, "", h)
+    if (f) exit
+    if (h == v) {f=1; next}
+  }
   f {print}
 ' CHANGELOG.md | grep -c '[^[:space:]]' || true)"
 [ "$SECTION_LINES" -ge 2 ] || die "CHANGELOG 里 $NEW_VERSION 那节几乎是空的（只有 $SECTION_LINES 行有内容），请补充说明"
@@ -56,66 +67,57 @@ ok "CHANGELOG 已写 $NEW_VERSION（$SECTION_LINES 行）"
 echo "${YLW}[3/6]${RST} 检查 git 状态"
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "当前目录不是 git 仓库"
 
-# 清理沙箱/异常退出留下的锁文件，否则后面每一步都会被挡住
-find .git -name '*.lock' -delete 2>/dev/null || true
-
-[ -z "$(git status --porcelain | grep -v '^?? ' || true)" ] \
-  || { git status --short; die "有未提交的改动，请先提交或 stash"; }
+# CHANGELOG 可以是本次待发布改动；其余已跟踪或未跟踪文件一律阻断，避免漏发。
+UNEXPECTED="$(git status --porcelain | awk 'substr($0,4) != "CHANGELOG.md" {print}')"
+[ -z "$UNEXPECTED" ] \
+  || { git status --short; die "除 CHANGELOG.md 外还有未提交或未跟踪的改动，请先处理"; }
 
 BRANCH="$(git branch --show-current)"
-[ "$BRANCH" = "main" ] || echo "${YLW}⚠${RST}  当前在 $BRANCH 分支而不是 main，确认无误再继续"
+[ "$BRANCH" = "main" ] || die "正式发布必须在 main 分支执行；当前是 $BRANCH"
 
+git remote get-url origin >/dev/null 2>&1 || die "没有配置 origin，无法执行正式发布"
+git fetch --quiet --tags origin "$BRANCH" || die "无法刷新 origin/$BRANCH；未确认远端状态，已中止"
 git rev-parse "v$NEW_VERSION" >/dev/null 2>&1 \
-  && die "标签 v$NEW_VERSION 已存在。删除旧标签：git tag -d v$NEW_VERSION && git push origin :v$NEW_VERSION"
-
-if git remote get-url origin >/dev/null 2>&1; then
-  git fetch --quiet origin "$BRANCH" 2>/dev/null || true
-  BEHIND="$(git rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || echo 0)"
-  [ "$BEHIND" = "0" ] || die "本地落后远端 $BEHIND 个提交，请先 git pull"
-fi
-ok "工作区干净，标签可用"
+  && die "标签 v$NEW_VERSION 已存在。请改用更高版本号；不要覆盖已经发布的标签"
+BEHIND="$(git rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || echo 0)"
+[ "$BEHIND" = "0" ] || die "本地落后远端 $BEHIND 个提交，请先 git pull"
+ok "发布改动范围正确，标签可用，远端状态已确认"
 
 # ---------- 4. 测试 ----------
 echo "${YLW}[4/6]${RST} 跑测试"
-PY=python3
-[ -x "venv/bin/python" ] && PY="venv/bin/python"
-[ -x "venv/Scripts/python.exe" ] && PY="venv/Scripts/python.exe"
 "$PY" -m unittest discover -s tests -q || die "测试没过，中止发布"
 "$PY" -m compileall -q src main.py >/dev/null || die "有语法错误，中止发布"
 ok "测试通过"
 
+if $CHECK_ONLY; then
+  echo
+  ok "发布前检查全部通过；没有修改版本号、提交、标签或远端"
+  exit 0
+fi
+
 # ---------- 5. 写版本并提交 ----------
 echo "${YLW}[5/6]${RST} 写入版本号并提交"
+read -r -p "  确认创建 v$NEW_VERSION 发布提交和标签，并推送到 origin？(y/N) " ans
+case "$ans" in
+  [yY]*) ;;
+  *) echo "  已取消；未修改 VERSION、提交或标签。"; exit 0 ;;
+esac
 echo "$NEW_VERSION" > VERSION
-git add VERSION CHANGELOG.md
+git add -- VERSION CHANGELOG.md
 git commit -q -m "发布 v$NEW_VERSION"
 git tag -a "v$NEW_VERSION" -m "v$NEW_VERSION"
 ok "已提交并打标签 v$NEW_VERSION"
 
 # ---------- 6. 推送 ----------
 echo "${YLW}[6/6]${RST} 推送到远端"
-if git remote get-url origin >/dev/null 2>&1; then
-  read -r -p "  确认推送 $BRANCH 和标签 v$NEW_VERSION 到 origin？(y/N) " ans
-  case "$ans" in
-    [yY]*)
-      git push origin "$BRANCH"
-      git push origin "v$NEW_VERSION"
-      ok "已推送"
-      SLUG="$(git remote get-url origin | sed -E 's#.*github\.com[:/]+([^/]+/[^/]+?)(\.git)?$#\1#')"
-      echo
-      echo "${GRN}发布完成：v$NEW_VERSION${RST}"
-      echo
-      echo "  用户端此刻已经能检测到更新了（客户端读仓库里的 VERSION 文件）。"
-      echo
-      echo "  ${DIM}可选：再建一个 GitHub Release，用户就能直接下载 zip：${RST}"
-      echo "    https://github.com/$SLUG/releases/new?tag=v$NEW_VERSION"
-      echo "    ${DIM}标题填 v$NEW_VERSION，正文把 CHANGELOG 里这一节粘进去${RST}"
-      ;;
-    *)
-      echo "  已跳过推送。稍后手动执行："
-      echo "    git push origin $BRANCH && git push origin v$NEW_VERSION"
-      ;;
-  esac
-else
-  echo "  没有配置 origin 远端，跳过推送。"
-fi
+git push --atomic origin "$BRANCH" "v$NEW_VERSION"
+ok "已原子推送分支与标签"
+SLUG="$(git remote get-url origin | sed -E 's#.*github\.com[:/]+([^/]+/[^/]+?)(\.git)?$#\1#')"
+echo
+echo "${GRN}发布完成：v$NEW_VERSION${RST}"
+echo
+echo "  用户端此刻已经能检测到更新了（客户端读仓库里的 VERSION 文件）。"
+echo
+echo "  ${DIM}可选：再建一个 GitHub Release，用户就能直接下载 zip：${RST}"
+echo "    https://github.com/$SLUG/releases/new?tag=v$NEW_VERSION"
+echo "    ${DIM}标题填 v$NEW_VERSION，正文把 CHANGELOG 里这一节粘进去${RST}"

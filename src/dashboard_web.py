@@ -354,7 +354,7 @@ PAGE = """
   <section>
     <h3>⑤ ⚠️ 反向执行（人工干预开关，谨慎使用）</h3>
     <div class="warnbox">
-      开启后：预测计算、波动率归一化、组合风险分配、杠杆/敞口约束、反手确认防抖——全部照常按原逻辑计算，
+      开启后：预测计算、波动率归一化、组合风险分配、杠杆/敞口约束和调仓缓冲——全部照常按原逻辑计算，
       <b>只在最后真正下单这一步，把方向对调</b>：算出来该开多，实际执行开空；算出来该开空，实际执行开多。
       这不代表模型认为反过来更对，纯粹是人工干预开关。<b>务必先在"回测"页用相同标的池验证过"反向执行"确实
       表现更好，再考虑在模拟盘/实盘打开它</b>，否则很可能只是把亏损方向从"做多"换成"做空"而已。
@@ -1578,13 +1578,13 @@ function md2html(md){
   if(!md) return '<span class="hint">（没有提供更新说明）</span>';
   const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   let out = [], inList = false;
-  for(let raw of md.split('\n')){
+  for(let raw of md.split('\\n')){
     let t = esc(raw.trimEnd());
-    if(/^###\s+/.test(t)){ if(inList){out.push('</ul>');inList=false;} out.push('<h3>'+t.replace(/^###\s+/,'')+'</h3>'); continue; }
-    if(/^##\s+/.test(t)){ if(inList){out.push('</ul>');inList=false;} out.push('<h2>'+t.replace(/^##\s+/,'')+'</h2>'); continue; }
-    if(/^\s*[-*]\s+/.test(t)){
+    if(/^###\\s+/.test(t)){ if(inList){out.push('</ul>');inList=false;} out.push('<h3>'+t.replace(/^###\\s+/,'')+'</h3>'); continue; }
+    if(/^##\\s+/.test(t)){ if(inList){out.push('</ul>');inList=false;} out.push('<h2>'+t.replace(/^##\\s+/,'')+'</h2>'); continue; }
+    if(/^\\s*[-*]\\s+/.test(t)){
       if(!inList){ out.push('<ul>'); inList=true; }
-      out.push('<li>'+inline(t.replace(/^\s*[-*]\s+/,''))+'</li>'); continue;
+      out.push('<li>'+inline(t.replace(/^\\s*[-*]\\s+/,''))+'</li>'); continue;
     }
     if(inList){ out.push('</ul>'); inList=false; }
     if(t.trim()==='' ) { out.push(''); continue; }
@@ -1592,10 +1592,10 @@ function md2html(md){
     out.push('<p style="margin:8px 0">'+inline(t)+'</p>');
   }
   if(inList) out.push('</ul>');
-  return out.join('\n');
+  return out.join('\\n');
   function inline(x){
     return x.replace(/`([^`]+)`/g,'<code>$1</code>')
-            .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+            .replace(/\\*\\*([^*]+)\\*\\*/g,'<strong>$1</strong>');
   }
 }
 
@@ -1683,13 +1683,13 @@ function render(r){
 }
 
 async function doUpdate(){
-  if(!confirm('确认更新到 v'+INFO.latest+'？\n\n更新前请确保：\n· 交易引擎已停止\n· 没有未平仓的持仓\n\n更新后需要重启程序。')) return;
+  if(!confirm('确认更新到 v'+INFO.latest+'？\\n\\n更新前请确保：\\n· 交易引擎已停止\\n· 没有未平仓的持仓\\n\\n更新后需要重启程序。')) return;
   const box = document.getElementById('steps-box');
   box.innerHTML = '<div class="hint"><span class="spin"></span>正在更新…</div>';
   const r = await (await fetch('/api/update/perform',{method:'POST'})).json();
   const steps = (r.steps||[]).map(s=>
     '<li>'+(s.ok?'<span class="pos">✔</span>':'<span class="neg">✘</span>')+' <b>'+s.name+'</b>：'
-    + String(s.message).replace(/\n/g,'<br>')+'</li>').join('');
+    + String(s.message).replace(/\\n/g,'<br>')+'</li>').join('');
   box.innerHTML = '<div class="'+(r.ok?'okbox':'errbox')+'" style="margin-top:12px">'+r.message+'</div>'
                 + (steps ? '<ul class="steps">'+steps+'</ul>' : '');
 }

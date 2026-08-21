@@ -533,8 +533,8 @@ class SystematicEngine:
             current.funding_paid = self._book.funding_paid.get(symbol, current.funding_paid)
             self.state.upsert_position(current)
 
-        # ⚠️ 反向执行模式：预测/波动率目标/组合风险分配/约束/防抖全部照常按 target 计算，
-        # 只在这里把最终要执行的名义仓位方向对调，下面的反手确认/no-trade buffer/plan_orders
+        # ⚠️ 反向执行模式：预测/波动率目标/组合风险分配/约束/调仓缓冲全部照常按 target 计算，
+        # 只在这里把最终要执行的名义仓位方向对调，下面的 no-trade buffer/plan_orders
         # 全部在"实际执行方向"这个统一坐标系里工作(current_notional 本来就是真实持仓、
         # 天然就是"执行方向"，所以只需要把 target 也换算到同一坐标系即可)。
         exec_target_notional = -target.target_notional if sys_cfg.invert_direction else target.target_notional
