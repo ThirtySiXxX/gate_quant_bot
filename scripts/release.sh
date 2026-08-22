@@ -38,10 +38,17 @@ CUR_VERSION="$(cat VERSION 2>/dev/null | tr -d '[:space:]')"
 [ -n "$CUR_VERSION" ] || die "读不到 VERSION 文件"
 
 # 用 Python 数字元组比较，兼容 macOS / Linux / Windows Git Bash。
-"$PY" -c 'import sys; a=tuple(map(int,sys.argv[1].split("."))); b=tuple(map(int,sys.argv[2].split("."))); raise SystemExit(0 if b>a else 1)' \
+# 允许相等：VERSION 文件可能已经在本次改动里手工改好了(比如版本号跟着代码一起提交)，
+# 这种情况下脚本只负责打标签和推送。真正防止重复发布的是下面的"标签已存在"检查，
+# 不是这里的版本比较。
+"$PY" -c 'import sys; a=tuple(map(int,sys.argv[1].split("."))); b=tuple(map(int,sys.argv[2].split("."))); raise SystemExit(0 if b>=a else 1)' \
   "$CUR_VERSION" "$NEW_VERSION" \
-  || die "新版本号必须大于当前版本。当前 $CUR_VERSION，你给的 $NEW_VERSION"
-ok "版本号 $CUR_VERSION → $NEW_VERSION"
+  || die "新版本号不能低于当前版本。当前 $CUR_VERSION，你给的 $NEW_VERSION"
+if [ "$CUR_VERSION" = "$NEW_VERSION" ]; then
+  ok "版本号已经是 $NEW_VERSION（VERSION 文件无需改动）"
+else
+  ok "版本号 $CUR_VERSION → $NEW_VERSION"
+fi
 
 # ---------- 2. CHANGELOG ----------
 echo "${YLW}[2/6]${RST} 检查 CHANGELOG"
@@ -102,11 +109,17 @@ case "$ans" in
   [yY]*) ;;
   *) echo "  已取消；未修改 VERSION、提交或标签。"; exit 0 ;;
 esac
-echo "$NEW_VERSION" > VERSION
+printf '%s\n' "$NEW_VERSION" > VERSION
 git add -- VERSION CHANGELOG.md
-git commit -q -m "发布 v$NEW_VERSION"
+# VERSION 和 CHANGELOG 都可能已经随代码一起提交过了，此时没有东西可提交，
+# 直接给当前 HEAD 打标签即可，不要因为"nothing to commit"就中止发布。
+if git diff --cached --quiet; then
+  info "VERSION 与 CHANGELOG 已在历史提交中，跳过发布提交，直接给 HEAD 打标签"
+else
+  git commit -q -m "发布 v$NEW_VERSION"
+fi
 git tag -a "v$NEW_VERSION" -m "v$NEW_VERSION"
-ok "已提交并打标签 v$NEW_VERSION"
+ok "已打标签 v$NEW_VERSION"
 
 # ---------- 6. 推送 ----------
 echo "${YLW}[6/6]${RST} 推送到远端"

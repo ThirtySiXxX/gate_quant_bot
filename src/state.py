@@ -51,6 +51,10 @@ class StateStore:
         self.started_at: float = now_ts()
         self.last_signals: Dict[str, dict] = {}         # symbol -> 最近一次信号快照(供界面展示)
         self.circuit_breaker_active: bool = False
+        # 交易所上存在、但不是本程序开的持仓("SYMBOL|side")；程序默认完全不碰它们
+        self.external_positions: List[str] = []
+        # 标的已从标的池移除、但仍有持仓，等待用户在网页上确认平仓
+        self.pending_close_positions: List[str] = []
         self.logs: List[str] = []                        # 最近N条日志，供界面展示
         self.errors: List[str] = []
         self.engine_running: bool = False
@@ -75,6 +79,8 @@ class StateStore:
             self.day_start_equity = 0.0
             self.day_start_ts = now_ts()
             self.circuit_breaker_active = False
+            self.external_positions = []
+            self.pending_close_positions = []
             self.last_signals = {}
             self.portfolio_snapshot = {}
         self._init_db()
@@ -283,14 +289,18 @@ class StateStore:
             "open_position_count": len(primaries),
             "open_hedge_count": len(hedges),
             "uptime_seconds": now_ts() - self.started_at,
+            "external_position_count": len(self.external_positions),
+            "pending_close_count": len(self.pending_close_positions),
         }
 
     def positions_view(self) -> List[dict]:
         with self._lock:
             positions = list(self.positions.values())
+            pending = set(self.pending_close_positions)
         out = []
         for p in positions:
             out.append({
+                "pending_close": f"{p.symbol}|{p.side}" in pending,
                 "symbol": p.symbol, "side": p.side, "size": p.size,
                 "entry_price": p.entry_price, "mark_price": p.mark_price,
                 "stop_price": p.stop_price, "take_profit_1": p.take_profit_1,

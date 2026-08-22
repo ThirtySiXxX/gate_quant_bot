@@ -244,7 +244,41 @@ class GateExchange:
         acc = self.api.list_futures_accounts(self.settle)
         total = float(acc.total or 0)
         upnl = float(acc.unrealised_pnl or 0)
+        # 统一账户/组合保证金模式下，资金记在统一账户里，合约账户的 total 可能是 0，
+        # 这时要看 cross_margin_balance（已含浮动盈亏，不能再加一次 upnl）
+        if total == 0:
+            cross_bal = float(getattr(acc, "cross_margin_balance", 0) or 0)
+            if cross_bal > 0:
+                return cross_bal
         return total + upnl
+
+    def get_account_detail(self) -> dict:
+        """账户余额明细。专供「测试连接」用——权益显示为 0 时，光看一个数字
+        没法判断是"钱没划到合约账户"还是"账户模式不同导致读错字段"，
+        所以把 Gate 实际返回的各项都摊开。"""
+        acc = self.api.list_futures_accounts(self.settle)
+
+        def f(name):
+            return float(getattr(acc, name, 0) or 0)
+
+        # Gate 的 margin_mode: 0=经典(逐仓/全仓)，1=跨币种保证金，2=组合保证金
+        mode_map = {0: "经典账户", 1: "跨币种保证金", 2: "组合保证金"}
+        mm = getattr(acc, "margin_mode", None)
+        return {
+            "currency": getattr(acc, "currency", self.settle.upper()),
+            "total": f("total"),
+            "available": f("available"),
+            "unrealised_pnl": f("unrealised_pnl"),
+            "position_margin": f("position_margin"),
+            "order_margin": f("order_margin"),
+            "bonus": f("bonus"),
+            "cross_margin_balance": f("cross_margin_balance"),
+            "cross_available": f("cross_available"),
+            "margin_mode": mm,
+            "margin_mode_text": mode_map.get(mm, f"未知({mm})"),
+            "in_dual_mode": bool(getattr(acc, "in_dual_mode", False)),
+            "equity": self.get_account_equity(),
+        }
 
     def get_dual_positions(self) -> List[dict]:
         """返回账户下所有非零仓位（双向模式下每个合约最多两条腿）。"""

@@ -23,6 +23,7 @@ EngineController 负责创建/销毁真正的 SystematicEngine 实例和后台�
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
 import traceback
@@ -35,6 +36,7 @@ import pandas as pd
 from . import carry as carry_mod
 from . import costs
 from . import data_fetcher
+from . import ownership
 from . import portfolio as pf
 from . import trend as trend_mod
 from . import vol as vol_mod
@@ -143,11 +145,35 @@ class SystematicEngine:
         self.exchange = exchange
         self.state = state
         self.cache_dir = cache_dir
+        # 持仓归属记录跟 K线缓存同级，都放在 data/ 下
+        self.data_dir = os.path.dirname(cache_dir.rstrip("/\\")) or "./data"
         self._stop_event = threading.Event()
         self._book = _LocalPositionBook()
+        # 本轮识别出的"外部持仓"(引擎自己没开过的仓)，key 是 "SYMBOL|side"
+        self._external_keys: set = set()
+        # 已经提示过的外部持仓，避免每个tick刷屏
+        self._external_notified: set = set()
+        # 用户在网页上点了"确认平仓"的仓位，下一个tick执行
+        self._close_requests: set = set()
+        self._pending_notified: set = set()
+        self._req_lock = threading.Lock()
 
     def stop(self):
         self._stop_event.set()
+
+    # ------------------------------------------------ 外部持仓 / 待确认平仓的人工操作
+    def adopt_external(self, symbol: str, side: str) -> None:
+        """用户明确同意让策略接管一笔它自己没开过的仓位。
+        只写归属登记，实际接管发生在下一个tick的 _reconcile_positions()。"""
+        ownership.adopt(self.data_dir, self.state.mode, symbol, side)
+        self._external_notified.discard(f"{symbol}|{side}")
+        self.state.add_log(f"{symbol}[{side}] 用户确认纳入策略管理，下一轮开始按策略目标调整", "WARN")
+
+    def request_close(self, symbol: str, side: str) -> None:
+        """用户确认平掉一笔"标的已移除但仍有持仓"的仓位。"""
+        with self._req_lock:
+            self._close_requests.add(f"{symbol}|{side}")
+        self.state.add_log(f"{symbol}[{side}] 用户确认平仓，下一轮执行")
 
     # ---------------------------------------------------------- 主循环
     def run(self):
@@ -197,12 +223,24 @@ class SystematicEngine:
                 f"当日权益亏损达到 {risk_cfg.daily_loss_limit_pct:.2f}%，账户级熔断已触发："
                 "今天禁止开仓/加仓，但仍允许减仓和平仓", "ERROR")
 
-        if not self._reconcile_positions():
+        if not self._reconcile_positions(sys_cfg):
             self.state.add_log("持仓同步失败，本轮跳过信号计算和下单——本地持仓状态此刻不可信，"
                                 "继续交易可能把真实持仓误判成空仓再次开仓，等下一轮同步成功后再继续", "ERROR")
             return
 
         self._handle_orphaned_positions(symbols, sys_cfg, cost_cfg)
+
+        # 有外部持仓的标的整体跳过：双向持仓模式下，策略如果在同一标的同方向开仓会和
+        # 用户自己的仓位合并成一条腿，之后策略平仓就会把用户的仓一起平掉。与其做复杂的
+        # 拆分核算，不如干脆不碰这个标的，等用户明确"纳入策略管理"后再交易。
+        external_symbols = {k.split("|", 1)[0] for k in self._external_keys}
+        blocked = [s for s in symbols if s in external_symbols]
+        if blocked:
+            self.state.add_log(
+                f"以下标的存在非本程序开的持仓，本轮跳过交易：{', '.join(blocked)}", "WARN")
+            symbols = [s for s in symbols if s not in external_symbols]
+            if not symbols:
+                return
 
         signals: Dict[str, pf.InstrumentSignal] = {}
         returns_by_symbol: Dict[str, pd.Series] = {}
@@ -371,7 +409,7 @@ class SystematicEngine:
         return sig, close_cov, contract_info, live_price
 
     # ---------------------------------------------------------- 持仓同步
-    def _reconcile_positions(self) -> bool:
+    def _reconcile_positions(self, sys_cfg: SystematicConfig) -> bool:
         """用交易所返回的真实持仓覆盖本地内存状态(source of truth)，
         既能处理程序重启后的持仓恢复，也能避免本地状态和真实账户不一致。
 
@@ -386,6 +424,12 @@ class SystematicEngine:
             self.state.add_log(f"同步持仓失败: {e}", "ERROR")
             return False
 
+        # 判定归属：交易所只告诉我们"有多少仓"，不会告诉我们"这仓是谁开的"。
+        # 只有登记在 ownership 里的才是引擎自己开的仓，其余一律视为用户自己的外部持仓。
+        owned_keys = ownership.list_owned(self.data_dir, self.state.mode)
+        manage_all = bool(getattr(sys_cfg, "manage_existing_positions", False))
+        external_keys = set()
+
         real_keys = set()
         for p in real_positions:
             symbol, side, size = p["contract"], p["side"], p["size"]
@@ -393,6 +437,10 @@ class SystematicEngine:
                 continue
             key = f"{symbol}|{side}"
             real_keys.add(key)
+            is_external = (not manage_all) and (key not in owned_keys)
+            if is_external:
+                external_keys.add(key)
+            role = "external" if is_external else "primary"
             existing = self.state.get_position(symbol, side)
             if existing:
                 # 同一进程内停止/重开引擎时，StateStore 仍保留持仓成本，
@@ -403,6 +451,8 @@ class SystematicEngine:
                 existing.mark_price = p["mark_price"]
                 existing.entry_price = p["entry_price"]
                 existing.leverage = p.get("leverage", existing.leverage)
+                if existing.role != "hedge":
+                    existing.role = role
                 direction = 1 if side == "long" else -1
                 existing.unrealized_pnl = (p["mark_price"] - p["entry_price"]) * size * existing.quanto_multiplier * direction
                 self.state.upsert_position(existing)
@@ -416,20 +466,42 @@ class SystematicEngine:
                     id=new_id(), symbol=symbol, side=side, size=size,
                     entry_price=p["entry_price"], stop_price=0.0, initial_stop_price=0.0,
                     take_profit_1=0.0, leverage=p.get("leverage", 1.0), quanto_multiplier=qm,
-                    mark_price=p["mark_price"], role="primary",
+                    mark_price=p["mark_price"], role=role,
                 )
                 new_pos.unrealized_pnl = (p["mark_price"] - p["entry_price"]) * size * qm * direction
                 self.state.upsert_position(new_pos)
-                self.state.add_log(f"{symbol}[{side}] 检测到交易所已有持仓(程序重启恢复)，纳入管理")
+                if not is_external:
+                    self.state.add_log(f"{symbol}[{side}] 检测到本程序开过的持仓，已恢复管理(程序重启恢复)")
 
         # 本地记录了、但交易所已经没有的仓位 -> 说明已经在别处被平掉了，清理掉本地记录
         with self.state.with_lock():
-            local_keys = [k for k, p in self.state.positions.items() if p.role == "primary"]
+            local_keys = [k for k, p in self.state.positions.items()
+                          if p.role in ("primary", "external")]
         for key in local_keys:
             if key not in real_keys:
                 symbol, side = key.split("|", 1)
                 self.state.remove_position(symbol, side)
                 self._book.pop(symbol)
+                # 仓位已经不在交易所上了，归属记录也一并清掉，避免残留
+                ownership.unmark(self.data_dir, self.state.mode, symbol, side)
+
+        # 清理归属登记里的僵尸条目：仓位在交易所上已经不存在了(可能是引擎平仓后崩溃没来得及
+        # 注销，也可能是用户在Gate网页手动平的)。不清的话，用户之后在同一标的同方向手动开的新仓
+        # 会被误判成"引擎自己的仓"而遭到接管，正好是这次要修的问题。
+        for stale in owned_keys - real_keys:
+            sym, sd = stale.split("|", 1)
+            ownership.unmark(self.data_dir, self.state.mode, sym, sd)
+
+        self._external_keys = external_keys
+        self.state.external_positions = sorted(external_keys)
+        # 外部持仓只在"第一次发现"时提示一次，避免每个tick刷屏
+        for key in sorted(external_keys - self._external_notified):
+            symbol, side = key.split("|", 1)
+            self.state.add_log(
+                f"{symbol}[{side}] 检测到不是本程序开的持仓，已跳过、不做任何处置。"
+                f"如果想让策略接管它，请在「持仓」区点“纳入策略管理”；"
+                f"在此之前该标的不会被交易。", "WARN")
+        self._external_notified = set(external_keys)
         return True
 
     # ---------------------------------------------------------- 孤儿持仓处理
@@ -437,11 +509,36 @@ class SystematicEngine:
                                     cost_cfg: CostConfig):
         """网页"设置"页移除某个交易标的后，主循环只会遍历当前配置的标的池，
         该标的原有的持仓不会再获得任何目标仓位/退出指令，会无人管理地一直留在交易所上。
-        这里在每轮开始时检测"本地持有仓位、但已经不在当前标的池里"的情况，直接市价平掉，
-        避免仓位失控。这是明确的自动清仓行为，会在日志里清楚标注原因。"""
+        这里在每轮开始时检测"本地持有仓位、但已经不在当前标的池里"的情况。
+
+        默认**不再自动平仓**，只登记成待处理项并在仪表盘上提示，等用户点确认再平。
+        自动平仓意味着程序会在用户毫不知情的时候把一笔仓位市价卖掉，
+        哪怕这笔仓位确实是程序自己开的，也应该由人来决定何时了结。
+        想恢复旧的自动行为，可以把 auto_close_removed_symbols 设为 true。
+
+        注意 list_primaries() 只返回 role="primary"，外部持仓(role="external")天然被排除在外，
+        任何情况下都不会被这里平掉。"""
         symbol_set = set(symbols)
         orphans = [p for p in self.state.list_primaries() if p.symbol not in symbol_set]
+
+        pending, to_close = [], []
+        with self._req_lock:
+            requested = set(self._close_requests)
         for pos in orphans:
+            if sys_cfg.auto_close_removed_symbols or f"{pos.symbol}|{pos.side}" in requested:
+                to_close.append(pos)
+            else:
+                pending.append(f"{pos.symbol}|{pos.side}")
+
+        self.state.pending_close_positions = sorted(pending)
+        for key in sorted(set(pending) - self._pending_notified):
+            symbol, side = key.split("|", 1)
+            self.state.add_log(
+                f"{symbol}[{side}] 已从标的池移除但仍有持仓，不会再收到任何调仓/退出指令。"
+                f"程序不会自动平掉它——请在「持仓」区点“确认平仓”，或把该标的加回标的池。", "WARN")
+        self._pending_notified = set(pending)
+
+        for pos in to_close:
             symbol, side = pos.symbol, pos.side
             try:
                 contract_info = self.exchange.get_contract(symbol)
@@ -456,15 +553,13 @@ class SystematicEngine:
                 # 这样 Gate 返回的 left 才能与请求张数直接对应，可靠识别部分成交。
                 result = self.exchange.reduce_dual(symbol, side, int(pos.size))
             except Exception as e:
-                self.state.add_log(f"{symbol}[{side}] 已从标的池移除但仍有持仓，自动清仓失败: {e}，"
-                                    f"请尽快去 Gate 官网手动处理，避免仓位无人管理", "ERROR")
+                self.state.add_log(f"{symbol}[{side}] 清仓失败: {e}，请到 Gate 官网手动处理", "ERROR")
                 continue
 
             left = abs(float(result.get("left", 0.0) or 0.0))
             filled_qty = max(0, pos.size - int(round(left)))
             if filled_qty <= 0:
-                self.state.add_log(f"{symbol}[{side}] 已从标的池移除，尝试自动清仓但未成交(left={left})，"
-                                    f"下一轮会重试", "WARN")
+                self.state.add_log(f"{symbol}[{side}] 清仓下单未成交(left={left})，下一轮会重试", "WARN")
                 continue
 
             fill_price = result.get("fill_price") or pos.mark_price
@@ -487,16 +582,19 @@ class SystematicEngine:
                 entry_price=pos.entry_price, exit_price=fill_price,
                 open_time=pos.open_time, close_time=now_ts(),
                 pnl=net, gross_pnl=gross, fees_paid=fee_share, funding_paid=funding_share,
-                exit_reason="标的已从配置移除，自动清仓", role="primary",
+                exit_reason="标的已从配置移除，确认清仓", role="primary",
             )
             self.state.record_trade(trade)
             self.state.add_log(
-                f"{symbol}[{side}] 已从标的池移除，自动清仓{filled_qty}张 @≈{fill_price:.4f} 净盈亏={net:.2f}"
+                f"{symbol}[{side}] 已从标的池移除，清仓{filled_qty}张 @≈{fill_price:.4f} 净盈亏={net:.2f}"
                 + ("（部分成交，剩余下一轮继续处理）" if filled_qty < pos.size else "")
             )
             if is_full_close:
                 self.state.remove_position(symbol, side)
                 self._book.pop(symbol)
+                ownership.unmark(self.data_dir, self.state.mode, symbol, side)
+                with self._req_lock:
+                    self._close_requests.discard(f"{symbol}|{side}")
             else:
                 self._book.fees_paid[symbol] = max(fee_so_far - entry_fee_share, 0.0)
                 self._book.funding_paid[symbol] = funding_so_far - funding_share
@@ -633,6 +731,10 @@ class SystematicEngine:
                 fee = costs.taker_fee(notional, taker_fee_rate)
 
             if action == "open":
+                # 先登记归属：这笔仓位是引擎自己开的，重启后不能被误判成"用户的外部持仓"。
+                # 必须在更新本地状态之前写，万一进程在这中间挂掉，宁可多记也不能漏记——
+                # 漏记会让程序重启后放着自己的仓不管，那比误记严重得多。
+                ownership.mark_owned(self.data_dir, self.state.mode, symbol, side)
                 self._book.add_fee(symbol, fee)
                 existing = self.state.get_position(symbol, side)
                 if existing:
@@ -700,6 +802,7 @@ class SystematicEngine:
                 if is_full_close:
                     self.state.remove_position(symbol, side)
                     self._book.pop(symbol)
+                    ownership.unmark(self.data_dir, self.state.mode, symbol, side)
                 elif pos:
                     pos.size -= filled_qty
                     pos.fees_paid = self._book.fees_paid.get(symbol, 0.0)

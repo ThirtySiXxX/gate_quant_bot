@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from flask import Flask, jsonify, render_template_string, request
 
@@ -21,6 +22,42 @@ from .engine import EngineController
 from .state import StateStore
 
 logger = logging.getLogger("bot.web")
+
+
+
+def _friendly_api_error(e) -> str:
+    """把 Gate 的原始异常翻译成"发生了什么 + 该怎么办"。
+
+    原样抛给用户的话，真正有用的那一句会淹没在一堆 HTTP header 里。
+    这几类错误都有稳定特征，识别出来直接给操作步骤。
+    """
+    label = (getattr(e, "label", "") or "").upper()
+    body = str(getattr(e, "message", "") or getattr(e, "body", "") or e)
+    raw = f"{label} {body}"
+
+    m = re.search(r"Request IP not in whitelist:\s*([0-9a-fA-F:.]+)", body)
+    if m or "not in whitelist" in body.lower():
+        ip = m.group(1) if m else "（见下方原始信息）"
+        return (f"IP 白名单拦截。\n"
+                f"你当前的公网出口 IP 是 {ip}，不在这个 API Key 的白名单里。\n"
+                f"解决：登录 Gate → API 管理 → 编辑该 Key → 把 {ip} 加入 IP 白名单，几分钟后生效。\n"
+                f"注意家用宽带 IP 通常会变，变了需要重新添加；挂 VPN 时要填代理的出口 IP。\n"
+                f"（原始信息：{raw[:160]}）")
+    if label in ("INVALID_KEY", "INVALID_SIGNATURE") or "invalid key" in body.lower() \
+            or "signature mismatch" in body.lower():
+        return ("API Key 或 Secret 不正确。\n"
+                "解决：确认复制时没有多余空格/换行；Secret 只在创建时显示一次，"
+                "记不清就重新创建一个 Key。\n"
+                f"（原始信息：{raw[:160]}）")
+    if "expired" in body.lower() or "timestamp" in body.lower():
+        return ("请求时间戳超出允许范围，通常是本机系统时间不准。\n"
+                "解决：打开系统的「自动设置时间」，或手动校时后重试。\n"
+                f"（原始信息：{raw[:160]}）")
+    if label == "FORBIDDEN" or "permission" in body.lower():
+        return ("权限不足。这个 Key 可能没有勾选「合约交易」或「读取」权限。\n"
+                "解决：Gate → API 管理 → 编辑该 Key → 勾选 合约交易(Futures Trade) 和 读取(Read)。\n"
+                f"（原始信息：{raw[:160]}）")
+    return str(e)[:400]
 
 
 # ============================================================ 共享 UI 片段
@@ -58,6 +95,8 @@ BASE_CSS = """
   .card .label { font-size:11.5px; color:var(--muted); }
   .card .value { font-size:19px; font-weight:600; margin-top:3px; }
   .pos { color:var(--pos); } .neg { color:var(--neg); } .warn { color:var(--warn); }
+  .warn-box { background:#3a2a0d; border:1px solid #6b4f14; color:#f0c674; border-radius:8px;
+              padding:10px 12px; margin-bottom:10px; font-size:13px; line-height:1.6; }
   table { width:100%; border-collapse:collapse; font-size:13px; }
   th,td { border-bottom:1px solid #21262d; padding:7px 8px; text-align:left; }
   th { color:var(--muted); font-weight:500; font-size:12px; }
@@ -231,9 +270,11 @@ PAGE = """
 
   <section><h3>组合层概览</h3><div class="grid" id="portfolio-grid"></div></section>
 
-  <section><h3>当前持仓</h3><table id="positions"><thead><tr>
+  <section><h3>当前持仓</h3>
+    <div id="ownership-notice" style="display:none;"></div>
+    <table id="positions"><thead><tr>
     <th>币种</th><th>方向</th><th>张数</th><th>开仓价</th><th>现价</th>
-    <th>浮动盈亏</th><th>持仓时长</th></tr></thead><tbody></tbody></table></section>
+    <th>浮动盈亏</th><th>持仓时长</th><th>归属</th><th>操作</th></tr></thead><tbody></tbody></table></section>
 
   <section><h3>标的信号（趋势 / Carry / 合成预测）</h3><table id="signals"><thead><tr>
     <th>币种</th><th>方向</th><th>信号强度</th><th>合成预测(F)</th><th>明细</th></tr></thead><tbody></tbody></table></section>
@@ -429,11 +470,14 @@ const SYS_ADV_LABELS = {
   depth_guard_enabled: "启用开/加仓盘口保护", depth_levels: "盘口估算档数",
   max_entry_spread_bps: "开/加仓最大点差(bps)", max_entry_slippage_bps: "开/加仓最大预估冲击(bps)",
   min_depth_fill_ratio: "盘口最小覆盖率(1=完整覆盖)",
+  manage_existing_positions: "⚠️ 接管非本程序开的已有持仓(默认关闭)",
+  auto_close_removed_symbols: "⚠️ 标的移出标的池后自动平掉遗留持仓(默认关闭)",
 };
 const SYS_ADV_TYPES = {
   short_trend_interval: 'text', main_trend_interval: 'text',
   regime_interval: 'text', covariance_interval: 'text',
   adaptive_risk_enabled: 'bool', depth_guard_enabled: 'bool',
+  manage_existing_positions: 'bool', auto_close_removed_symbols: 'bool',
 };
 const COST_LABELS = {
   taker_fee_rate: "吃单费率(填你账户真实值，0.0005=0.05%)",
@@ -457,6 +501,24 @@ function toast(msg, ok){
   el.textContent = msg; el.className = 'toast ' + (ok ? 'ok':'err');
   el.style.display = 'block';
   setTimeout(()=>{ el.style.display='none'; }, 4500);
+}
+
+async function adoptPos(symbol, side){
+  const d = side==='long'?'多':'空';
+  if(!confirm(`确认让策略接管 ${symbol} 的${d}仓？\n\n接管后这笔仓位会按策略目标被调整、减仓甚至反向平掉，\n不再由你手动控制。`)) return;
+  const r = await (await fetch('/api/positions/adopt',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol,side})})).json();
+  toast(r.message, r.ok);
+  refresh();
+}
+
+async function confirmClosePos(symbol, side){
+  const d = side==='long'?'多':'空';
+  if(!confirm(`确认市价平掉 ${symbol} 的${d}仓？\n\n该标的已不在标的池中，平掉后不会再自动开回来。`)) return;
+  const r = await (await fetch('/api/positions/confirm-close',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol,side})})).json();
+  toast(r.message, r.ok);
+  refresh();
 }
 
 function buildFields(containerId, obj, labels, types){
@@ -882,12 +944,37 @@ async function refresh(){
     <div class="card"><div class="label">上次组合计算时间</div><div class="value" style="font-size:13px;">${fmtTs(p.ts)}</div></div>
   `;
 
+  const posList = data.positions || [];
+  const externals = posList.filter(p => p.role === 'external');
+  const pendings = posList.filter(p => p.pending_close);
+  const notice = document.getElementById('ownership-notice');
+  let noticeHtml = '';
+  if(externals.length){
+    noticeHtml += `<div class="warn-box">⚠️ 检测到 <b>${externals.length}</b> 笔<b>不是本程序开的持仓</b>。
+      程序不会平掉、也不会调整它们，并且会<b>跳过这些标的的全部交易</b>，直到你明确处理。
+      要让策略接管，请在下方点“纳入策略管理”。</div>`;
+  }
+  if(pendings.length){
+    noticeHtml += `<div class="warn-box">⚠️ 有 <b>${pendings.length}</b> 笔持仓的标的已从标的池移除，
+      不会再收到任何调仓/退出指令。程序<b>不会自动平掉它</b>——请点“确认平仓”，或把该标的加回标的池。</div>`;
+  }
+  notice.innerHTML = noticeHtml;
+  notice.style.display = noticeHtml ? 'block' : 'none';
+
   const posBody = document.querySelector('#positions tbody');
-  posBody.innerHTML = (data.positions||[]).map(p => `<tr>
+  posBody.innerHTML = posList.map(p => {
+    const ext = p.role === 'external';
+    const own = ext ? '<span class="neg">外部持仓</span>'
+              : (p.pending_close ? '<span class="neg">待确认平仓</span>' : '策略管理中');
+    let act = '—';
+    if(ext) act = `<button class="btn" onclick="adoptPos('${p.symbol}','${p.side}')">纳入策略管理</button>`;
+    else if(p.pending_close) act = `<button class="btn danger" onclick="confirmClosePos('${p.symbol}','${p.side}')">确认平仓</button>`;
+    return `<tr>
     <td>${p.symbol}</td><td>${p.side==='long'?'多':'空'}</td><td>${p.size}</td>
     <td>${fmtNum(p.entry_price,4)}</td><td>${fmtNum(p.mark_price,4)}</td>
     <td class="${cls(p.unrealized_pnl)}">${fmtNum(p.unrealized_pnl)}</td>
-    <td>${fmtSecs(p.holding_seconds)}</td></tr>`).join('');
+    <td>${fmtSecs(p.holding_seconds)}</td><td>${own}</td><td>${act}</td></tr>`;
+  }).join('');
 
   const sigBody = document.querySelector('#signals tbody');
   sigBody.innerHTML = (data.signals||[]).map(sg => `<tr>
@@ -1329,7 +1416,8 @@ MANUAL_PAGE = """
   <div id="mode-warn"></div>
   <div class="warnbox">
     这个页面用来验证 API 连通性和下单参数换算，<b>完全独立于策略引擎</b>——它不会写入策略持仓账本，
-    策略引擎下一轮同步时会把这里开出来的仓位当成"外部已有持仓"接管。测试完请记得手动平掉。
+    这里开出来的仓位会被策略引擎标记为<b>外部持仓</b>：引擎不会平掉、也不会调整它，
+    并且会跳过该标的的全部交易，直到你在「控制台」里点“纳入策略管理”。测试完请记得手动平掉。
     <br>「仓位价值」填的是<b>不含杠杆的名义价值</b>：填 1000 就是开 1000 USDT 的仓，
     杠杆只决定占用多少保证金（1000÷杠杆），不改变仓位大小。
   </div>
@@ -2013,6 +2101,34 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
             "portfolio": portfolio,
         })
 
+    def _position_action(handler_name: str, ok_msg: str):
+        """/api/positions/* 两个动作的公共部分：校验参数、确认这笔仓位确实存在、
+        再把动作转交给正在运行的引擎实例。都是"改变程序会不会动用户仓位"的操作，
+        必须显式校验，不能拿着前端传来的字符串直接执行。"""
+        data = request.get_json(force=True) or {}
+        symbol = (data.get("symbol") or "").strip().upper()
+        side = (data.get("side") or "").strip().lower()
+        if not symbol or side not in ("long", "short"):
+            return jsonify({"ok": False, "message": "参数不完整：需要 symbol 和 side(long/short)"})
+        engine = getattr(controller, "engine", None)
+        if not controller.is_running() or engine is None:
+            return jsonify({"ok": False, "message": "引擎未运行，请先启动引擎再执行该操作"})
+        if not state.get_position(symbol, side):
+            return jsonify({"ok": False, "message": f"未找到 {symbol} 的{side}仓，请刷新后重试"})
+        getattr(engine, handler_name)(symbol, side)
+        return jsonify({"ok": True, "message": ok_msg.format(symbol=symbol,
+                                                             side="多" if side == "long" else "空")})
+
+    @app.route("/api/positions/adopt", methods=["POST"])
+    def api_positions_adopt():
+        return _position_action(
+            "adopt_external", "{symbol} {side}仓已纳入策略管理，下一轮开始按策略目标调整")
+
+    @app.route("/api/positions/confirm-close", methods=["POST"])
+    def api_positions_confirm_close():
+        return _position_action(
+            "request_close", "{symbol} {side}仓已排入平仓队列，下一轮执行")
+
     @app.route("/api/config", methods=["GET"])
     def api_config_get():
         cfg = config_store.snapshot()
@@ -2069,10 +2185,30 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
             from .exchange_gate import GateExchange
             settle = config_store.snapshot().get("settle", "usdt")
             ex = GateExchange(creds.api_key, creds.api_secret, settle=settle, host=creds.api_host)
-            equity = ex.get_account_equity()
-            return jsonify({"ok": True, "message": f"连接成功，账户权益 {equity:.2f} USDT"})
+            d = ex.get_account_detail()
+            cur = d["currency"]
+            msg = (f"连接成功 · {d['margin_mode_text']} · 权益 {d['equity']:.2f} {cur}"
+                    f"（可用 {d['available']:.2f}／仓位保证金 {d['position_margin']:.2f}"
+                    f"／浮动盈亏 {d['unrealised_pnl']:+.2f}）")
+            if d["equity"] <= 0:
+                # 权益为0时光报一个数字没用，直接把最可能的原因和排查顺序给出来
+                hints = [
+                    f"合约账户（{settle.upper()} 本位）里没有资金。",
+                    "最常见原因：钱还在**现货/理财账户**里没划转过来 —— "
+                    "Gate 的现货和合约是两个独立钱包，需要在官网「资产 → 划转」把 USDT "
+                    "从现货划到「USDT 合约」账户。",
+                ]
+                if d["margin_mode"] not in (0, None):
+                    hints.append(f"另外你的账户是「{d['margin_mode_text']}」模式，资金可能记在统一账户下，"
+                                  f"当前读到 cross_margin_balance={d['cross_margin_balance']:.2f}。")
+                hints.append(f"也请确认结算币种设置正确：当前配置 settle={settle}，"
+                              f"如果你用的是币本位合约需要改成对应币种。")
+                return jsonify({"ok": True, "warn": True,
+                                 "message": msg + "\n\n⚠️ " + "\n⚠️ ".join(hints),
+                                 "detail": d})
+            return jsonify({"ok": True, "message": msg, "detail": d})
         except Exception as e:
-            return jsonify({"ok": False, "message": f"连接失败: {e}"})
+            return jsonify({"ok": False, "message": f"连接失败: {_friendly_api_error(e)}"})
 
     @app.route("/api/engine/start", methods=["POST"])
     def engine_start():
