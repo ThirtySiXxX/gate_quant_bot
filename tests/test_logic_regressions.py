@@ -12,7 +12,7 @@ import pandas as pd
 from src import data_fetcher, updater
 from src.backtest import SymbolBacktestInputs, run_portfolio_backtest
 from src.config import CostConfig, SystematicConfig
-from src.exchange_gate import estimate_book_fill
+from src.exchange_gate import GateExchange, estimate_book_fill
 from src.models import Position
 from src.portfolio import (
     InstrumentSignal,
@@ -37,6 +37,19 @@ class UpdaterVersionTests(unittest.TestCase):
         section = updater.extract_changelog_section(text, "1.0.0")
         self.assertIn("right", section)
         self.assertNotIn("wrong", section)
+
+    def test_http_get_uses_certifi_ca_bundle(self):
+        response = unittest.mock.MagicMock()
+        response.__enter__.return_value.read.return_value = b"ok"
+        context = object()
+        with (
+            patch("src.updater.ssl.create_default_context", return_value=context) as make_context,
+            patch("src.updater.urllib.request.urlopen", return_value=response) as urlopen,
+        ):
+            self.assertEqual(updater._http_get("https://example.test/version"), "ok")
+
+        make_context.assert_called_once_with(cafile=updater.certifi.where())
+        self.assertIs(urlopen.call_args.kwargs["context"], context)
 
 
 class PortfolioConvictionTests(unittest.TestCase):
@@ -156,6 +169,30 @@ class OrderBookGuardTests(unittest.TestCase):
         )
         self.assertAlmostEqual(result["fill_ratio"], 0.25)
         self.assertAlmostEqual(result["available_qty"], 1.0)
+
+    def test_gate_order_book_uses_lowercase_with_id_value(self):
+        class Api:
+            def __init__(self):
+                self.kwargs = None
+
+            def list_futures_order_book(self, settle, contract, **kwargs):
+                self.kwargs = kwargs
+                return SimpleNamespace(
+                    asks=[SimpleNamespace(p="101", s=2)],
+                    bids=[SimpleNamespace(p="99", s=2)],
+                    id=123,
+                    current=456,
+                )
+
+        exchange = GateExchange.__new__(GateExchange)
+        exchange.api = Api()
+        exchange.settle = "usdt"
+        result = exchange.estimate_market_order(
+            "BTC_USDT", "long", qty=1, is_entry=True, levels=20
+        )
+
+        self.assertEqual(exchange.api.kwargs["with_id"], "true")
+        self.assertEqual(result["book_id"], 123)
 
 
 class FundingHistoryLimitTests(unittest.TestCase):

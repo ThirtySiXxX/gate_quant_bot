@@ -204,8 +204,11 @@ class GateExchange:
 
         这是执行保护，不参与趋势或Carry方向判断。开多/平空需要吃 asks，开空/平多吃 bids。
         """
+        # gate-api 7.2.100 会把 Python bool 序列化成大写的 ``True``，而 Gate
+        # 服务端只接受查询字符串 ``true`` / ``false``。显式传小写字符串，既保留
+        # 盘口更新 ID，又避免 INVALID_PARAM_VALUE 导致所有开/加仓被深度保护挡住。
         book = self.api.list_futures_order_book(
-            self.settle, contract, interval="0", limit=max(1, min(int(levels), 50)), with_id=True)
+            self.settle, contract, interval="0", limit=max(1, min(int(levels), 50)), with_id="true")
         asks = [(x.p, x.s) for x in (book.asks or [])]
         bids = [(x.p, x.s) for x in (book.bids or [])]
         is_buy = (side == "long") if is_entry else (side == "short")

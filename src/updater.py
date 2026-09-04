@@ -24,12 +24,15 @@ import logging
 import os
 import re
 import shutil
+import ssl
 import subprocess
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
+
+import certifi
 
 logger = logging.getLogger("bot.updater")
 
@@ -149,7 +152,11 @@ def _http_get(url: str) -> Optional[str]:
         "Accept": "application/vnd.github+json",
     })
     try:
-        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as r:
+        # python.org 的 macOS Python 可能没有安装系统 CA 链，直接 urlopen 会报
+        # CERTIFICATE_VERIFY_FAILED。使用 certifi 自带的 Mozilla CA bundle，仍然
+        # 保持完整 HTTPS 证书校验，不能用未验证 context 绕过安全检查。
+        context = ssl.create_default_context(cafile=certifi.where())
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT, context=context) as r:
             return r.read().decode("utf-8", errors="replace")
     except (urllib.error.URLError, OSError, ValueError) as e:
         logger.info("更新检查请求失败 %s: %s", url, e)
