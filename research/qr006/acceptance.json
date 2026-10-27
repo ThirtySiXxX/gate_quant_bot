@@ -1,0 +1,787 @@
+{
+  "schema_version": 1,
+  "protocol_id": "qf006-proposal-r1",
+  "state": "READY_FOR_QD_REVIEW",
+  "all_values_synthetic": true,
+  "not_generated_market_labels": true,
+  "clock_note": "Human-readable UTC clock literals below are fixture input specifications, to be parsed into integer microseconds by a future test; source precision remains explicit",
+  "cases": [
+    {
+      "id": "QF006-A01",
+      "name": "positive taker fee",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "q": 10,
+        "m": "0.001",
+        "fill_price": "49900",
+        "fee_fraction": "0.0005"
+      },
+      "expected": {
+        "notional_usdt": "499",
+        "fee_cost_usdt": "0.2495",
+        "fee_cash_usdt": "-0.2495"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A02",
+      "name": "signed maker rebate, synthetic not current fee",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "q": 10,
+        "m": "0.001",
+        "fill_price": "49900",
+        "fee_fraction": "-0.0001",
+        "role": "maker",
+        "role_basis": "synthetic"
+      },
+      "expected": {
+        "fee_cost_usdt": "-0.0499",
+        "fee_cash_usdt": "0.0499"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A03",
+      "name": "no fill no fee",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "order_contracts": 100,
+        "filled_contracts": 0,
+        "status": "cancelled"
+      },
+      "expected": {
+        "execution_fee_usdt": "0",
+        "episode_target": null
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A04",
+      "name": "partial fills charged once",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "fills_contracts": [
+          100,
+          25
+        ],
+        "remaining_unfilled": 75,
+        "m": "0.001",
+        "price": "2000",
+        "fee_fraction": "0.0005"
+      },
+      "expected": {
+        "fill_fees": [
+          "0.1",
+          "0.025"
+        ],
+        "total_fee_usdt": "0.125"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A05",
+      "name": "funding signs",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "abs_Q": 10,
+        "m": "0.001",
+        "mark": "50000",
+        "rate_abs": "0.0001"
+      },
+      "expected": {
+        "long_positive_rate_cash": "-0.05",
+        "long_negative_rate_cash": "0.05",
+        "short_positive_rate_cash": "0.05",
+        "short_negative_rate_cash": "-0.05",
+        "zero_rate_cash": "0"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A06",
+      "name": "no eligible snapshot",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "holding": "01:00 to02:00",
+        "snapshots": [
+          "00:00",
+          "08:00",
+          "16:00"
+        ]
+      },
+      "expected": {
+        "funding_cash_usdt": "0",
+        "elapsed_time_proration_forbidden": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A07",
+      "name": "snapshot differs from source and booking",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "snapshot": "08:00:00",
+        "close": "08:00:01",
+        "source_t": "08:00:03",
+        "booking": "08:00:05",
+        "snapshot_Q": 10,
+        "m": "0.001",
+        "mark": "50000",
+        "rate": "0.0001",
+        "current_Q_at_booking": 0
+      },
+      "expected": {
+        "old_episode_funding_cash": "-0.05",
+        "snapshot_quantity": 10,
+        "current_quantity_not_used": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A08",
+      "name": "exact same-time missing priority",
+      "evidence_mode": "HISTORICAL_EXACT",
+      "input": {
+        "snapshot": "08:00:00",
+        "fill": "08:00:00",
+        "exchange_sequence": null
+      },
+      "expected": {
+        "target": null
+      },
+      "reject_reason": "AMBIGUOUS_SNAPSHOT_SEQUENCE",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A09",
+      "name": "declared snapshot-before-fill boundary",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "policy": "snapshot_before_fills",
+        "independent_trajectories": true,
+        "old_long_closed_at_S": {
+          "initial_long": 10,
+          "close_at_S": 10
+        },
+        "flat_new_open_at_S": {
+          "initial_long": 0,
+          "open_at_S": 10
+        },
+        "partial_open_from_flat": {
+          "initial_long": 0,
+          "open_before_S": 4,
+          "open_at_S": 6
+        },
+        "partial_reduction_from_long": {
+          "initial_long": 10,
+          "reduce_before_S": 4,
+          "reduce_at_S": 6
+        }
+      },
+      "expected": {
+        "old_close_eligible_Q": 10,
+        "new_open_eligible_Q": 0,
+        "partial_open_eligible_Q": 4,
+        "partial_reduction_eligible_Q": 6,
+        "opposite_order_is_separate_stress": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A10",
+      "name": "reversal separates episodes",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "old_long": 10,
+        "new_short": 6,
+        "snapshot_before_reversal": true,
+        "m": "0.001",
+        "mark": "50000",
+        "rate": "0.0001",
+        "reversal_fill_price": "50000",
+        "fee_fraction": "0.0005"
+      },
+      "expected": {
+        "old_funding_cash": "-0.05",
+        "new_funding_cash": "0",
+        "total_fill_fee": "0.4",
+        "close_fee": "0.25",
+        "open_fee": "0.15"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A11",
+      "name": "late booking full reconciliation QD6 fixture",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "C0": "10000",
+        "q": 10,
+        "m": "0.001",
+        "entry": "49900",
+        "exit": "50100",
+        "fee_fraction": "0.0005",
+        "mark": "50000",
+        "rate": "0.0001",
+        "close_before_booking": true
+      },
+      "expected": {
+        "entry_fee": "0.2495",
+        "exit_fee": "0.2505",
+        "gross_pnl": "2",
+        "funding_cash": "-0.05",
+        "net_pnl": "1.45",
+        "post_entry_C": "9999.7505",
+        "snapshot_U": "1",
+        "snapshot_L": "0.05",
+        "snapshot_E": "10000.7005",
+        "closed_C": "10001.5",
+        "closed_L": "0.05",
+        "closed_E": "10001.45",
+        "booked_C": "10001.45",
+        "booked_L": "0",
+        "booked_E": "10001.45"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A12",
+      "name": "partial reduction allocates fixed snapshot entitlement",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "same_as": "QF006-A11",
+        "closed_contracts": 6,
+        "remaining_contracts": 4,
+        "both_exit_prices": "50100"
+      },
+      "expected": {
+        "funding_cost_closed": "0.03",
+        "funding_cost_remaining": "0.02",
+        "entry_fee_closed": "0.1497",
+        "exit_fee_closed": "0.1503",
+        "closed_slice_net": "0.87",
+        "remaining_slice_net": "0.58",
+        "combined_net": "1.45",
+        "training_episode_count": 1
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A13",
+      "name": "duplicates and conflicts",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "same_event_same_revision_same_bytes": "delivered_twice",
+        "same_id_revision_conflicting_rate": "separate_negative_fixture"
+      },
+      "expected": {
+        "duplicate_extra_cash": "0",
+        "conflict_is_quarantined": true
+      },
+      "reject_reason": "CONFLICTING_EVENT_REVISION for conflicting fixture",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A14",
+      "name": "late authoritative correction",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "previous_funding_cash": "-0.05",
+        "revised_total": "-0.1",
+        "revision_seen": "10:00",
+        "original_booking": "08:00:03"
+      },
+      "expected": {
+        "appended_delta": "-0.05",
+        "original_entry_preserved": true,
+        "as_known_before_10_unchanged": true,
+        "label_known_at_at_least": "10:00"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A15",
+      "name": "no exact mark",
+      "evidence_mode": "HISTORICAL_EXACT",
+      "input": {
+        "trade_close": "50000",
+        "settlement_mark": null,
+        "snapshot_quantity": 10
+      },
+      "expected": {
+        "funding_amount": null,
+        "target": null
+      },
+      "reject_reason": "MISSING_SETTLEMENT_MARK",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A16",
+      "name": "current metadata is not past rule",
+      "evidence_mode": "HISTORICAL_EXACT",
+      "input": {
+        "observed_at": "2026-10-28",
+        "valid_from": null,
+        "snapshot_at": "2023-01-01"
+      },
+      "expected": {
+        "historical_rule_accepted": false
+      },
+      "reject_reason": "UNPROVEN_RULE_APPLICABILITY",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A17",
+      "name": "wrong units and numeric types",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "negative_fixture_values": [
+          "quantity true",
+          "quantity 1.5 contracts",
+          "price -1",
+          "rate 0.05% instead of fraction",
+          "volume USDT used as contracts",
+          "NaN",
+          "fee_currency POINT relabeled USDT"
+        ]
+      },
+      "expected": {
+        "all_invalid_variants_rejected": true
+      },
+      "reject_reason": "UNIT_OR_NUMERIC_CONTRACT_VIOLATION",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A18",
+      "name": "feature availability exact boundary",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "feature_available_at_us": 1000000,
+        "decisions_us": [
+          999999,
+          1000000
+        ],
+        "availability_basis": "declared synthetic"
+      },
+      "expected": {
+        "usable": [
+          false,
+          true
+        ]
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A19",
+      "name": "final-rate hindsight isolated from decisions",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "snapshot": "08:00",
+        "final_rate_available": "08:00:03",
+        "decision": "08:00:01",
+        "eligible_Q_known": true,
+        "amount_known": false
+      },
+      "expected": {
+        "decision_funding_value": null,
+        "pending_amount": null,
+        "increase_risk_supported": false,
+        "posthoc_final_rate_not_in_decision": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A20",
+      "name": "synthetic budget is not actual margin",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "C": "1000",
+        "A": "20",
+        "L": "30",
+        "reserved_margin": "100",
+        "reserved_fees": "5",
+        "U": "0",
+        "independent_positive_U": "50",
+        "independent_negative_U": "-40",
+        "independent_unknown_U": null,
+        "reserves_exclude_already_counted_losses_liabilities_and_posted_fees": true
+      },
+      "expected": {
+        "simulated_budget": "865",
+        "actual_available_margin": null,
+        "after_payable_booking_C": "970",
+        "after_booking_L": "0",
+        "after_payable_booking_budget": "865",
+        "receivable_not_spendable_until_booked": true,
+        "positive_U_budget": "865",
+        "negative_U_budget": "825",
+        "negative_U_after_payable_booking_budget": "825",
+        "unknown_U_budget": null,
+        "unknown_U_increase_risk_supported": false
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A21",
+      "name": "known-time later than position-flat",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "natural_exit": "08:00:01",
+        "booking": "08:00:03",
+        "booking_known": "08:00:04",
+        "completeness_watermark": "08:00:04",
+        "cutoff_for_negative_fixture": "08:00:02"
+      },
+      "expected": {
+        "label_end": "08:00:01",
+        "label_known_at": "08:00:04",
+        "at_cutoff_target": null,
+        "at_cutoff_status": "immature"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A22",
+      "name": "strict mature boundary plus purge",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "B_seconds": 200000,
+        "label_end_seconds": 100000,
+        "known_times_seconds": [
+          113600,
+          113599
+        ],
+        "embargo_seconds": 86400,
+        "overlap_for_additional_negative_fixture": true,
+        "seconds_to_us_multiplier": 1000000,
+        "B_us": 200000000000,
+        "label_end_us": 100000000000,
+        "known_times_us": [
+          113600000000,
+          113599000000
+        ],
+        "embargo_us": 86400000000,
+        "known_one_microsecond_before_boundary_us": 113599999999
+      },
+      "expected": {
+        "mature_without_overlap": [
+          false,
+          true
+        ],
+        "any_overlap_rejected": true,
+        "seconds_and_microseconds_results_equal": true,
+        "one_microsecond_before_boundary_mature": true,
+        "comparing_us_times_with_86400_unconverted_forbidden": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A23",
+      "name": "fold-crossing and terminal censoring",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "episode_open_before_fold": true,
+        "natural_exit_after_fold": true,
+        "forced_terminal_close_in_negative_fixture": true
+      },
+      "expected": {
+        "no_state_reset": true,
+        "cannot_train_previous_fold": true,
+        "terminal_target": null,
+        "terminal_status": "censored"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A24",
+      "name": "adds and gross-entry denominator",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "q_entry": 10,
+        "p_entry": "100",
+        "q_add": 10,
+        "p_add": "200",
+        "q_exit": 20,
+        "p_exit": "250",
+        "m": "0.1",
+        "fee_fraction": "0.0005",
+        "funding_events": []
+      },
+      "expected": {
+        "gross_entry_notional_sum": "300",
+        "initial_entry_notional": "100",
+        "gross_pnl": "200",
+        "total_fee": "0.4",
+        "net_pnl": "199.6",
+        "target_numerator": "199.6",
+        "target_denominator": "300",
+        "target_quantized_12dp": "0.665333333333",
+        "episode_rows": 1
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A25",
+      "name": "selection is not an all-opportunities target",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "proposal": "unfilled or rejected",
+        "realized_episode": null
+      },
+      "expected": {
+        "target": null,
+        "selection_status_retained": true,
+        "zero_return_label_forbidden": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A26",
+      "name": "entry filtering requires full path",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "initial_cash": "100",
+        "required_ticket_budget": "80",
+        "first_filled_trade_loss": "50",
+        "second_proposal_budget": "80",
+        "counterfactual": "skip first entry"
+      },
+      "expected": {
+        "original_second_entry": "blocked at cash50",
+        "counterfactual_second_entry": "eligible at cash100",
+        "old_ledger_row_deletion_is_valid_comparison": false,
+        "full_state_replay_required": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A27",
+      "name": "native compatibility",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "payload_namespace": "qf006",
+        "native_consumer_adapter": null
+      },
+      "expected": {
+        "native_accepts_payload": false,
+        "native_schema_files_changed": false
+      },
+      "reject_reason": "UNSUPPORTED_NAMESPACE",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A28",
+      "name": "training and test exposure",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "fitted_preprocessing_on_validation": "negative fixture",
+        "already_viewed_2026_as_untouched": "negative fixture",
+        "no_human_training_approval": true
+      },
+      "expected": {
+        "all_rejected": true,
+        "fit_count": 0
+      },
+      "reject_reason": "LEAKAGE_OR_PERMISSION_GATE",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A29",
+      "name": "unresolved book or completeness is not zero",
+      "evidence_mode": "HISTORICAL_EXACT",
+      "input": {
+        "position_closed": true,
+        "booking_at": null,
+        "finality_watermark": null
+      },
+      "expected": {
+        "label_known_at": null,
+        "target": null,
+        "pending_record_retained": true
+      },
+      "reject_reason": "UNKNOWN_BOOKING_OR_FINALITY",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A30",
+      "name": "declared mark proxy freshness",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "proxy_kind": "last available MARK",
+        "age_seconds": [
+          59,
+          61
+        ],
+        "max_age_seconds": 60,
+        "trade_price_substitution": "negative fixture"
+      },
+      "expected": {
+        "proxy_accepted": [
+          true,
+          false
+        ],
+        "exact_claim": false,
+        "trade_substitution_into_primary": false
+      },
+      "reject_reason": "STALE_VALUATION or WRONG_PRICE_KIND in negative fixtures",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A31",
+      "name": "contract conversion missing",
+      "evidence_mode": "HISTORICAL_EXACT",
+      "input": {
+        "old_multiplier": "0.001",
+        "new_multiplier": "0.01",
+        "lot_conversion_rule": null
+      },
+      "expected": {
+        "lot_pnl_and_label": null
+      },
+      "reject_reason": "MISSING_CONTRACT_CONVERSION",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A32",
+      "name": "effective time is not publication knowledge",
+      "evidence_mode": "HISTORICAL_EXACT",
+      "input": {
+        "rule_effective": "2025-08-29 10:00 UTC",
+        "displayed_publication": "2025-08-29 11:30 UTC",
+        "decision": "2025-08-29 10:30 UTC",
+        "other_earlier_availability_evidence": null
+      },
+      "expected": {
+        "earlier_strategy_knowledge_proven": false,
+        "retrospective_rule_applicability_separate": true
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A33",
+      "name": "source seconds are not inferred snapshot",
+      "evidence_mode": "HISTORICAL_EXACT",
+      "input": {
+        "source_t": "08:00:03",
+        "calendar_mapping_evidence": null
+      },
+      "expected": {
+        "snapshot_at": null,
+        "source_t_preserved": "08:00:03",
+        "floor_to_8h_allowed": false
+      },
+      "reject_reason": "UNRESOLVED_SNAPSHOT_MAPPING",
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QF006-A34",
+      "name": "adverse slippage counted once",
+      "evidence_mode": "SCENARIO",
+      "input": {
+        "reference_entry": "100",
+        "fill_entry": "101",
+        "exit": "110",
+        "base_quantity": "1",
+        "fees": "0",
+        "funding": "0"
+      },
+      "expected": {
+        "gross_and_net_pnl": "9",
+        "additional_slippage_subtraction": "0"
+      },
+      "reject_reason": null,
+      "producer_owner": "QD",
+      "independent_check_owner": "QR",
+      "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
+    }
+  ]
+}
