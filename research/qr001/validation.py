@@ -138,28 +138,32 @@ def metrics(y, p):
 
 def paired_daily_losses(predictions):
     rows = predictions.copy()
+    if rows.duplicated(['symbol', 'feature_time']).any():
+        raise ValueError('duplicate instrument-time prediction')
     rows['day'] = rows.feature_time // 86400
     rows['difference'] = rows.calibrated_log_loss - rows.matched_raw_log_loss
     # Preserve all cross-asset dependence: one equal-asset aggregate per UTC day.
-    per_asset = rows.groupby(['fold', 'day', 'symbol']).difference.mean()
-    return per_asset.groupby(['fold', 'day']).mean().reset_index()
+    # A fold boundary inside a day must not split or overweight that UTC day.
+    per_asset = rows.groupby(['day', 'symbol']).difference.mean()
+    return per_asset.groupby('day').mean().reset_index()
 
 
 def block_interval(daily, block_days=7, repetitions=1000, seed=17):
     if block_days < 1 or repetitions < 1 or daily.empty:
         raise ValueError('invalid bootstrap input')
+    ordered = daily.sort_values('day')
+    if (ordered.day.duplicated().any() or (ordered.day.diff().dropna() != 1).any()
+            or not np.isfinite(ordered[['day', 'difference']].to_numpy()).all()):
+        raise ValueError('bootstrap requires finite, unique, consecutive UTC days')
     rng = np.random.default_rng(seed)
-    folds = [g.sort_values('day').difference.to_numpy() for _, g in daily.groupby('fold')]
+    values = ordered.difference.to_numpy()
+    n = len(values)
     draws = []
     for _ in range(repetitions):
-        selected = []
-        for values in folds:
-            n = len(values)
-            starts = rng.integers(0, n, size=int(np.ceil(n / block_days)))
-            index = ((starts[:, None] + np.arange(block_days)) % n).ravel()[:n]
-            selected.append(values[index])
-        draws.append(float(np.concatenate(selected).mean()))
+        starts = rng.integers(0, n, size=int(np.ceil(n / block_days)))
+        index = ((starts[:, None] + np.arange(block_days)) % n).ravel()[:n]
+        draws.append(float(values[index].mean()))
     return dict(mean_difference=float(daily.difference.mean()),
                 lower_95=float(np.quantile(draws, .025)), upper_95=float(np.quantile(draws, .975)),
                 day_clusters=len(daily), block_days=block_days, repetitions=repetitions,
-                method='paired equal-asset UTC-day circular blocks, resampled within each fold')
+                method='paired equal-asset unique UTC-day circular blocks across the evaluation sequence')

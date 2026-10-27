@@ -104,3 +104,20 @@ class ResearchValidationTests(unittest.TestCase):
         self.assertEqual(a, block_interval(duplicated, 7, 100, 17))
         self.assertEqual(a['day_clusters'], 20)
         self.assertLess(a['lower_95'], a['upper_95'])
+
+    def test_fold_boundary_does_not_duplicate_or_overweight_utc_day(self):
+        rows = pd.DataFrame(dict(fold=[1, 1, 2, 2, 2],
+            symbol=['ETH', 'ETH', 'ETH', 'BTC', 'BTC'],
+            feature_time=[0, 3600, 7200, 7200, 86400],
+            matched_raw_log_loss=[1.] * 5, calibrated_log_loss=[1., 1., 4., 4., 2.]))
+        daily = paired_daily_losses(rows)
+        self.assertEqual(daily.day.tolist(), [0, 1])
+        # Day zero: ETH mean=1, BTC mean=3, equal-asset aggregate=2.
+        np.testing.assert_allclose(daily.difference, [2., 1.])
+        pd.testing.assert_frame_equal(daily, paired_daily_losses(rows.assign(fold=1)))
+        self.assertEqual(block_interval(daily, 1, 100)['day_clusters'], 2)
+        with self.assertRaisesRegex(ValueError, 'duplicate'):
+            paired_daily_losses(pd.concat([rows, rows.iloc[:1]]))
+        for bad in [pd.concat([daily, daily.iloc[:1]]), daily.assign(day=[0, 2])]:
+            with self.assertRaisesRegex(ValueError, 'unique, consecutive'):
+                block_interval(bad)
