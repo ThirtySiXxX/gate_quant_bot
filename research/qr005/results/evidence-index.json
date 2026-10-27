@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "scope": "QF-QR-005 final independent data acceptance; not training approval",
+  "validation_code_commit": "0173d7cb9ada739c071d0d16695e48a1a8e6925e",
+  "diagnostics_code_commit": "9fde55daef707037f5c2a1091ce994e01fab5655",
+  "spec_commit": "e1b459434e32e585e8a57d46b4bfedb0e79d7f67",
+  "qd_candidate_commit": "ba1a507d8b265f29f355a015d5f189178361e611",
+  "files": {
+    "research/qr005/assess_inputs.py": {
+      "sha256": "6f1195a8cefb5163654801b2fcf02fcf9b0b18b85e1751885de069d2d13fdeb5",
+      "bytes": 3726
+    },
+    "research/qr005/data-acceptance.json": {
+      "sha256": "a516075cd2baced65dd659b520c6495d2cdf9d539ff8a1bfa2570c93ccfb63a4",
+      "bytes": 8573
+    },
+    "research/qr005/data-protocol.md": {
+      "sha256": "f6b2042a4f38546ab47b4d6f992e161dbde5e2ea47aeef7a451d0a0e7b40d57d",
+      "bytes": 10466
+    },
+    "research/qr005/replay-compatibility.md": {
+      "sha256": "2d5941a8d6d19faf6cdca6f8b1fcb2cac19cd9ec64e08ad4ccd8b959f565f32f",
+      "bytes": 4275
+    },
+    "research/qr005/results/candidate-independent-validation.json": {
+      "sha256": "9b9afa4d8365f4bb7046af25705d3e96874b20875c47e333cfa13f7bed928cca",
+      "bytes": 4748
+    },
+    "research/qr005/results/candidate-native-diagnostics.json": {
+      "sha256": "83bd21f092700719158081dcba4e9cccd7068e87daf19870f5da0bc4b92b3e13",
+      "bytes": 11858
+    },
+    "research/qr005/results/reproducibility-and-preservation.json": {
+      "sha256": "d2d13a79ddb6b49d5303184b03629f466eedd092452b07ec935c4e64959cfe23",
+      "bytes": 2141
+    },
+    "research/qr005/results/v1-preservation-before-build.json": {
+      "sha256": "fbb9bf6a8e3a939124ac062035e765e7b38149aae4d780a57eef4907c50dffed",
+      "bytes": 22976
+    },
+    "research/qr005/results/verification-runs.json": {
+      "sha256": "364ae703282a5951b6f65abde1d497250cd091aba552653dde45bed44dd2c081",
+      "bytes": 2521
+    },
+    "research/qr005/validate_history.py": {
+      "sha256": "0d97b71553a8024cae7f0473235095632f7345cbf040b0be3de4b95998fa8e59",
+      "bytes": 16174
+    },
+    "tests/qr_research/test_qr005_history.py": {
+      "sha256": "02f11fd52a4afead8f0d6badc2c30d1b7914e95ef4027735dfc8cdebe1f8e512",
+      "bytes": 13889
+    },
+    "docs/agent-reports/qr/QF-QR-005-data-readiness.md": {
+      "sha256": "ad82e92e14fe1e08a7841bff69a76ca10d862e780823cd77fdfc867fbdb398f9",
+      "bytes": 11498
+    }
+  },
+  "data_status": "PASS_WITH_LIMITATIONS",
+  "training_status": "NOT_READY",
+  "baseline_replays": 0,
+  "model_fits": 0
+}

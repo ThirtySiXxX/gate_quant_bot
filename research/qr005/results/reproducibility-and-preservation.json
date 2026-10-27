@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "candidate_manifest_sha256": "cbe95174e6eca704353a06f89e68294ec58a81cc6a59f370bb424c51d1177808",
+  "reproduction_manifest_sha256": "7a415b384cbfb3ea865ff189c4e735cfb4bdea417ed4ad79f5eaf5a6abb58772",
+  "different_manifest_fields": [
+    "created_at"
+  ],
+  "identical_normalized_and_lineage_files": {
+    "normalized/BTC_USDT-3600s.csv": "e292642723c6f76e97c7565e4b7ed97a76cf382402a3dcad22a7d902ff069789",
+    "normalized/BTC_USDT-funding.csv": "d962b994e147a791ee148ae07b0884b0bb8430bc9e4a4b72b48ee51a6782f9a4",
+    "normalized/BTC_USDT-14400s.csv": "c700b9c3b19a2636a541e71b08582fab5d255959de32d737ef5660972bf6788b",
+    "lineage/BTC_USDT-14400s.jsonl": "7effddd1d16038520f25ccea56ee5f60de4d46113818595e446cec53030c3239",
+    "normalized/BTC_USDT-86400s.csv": "a4801120408ea72342ad48e6c49fa38e5507970bd0ecf8ac2af35ac40effc330",
+    "lineage/BTC_USDT-86400s.jsonl": "5a33f5536c3179c813b3d2ce33453c7a7fd28b792a72de6e298c569ba5b76f89",
+    "normalized/ETH_USDT-3600s.csv": "b258376d40a44fb5f3a5cfeddbdc3710a39f360f57881e52af6c497d7690acfc",
+    "normalized/ETH_USDT-funding.csv": "b4a0bc1adce31a6d23c381a92ced45f72062cecd27101a236d52e240eaf60fcd",
+    "normalized/ETH_USDT-14400s.csv": "1c216dcce2c265ff33aabd6027e3ac2b86af1eb2ee5fc16075a28b37764bfdf9",
+    "lineage/ETH_USDT-14400s.jsonl": "7effddd1d16038520f25ccea56ee5f60de4d46113818595e446cec53030c3239",
+    "normalized/ETH_USDT-86400s.csv": "4379de5cc217764a59f6a3bf315e0ca5f2924e7424e484c35926466b686a15d3",
+    "lineage/ETH_USDT-86400s.jsonl": "5a33f5536c3179c813b3d2ce33453c7a7fd28b792a72de6e298c569ba5b76f89"
+  },
+  "all_234_base_files_unchanged": true,
+  "base_file_count": 234,
+  "qd_code_commit": "710fbca77f677cfcdcd4fbe10d319f63483f48b9",
+  "qd_builder_sha256": "7f2e0a11b96c97d833437b2c4dcdf20337a56e2199b05f4e153ac5ec92263de5",
+  "qd_handoff_commit": "ba1a507d8b265f29f355a015d5f189178361e611",
+  "source_head": "cae0d2395adf2cd3905e41cb1c16748c8247c32c",
+  "source_staged_diff_sha256": "c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce",
+  "new_network_attempts": 0,
+  "baseline_replays": 0,
+  "model_fits": 0
+}

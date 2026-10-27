@@ -1,0 +1,166 @@
+{
+  "schema_version": 2,
+  "protocol_id": "canonical_hourly_v2-r1",
+  "spec_sha256": "a516075cd2baced65dd659b520c6495d2cdf9d539ff8a1bfa2570c93ccfb63a4",
+  "manifest_sha256": "cbe95174e6eca704353a06f89e68294ec58a81cc6a59f370bb424c51d1177808",
+  "data_status": "PASS_WITH_LIMITATIONS",
+  "training_status": "NOT_READY",
+  "baseline_replays": 0,
+  "model_fits": 0,
+  "issues": [],
+  "provenance": {
+    "v1_structural_status": "FAIL",
+    "preserved_native_issues": [
+      "BTC_USDT 14400: 188 cross-interval mismatches require source review",
+      "BTC_USDT 86400: 148 cross-interval mismatches require source review",
+      "ETH_USDT 14400: 1393 cross-interval mismatches require source review",
+      "ETH_USDT 86400: 339 cross-interval mismatches require source review"
+    ],
+    "raw_files_verified": 210,
+    "raw_coverage": {
+      "eligible_unique_origins": 94886,
+      "normalized_unique_origins": 94886,
+      "omitted_origins": [],
+      "duplicate_origins": 28,
+      "boundary_excluded_raw_rows": {}
+    },
+    "new_raw_integrity_issues": []
+  },
+  "checks": {
+    "derived_rows": {
+      "BTC_USDT:14400": 8372,
+      "BTC_USDT:86400": 1395,
+      "ETH_USDT:14400": 8372,
+      "ETH_USDT:86400": 1395
+    },
+    "exact_child_lineage_rows": 19534,
+    "withheld_buckets": [
+      {
+        "symbol": "BTC_USDT",
+        "interval_seconds": 14400,
+        "timestamp": 1793088000,
+        "end_exclusive": 1793102400,
+        "available_parent_rows": [
+          33489
+        ],
+        "unavailable_hours": 3,
+        "reason": "cutoff_before_bucket_close"
+      },
+      {
+        "symbol": "BTC_USDT",
+        "interval_seconds": 86400,
+        "timestamp": 1793059200,
+        "end_exclusive": 1793145600,
+        "available_parent_rows": [
+          33481,
+          33482,
+          33483,
+          33484,
+          33485,
+          33486,
+          33487,
+          33488,
+          33489
+        ],
+        "unavailable_hours": 15,
+        "reason": "cutoff_before_bucket_close"
+      },
+      {
+        "symbol": "ETH_USDT",
+        "interval_seconds": 14400,
+        "timestamp": 1793088000,
+        "end_exclusive": 1793102400,
+        "available_parent_rows": [
+          33489
+        ],
+        "unavailable_hours": 3,
+        "reason": "cutoff_before_bucket_close"
+      },
+      {
+        "symbol": "ETH_USDT",
+        "interval_seconds": 86400,
+        "timestamp": 1793059200,
+        "end_exclusive": 1793145600,
+        "available_parent_rows": [
+          33481,
+          33482,
+          33483,
+          33484,
+          33485,
+          33486,
+          33487,
+          33488,
+          33489
+        ],
+        "unavailable_hours": 15,
+        "reason": "cutoff_before_bucket_close"
+      }
+    ],
+    "preserved_native_disagreement_counts": {
+      "BTC_USDT:14400": 188,
+      "BTC_USDT:86400": 148,
+      "ETH_USDT:14400": 1393,
+      "ETH_USDT:86400": 339
+    },
+    "funding": {
+      "BTC_USDT": {
+        "rows": 4187,
+        "nominal_reference_seconds": 28800,
+        "offset_seconds_counts": {
+          "0": 3625,
+          "1": 458,
+          "2": 89,
+          "3": 15
+        },
+        "inter_event_seconds_counts": {
+          "28799": 21,
+          "28800": 4145,
+          "28801": 19,
+          "28802": 1
+        },
+        "missing_reference_slots": [],
+        "duplicate_reference_slots": [],
+        "authoritative_historical_schedule_proven": false
+      },
+      "ETH_USDT": {
+        "rows": 4187,
+        "nominal_reference_seconds": 28800,
+        "offset_seconds_counts": {
+          "0": 3626,
+          "1": 192,
+          "2": 261,
+          "3": 56,
+          "4": 34,
+          "5": 18
+        },
+        "inter_event_seconds_counts": {
+          "28797": 2,
+          "28798": 1,
+          "28799": 51,
+          "28800": 4077,
+          "28801": 52,
+          "28802": 2,
+          "28803": 1
+        },
+        "missing_reference_slots": [],
+        "duplicate_reference_slots": [],
+        "authoritative_historical_schedule_proven": false
+      }
+    },
+    "candidate_files": 8,
+    "network_attempts": 0,
+    "model_fits": 0
+  },
+  "limitations": [
+    "Single frozen official hourly stream is an explicit research basis, not proven historical truth",
+    "Idealized availability, not observed arrival or historical revision vintage",
+    "Funding schedule and historical contract metadata remain unproven",
+    "Native prorated funding cashflow cannot represent exact settlement events",
+    "No unseen prospective holdout or training confirmation"
+  ],
+  "remaining_gates": [
+    "explicit replay funding/cost compatibility and label assessment",
+    "prospective holdout, economic effect and precision plan",
+    "fresh human permission before training"
+  ]
+}
