@@ -1,0 +1,189 @@
+{
+  "schema_version": 2,
+  "protocol_id": "canonical_hourly_v2-r1",
+  "state": "DRAFT_FOR_QD_REVIEW",
+  "owner": "QR semantics; QD producer; QR independent review",
+  "scope": {
+    "venue": "gate",
+    "market": "linear_perpetual",
+    "settle": "usdt",
+    "symbols": [
+      "BTC_USDT",
+      "ETH_USDT"
+    ],
+    "price_type": "trade",
+    "intervals_seconds": {
+      "1h": 3600,
+      "4h": 14400,
+      "1d": 86400
+    },
+    "funding_type": "settled_funding_applies",
+    "volume_unit": "contracts",
+    "price_unit": "USDT_per_base"
+  },
+  "calendar": {
+    "raw_start": 1672531200,
+    "raw_end_exclusive": 1793091600,
+    "baseline_start": 1704067200,
+    "warmup_end_exclusive": 1704067200,
+    "seed_train_end_exclusive": 1735689600,
+    "validation_edges": [
+      1735689600,
+      1751328000,
+      1767225600
+    ],
+    "retrospective_audit_end_exclusive": 1793091600,
+    "new_holdout": "NONE_RESERVED; freeze prospectively before any model fitting; no new acquisition beyond cutoff",
+    "already_viewed": "All QR001/QR003 windows; all newly expanded data is development/retrospective for this phase"
+  },
+  "network_attempts": 0,
+  "model_fits": 0,
+  "base": {
+    "dataset_id": "gate-btc-eth-history-qd004-v1",
+    "manifest_sha256": "5f5319175c42ba4a82e25ca128ac58ae3b71be4b82911fd7935cfa3678407cfd",
+    "candidate_reviewed_sha256": "16035c8f9065ea79e4c572ce444b7af6a6b038f2526e5bda9273bf6580274dac",
+    "input_sha256": {
+      "normalized/BTC_USDT-3600s.csv": "e292642723c6f76e97c7565e4b7ed97a76cf382402a3dcad22a7d902ff069789",
+      "normalized/BTC_USDT-14400s.csv": "063fe0aa8856063bb545e3a02ba207b898af94f7ff7e53e6c5745e2f9cc82b8a",
+      "normalized/BTC_USDT-86400s.csv": "371d46b75a0f25c53a9bc1a552a13e5c799ec7b005d7b0e9c3f62bf0278c8935",
+      "normalized/BTC_USDT-funding.csv": "d962b994e147a791ee148ae07b0884b0bb8430bc9e4a4b72b48ee51a6782f9a4",
+      "normalized/ETH_USDT-3600s.csv": "b258376d40a44fb5f3a5cfeddbdc3710a39f360f57881e52af6c497d7690acfc",
+      "normalized/ETH_USDT-14400s.csv": "04be5a081dd08aeb49088b8541fa5ab056cde7f6f2eb249e9bbaa049f29aa7a4",
+      "normalized/ETH_USDT-86400s.csv": "24af98956640bd404f36745340bab14bd8abfdfe292d7e0d705c579bee7b0ba1",
+      "normalized/ETH_USDT-funding.csv": "b4a0bc1adce31a6d23c381a92ced45f72062cecd27101a236d52e240eaf60fcd",
+      "normalized/BTC_USDT-contract_metadata.json": "7229c49ebc14517c966231937beb7d4dbd4f5bc77f68eec56262e493c3be5971",
+      "normalized/BTC_USDT-risk_tiers.json": "0780285e7d9ec5a0ac24416d68f334d919f957f0d8d54f7976e1e7bab09598d4",
+      "normalized/ETH_USDT-contract_metadata.json": "8efbb2d53678dde6741ffb5540bba5e60b24777d45d61c71dd6b10245bb99ea5",
+      "normalized/ETH_USDT-risk_tiers.json": "ddbfa356a08b21a14e306b2a74abef1850d9c198862478f79c5b9f998eb7edbb"
+    },
+    "expected_v1_issues": [
+      "BTC_USDT 14400: 188 cross-interval mismatches require source review",
+      "BTC_USDT 86400: 148 cross-interval mismatches require source review",
+      "ETH_USDT 14400: 1393 cross-interval mismatches require source review",
+      "ETH_USDT 86400: 339 cross-interval mismatches require source review"
+    ]
+  },
+  "evidence_sha256": {
+    "research/qr004/data-acceptance.json": "6e3d4fb99c62d0658fcb3bb779a35b072d65b29df399e9b287fa315943687862",
+    "research/qr004/validate_history.py": "a8b90118cc164143cfb30d01d46f93d7ad46a297dbb1c481ee24687afe5a18ee",
+    "research/qr004/results/evidence-index.json": "ab1b7fc2102390bf3e28599382c6bdf9de829b8172a60010368045aa34333461",
+    "research/qr004/results/source-check-independent-review.json": "00c406699c397635fb7244ad29127d0cf302b44d608af8d3bdd4ae8cf3043d64"
+  },
+  "normalization": {
+    "candle_columns": [
+      "timestamp",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "available_at",
+      "source_id",
+      "source_row"
+    ],
+    "funding_columns": [
+      "timestamp",
+      "funding_rate",
+      "available_at",
+      "source_id",
+      "source_row"
+    ],
+    "timestamp_unit": "UTC_unix_seconds",
+    "candle_timestamp": "open",
+    "candle_available_at": "open_plus_interval_proxy_not_observed_arrival",
+    "funding_timestamp": "actual_source_settlement_timestamp_unrounded",
+    "funding_available_at": "source_settlement_proxy_not_observed_arrival",
+    "exact_duplicate_policy": "deduplicate identical parsed numeric records, retain all source references in lineage/quarantine ledger",
+    "conflict_policy": "quarantine all conflicting versions; never overwrite/select last or average",
+    "gap_policy": "report every missing interval; no forward_fill/interpolate/zero funding; no silent date shrink",
+    "outlier_policy": "flag for source verification; never clip real crashes",
+    "cross_interval_policy": "derive_coarse_from_frozen_hourly_in_v2; native_coarse_preserved_diagnostic_only",
+    "boundary_policy": "exclude candles whose close exceeds cutoff and funding at/after cutoff"
+  },
+  "derived_columns": [
+    "timestamp",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "available_at"
+  ],
+  "derivation": {
+    "base_seconds": 3600,
+    "derived_seconds": [
+      14400,
+      86400
+    ],
+    "alignment": "UTC_epoch",
+    "numeric": "Decimal_exact",
+    "ohlcv": [
+      "first_open",
+      "maximum_high",
+      "minimum_low",
+      "last_close",
+      "sum_contracts"
+    ],
+    "availability": "max_child_available_at_equals_bucket_end",
+    "partial_interior": "reject",
+    "unclosed_tail": "withhold_record_parent_rows_no_hourly_drop",
+    "native_coarse": "diagnostic_only_never_fallback"
+  },
+  "manifest_required": [
+    "schema_version",
+    "protocol_id",
+    "dataset_id",
+    "created_at",
+    "spec_sha256",
+    "base_manifest_sha256",
+    "symbols",
+    "data_range",
+    "files",
+    "withheld_buckets",
+    "network_attempts",
+    "model_fits",
+    "limitations"
+  ],
+  "file_required": [
+    "symbol",
+    "kind",
+    "interval_seconds",
+    "path",
+    "sha256",
+    "rows",
+    "columns",
+    "units",
+    "availability_basis",
+    "derivation"
+  ],
+  "funding": {
+    "method": "copy_frozen_bytes",
+    "nominal_grid_seconds": 28800,
+    "grid_is_diagnostic_only": true,
+    "round_or_fill": false,
+    "consumer_cost_semantics": "native_prorated_elapsed_not_actual_event_debit",
+    "baseline_gate": "counterpart compatibility review required; no hidden economic assumption change"
+  },
+  "readiness": {
+    "G1_raw": "all raw/source/status/hash/decompression/row integrity checks pass; failures retained",
+    "G2_normalized": "exact universe/product/units/closed-time/cutoff; zero unresolved conflicts or missing required intervals; proven lineage; actual funding plus declared interval semantics; realistic arrival caveat",
+    "G3_events": "full warmup, permitted two baselines, label quality and maturity checked; each asset has identifiable nonconstant targets/features and multiple separated market periods; report cross-asset/time clusters and uncertainty; bars/branches never independent label counts",
+    "G4_protocol": "proposed chronological splits, six named features, one fixed linear model and train-prior documented; no fit; prospective holdout and economic effect/precision acceptance remain explicit decisions at training confirmation",
+    "G5_permission": "fresh direct user confirmation immediately before training",
+    "ready_status": "READY_FOR_USER_TRAINING_CONFIRMATION means G1-G3 supported and G4 proposal reviewable, not generalization proven; final G4 choices and fresh G5 required before any fit",
+    "otherwise": "NOT_READY with exact missing coverage or evidence, never grow search until profitability"
+  },
+  "budget": {
+    "downloads": 0,
+    "model_fits": 0,
+    "max_baseline_replays_per_coin": 1,
+    "replay_gate": "data acceptance AND explicit native funding compatibility finding; otherwise zero"
+  },
+  "limitations": [
+    "Single frozen official hourly stream is an explicit research basis, not proven historical truth",
+    "Idealized availability, not observed arrival or historical revision vintage",
+    "Funding schedule and historical contract metadata remain unproven",
+    "Native prorated funding cashflow cannot represent exact settlement events",
+    "No unseen prospective holdout or training confirmation"
+  ]
+}
