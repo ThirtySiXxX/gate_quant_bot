@@ -1,0 +1,29 @@
+{
+  "purpose": "Concrete synthetic fixture records only; not collected market observations",
+  "values_order": {"candles": ["timestamp", "open", "high", "low", "close", "volume"], "funding": ["timestamp", "funding_rate"]},
+  "numeric_representation": "Exact decimal strings, compared numerically, never rounded for membership",
+  "duplicate": {
+    "symbol": "BTC_USDT", "kind": "candles", "interval_seconds": 3600, "timestamp": 1672531200,
+    "reason": "exact_numeric_duplicate", "resolution": "deduplicated_identical",
+    "values": ["1672531200", "100", "200", "1", "100", "10"],
+    "references": [{"source_id": "fixture-a", "source_row": 1}, {"source_id": "fixture-b", "source_row": 1}],
+    "destination": {"path": "normalized/BTC_USDT-3600s.csv", "source_id": "fixture-a", "source_row": 1}
+  },
+  "conflict": {
+    "symbol": "BTC_USDT", "kind": "candles", "interval_seconds": 3600, "timestamp": 1672531200,
+    "reason": "conflicting_numeric_records", "resolution": "quarantined_all_versions",
+    "variants": [
+      {"values": ["1672531200", "100", "200", "1", "100", "10"], "references": [{"source_id": "fixture-a", "source_row": 1}, {"source_id": "fixture-b", "source_row": 1}]},
+      {"values": ["1672531200", "100", "200", "1", "101", "10"], "references": [{"source_id": "fixture-c", "source_row": 1}]}
+    ],
+    "destination": "quarantine/conflicts.json"
+  },
+  "exclusion": {
+    "source_id": "fixture-d", "source_row": 3,
+    "values": ["1672542000", "100", "101", "99", "100", "10"],
+    "reason": "outside_global_closed_range", "resolution": "retained_exclusion",
+    "destination": "quarantine/exclusions.json"
+  },
+  "header_rule": "source_row=1 is first parsed data row after an optional recognized header",
+  "funding_example": {"source_id": "fixture-f", "source_row": 1, "values": ["1672531209", "0.00010"], "available_at": "1672531209"}
+}

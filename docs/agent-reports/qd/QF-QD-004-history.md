@@ -202,3 +202,43 @@ train, restore scheduling, merge/push or operate the app/NAS under this discover
 dispatch. Exhausted probe budget is 12/12; further probing belongs to a separately
 bounded handoff. Full history, historical tiers and genuine unseen data readiness
 have not been established by these samples.
+
+## Authorized intake continuation (2026-10-28, in progress)
+
+Dispatch `QF-DISPATCH-20261028-QD004-INTAKE-1` authorizes the finite implementation
+and public acquisition stage. Earlier discovery-only stop instructions above are
+historical. QR frozen spec commit is `b573d5278b2bf74770b996bc03ba11fe2cb19a08`,
+JSON SHA256 `6e3d4fb99c62d0658fcb3bb779a35b072d65b29df399e9b287fa315943687862`;
+exact committed bytes were checked before implementation. Current parent e68813c.
+
+The new exclusive QD paths are history_intake.py, results metadata, its dedicated
+test file, this report, and ignored research/.data/qd004/. Source-probes remain
+intact. Initial adapter/API example: `research/qd004/results/intake-contract.json`.
+Frozen route `hybrid_native_v1`: monthly native 1h/funding_applies through 202609,
+native REST 4h/day throughout, October REST tails with September overlaps, four
+current-only metadata snapshots. Source route is fixed before any new response
+or return inspection. Budget includes 12 prior attempts and their 10076 bytes.
+Only one collector runs, sequentially, with no automatic redirect handling.
+
+Candidate dataset root is
+`/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1`.
+Root manifest/normalized keys follow the frozen JSON exactly; source_row is one
+based after any recognized CSV header. All duplicate references and conflicting
+variants are retained separately. No runtime/schema migration, replay or fitting.
+Collection status, final counts/hashes, tests and unresolved quality issues will
+be recorded below after execution. Training remains NOT_READY pending QR G1–G4
+review and fresh direct user G5 permission.
+
+Implementation pre-collection verification: 17 offline intake fixtures passed;
+full socket-blocked suite **214 passed** (10.972 seconds), frontend **8 groups
+passed**, whitespace checks passed. Fixtures cover persistent attempt/retry
+budgets, access barriers, bounded/partial responses, gzip CRC/EOF/expansion,
+one-based header mapping and volume meaning, invalid/boundary row retention,
+all-version conflict quarantine, complete duplicate lineage, unrounded funding
+seconds offsets, dropped-funding detection even with altered manifest hashes,
+authentic extreme retention, current-only metadata and exclusive collector lease.
+Concrete synthetic duplicate/conflict/exclusion examples are published in
+`research/qd004/results/lineage-examples.json`; QR accepted the initial adapter.
+The pinned plan has **210 new requests**, expected **222 total** with the 12 probes
+and no retries. Collector source SHA256 before acquisition:
+`2adfed92c3204244a9ed5e66732d8ce2cee89af624eb1b18feb57bdf7ee0299a`.
