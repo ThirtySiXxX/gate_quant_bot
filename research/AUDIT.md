@@ -96,6 +96,17 @@ simulator. No positive prediction metric alone qualifies a trading candidate.
 5. Preserve every negative experiment and reserve genuinely new periods for final
    evaluation. RL is deferred until environment/fill/cost fidelity is established.
 
+QR-001 is now complete: see `results/qr001/README.md`. The probability-quality
+hypothesis has a small conditional positive result; the trading criterion fails.
+No runtime promotion is recommended. The next proposed study is target/holding-
+period alignment, using the same simple controls and a separately frozen protocol.
+Its falsifiable hypothesis is that a horizon aligned with actual position duration
+improves prospective prediction and cost-adjusted participation over four-hour
+labels. Reject it if gains disappear across folds/costs or remain driven by a few
+positions. This is a backlog item, not an already run experiment or an approved
+change to runtime targets. QD provenance review and genuinely new data remain
+dependencies for promotion.
+
 ## Method references
 
 Chronological train-before-test and an explicit gap are consistent with
