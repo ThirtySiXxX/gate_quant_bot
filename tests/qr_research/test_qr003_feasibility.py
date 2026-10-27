@@ -6,7 +6,7 @@ import pandas as pd
 
 from research.qr003.feasibility_audit import (
     TERMINAL_REASON, audit_positions, feature_records, interval_clusters,
-    mature_before, summarize,
+    mature_before, summarize, input_quality, audit_events, compare_paths, digest,
 )
 
 
@@ -126,6 +126,90 @@ class FeasibilityTests(unittest.TestCase):
         self.assertEqual(len(original[times[0]]["values"]), 21)
         with self.assertRaisesRegex(ValueError, "hourly"):
             feature_records(frame, [200*3600+.5])
+
+    def test_market_quality_marks_missing_closed_bar_and_stale_funding(self):
+        def candles(step):
+            return pd.DataFrame(dict(timestamp=np.arange(0, 4*86400, step),
+                open=100., high=101., low=99., close=100., volume=1.))
+        frames = {i: candles(s) for i, s in (("1h", 3600), ("4h", 14400), ("1d", 86400))}
+        frames["funding"] = pd.DataFrame(dict(timestamp=np.arange(0, 4*86400, 28800), funding_rate=.0001))
+        complete = input_quality("BTC_USDT", frames, 2*86400, 3*86400)
+        self.assertTrue(complete["complete_evaluation_inputs"])
+        # Missing hour opened at start is first stale when it should have closed.
+        frames["1h"] = frames["1h"][frames["1h"].timestamp != 2*86400]
+        frames["funding"] = frames["funding"][frames["funding"].timestamp != 2*86400]
+        bad = input_quality("BTC_USDT", frames, 2*86400, 3*86400)
+        self.assertEqual(bad["coverage"]["1h"]["evaluated_invalid_decisions"], 1)
+        self.assertEqual(bad["coverage"]["1h"]["missing_execution_open_decisions"], 1)
+        self.assertEqual(bad["coverage"]["funding"]["evaluated_invalid_decisions"], 7)
+        hour = next(w for w in bad["invalid_windows"] if w["reason"] == "missing_or_stale_1h")
+        self.assertEqual(hour["start"], 2*86400+3600)
+        self.assertEqual(hour["end"], 2*86400+7200)
+        frames["4h"].loc[2, "timestamp"] = 1
+        with self.assertRaisesRegex(ValueError, "timestamp grid"):
+            input_quality("BTC_USDT", frames, 2*86400, 3*86400)
+
+    def test_funding_second_offsets_are_not_rounded_into_past(self):
+        frames = {i: pd.DataFrame(dict(timestamp=np.arange(0, 4*86400, s),
+            open=100., high=101., low=99., close=100., volume=1.))
+            for i, s in (("1h", 3600), ("4h", 14400), ("1d", 86400))}
+        frames["funding"] = pd.DataFrame(dict(timestamp=np.arange(0, 4*86400, 28800)+3,
+            funding_rate=.0001))
+        before = frames["funding"].copy(deep=True)
+        report = input_quality("ETH_USDT", frames, 2*86400, 3*86400)
+        self.assertTrue(report["complete_evaluation_inputs"])
+        pd.testing.assert_frame_equal(before, frames["funding"])
+        self.assertEqual(report["coverage"]["funding"]["closed_or_settled_before_start"], 6)
+
+    def test_observer_candidates_must_match_actual_fills_and_original_calls(self):
+        result = result_fixture()
+        events = []
+        for i, execution in enumerate(result["executions"]):
+            t, flat = execution["time"], i == 0
+            state = dict(current_notional=0 if flat else execution["position_before"]*execution["price"])
+            events.append(dict(schema_version=1, trajectory_id="baseline", symbol="BTC_USDT",
+                decision_at=t, decision_price=execution["price"],
+                signal_available=True, signal={"timing_feature": {"bar_ts": t-3600}},
+                position_before={"size": execution["position_before"]}, state_before=state,
+                state_id=digest({"observed": state, "position_before": {"size": execution["position_before"]}}),
+                plan=dict(model_target=1000 if flat else 0, rebalance=True, allow_increase=True),
+                pre_ml_entry_proposal=flat, order_check={"budget_checked": flat},
+                post_budget_eligibility={"status": "eligible" if flat else "not_applicable", "reason": "held"},
+                skip_applied=False))
+        frame = pd.DataFrame(dict(timestamp=[0, 3600, 7200, 10800], open=[100,100,110,90],
+            high=[101,101,111,91], low=[99,99,109,89], close=[100,100,110,90], volume=1))
+        payload = dict(events=events, result=result, trajectory_id="baseline", skip_applied=False,
+            skip_entry_at=None, call_counts=dict(signal_at=3, decide_execution=3, build_order_plan=3))
+        report = audit_events(payload, frame)
+        self.assertEqual(report["counts"]["executable"], 1)
+        self.assertEqual(report["counts"]["held"], 2)
+        self.assertEqual(report["unlabelled_executable_candidates"], 0)
+        bad = copy.deepcopy(payload); bad["events"][0]["post_budget_eligibility"]["status"] = "rejected"
+        with self.assertRaisesRegex(ValueError, "ledger open"):
+            audit_events(bad, frame)
+        bad = copy.deepcopy(payload); bad["call_counts"]["signal_at"] = 4
+        with self.assertRaisesRegex(ValueError, "call count"):
+            audit_events(bad, frame)
+        bad = copy.deepcopy(payload); bad["events"][0]["state_id"] = digest(bad["events"][0]["state_before"])
+        with self.assertRaisesRegex(ValueError, "state identity"):
+            audit_events(bad, frame)
+        bad = copy.deepcopy(payload); bad["events"][0]["signal"]["timing_feature"]["bar_ts"] = 3600
+        with self.assertRaisesRegex(ValueError, "unclosed"):
+            audit_events(bad, frame)
+
+    def test_branch_new_candidate_is_linked_without_counting_as_independent(self):
+        a = dict(decision_at=3600, state_id="same", flat=True, pre_ml_proposed=True, eligible=True, executed=True)
+        b = dict(decision_at=7200, state_id="held", flat=False, pre_ml_proposed=False, eligible=False, executed=False)
+        baseline = dict(records=[a,b])
+        branch = dict(records=[{**a, "executed": False}, {**b, "state_id": "flat", "flat": True,
+            "pre_ml_proposed": True, "eligible": True, "executed": True, "proposed_side": "long"}])
+        result = compare_paths(baseline, branch, 3600)
+        self.assertEqual(result["first_state_divergence"], 7200)
+        self.assertEqual(result["first_qualification_divergence"], 7200)
+        self.assertTrue(result["new_branch_candidates"][0]["baseline_held"])
+        branch["records"][0]["state_id"] = "leaked"
+        with self.assertRaisesRegex(ValueError, "before intervention"):
+            compare_paths(baseline, branch, 3600)
 
 
 if __name__ == "__main__":

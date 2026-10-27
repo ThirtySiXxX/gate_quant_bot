@@ -1,0 +1,754 @@
+{
+  "coordinator_intake_manifest_sha256": "6a7516933a55a9c8c76c3ec019277f66b918b60f953304d88b897d14677b3d6e",
+  "description": "Phase A per-asset finite diagnostic only; no model training",
+  "instruments": {
+    "BTC_USDT": {
+      "files": {
+        "1d": {
+          "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/phase-a-data/BTC_USDT/1d.csv",
+          "select_from": 1764288000,
+          "select_until": 1793091600,
+          "sha256": "c20b58e543852bd15c90f5db0b64456a8e688700dc8562de56b23cf4233d3c4a"
+        },
+        "1h": {
+          "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr001/classification/BTC_USDT_1h.csv",
+          "select_from": 1779919200,
+          "select_until": 1793091600,
+          "sha256": "f7e607751584c0d5f24273340000642b643230f5b0a693ff2a0ab24872458e58"
+        },
+        "4h": {
+          "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/phase-a-data/BTC_USDT/4h.csv",
+          "select_from": 1763726400,
+          "select_until": 1793091600,
+          "sha256": "890b98f50eb31b6738d6ec5b5418846dcb8845481acfeafc4f232571a928a542"
+        },
+        "funding": {
+          "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/phase-a-data/BTC_USDT/funding-available.csv",
+          "select_from": 0,
+          "select_until": 1793091600,
+          "sha256": "9e273fcb39bc2a7f204f7a8d1f9de60cd3c43f324b4a9a751b9580a8d83f2147"
+        }
+      },
+      "fixture": {
+        "contract": {
+          "config_change_time": 1788234002,
+          "contract_type": "",
+          "create_time": 1574035200,
+          "cross_leverage_default": "10",
+          "enable_bonus": true,
+          "enable_circuit_breaker": false,
+          "enable_credit": true,
+          "enable_decimal": false,
+          "funding_cap_ratio": "0.75",
+          "funding_impact_value": "30000",
+          "funding_interval": 28800,
+          "funding_next_apply": 1793088000,
+          "funding_offset": 0,
+          "funding_rate": "0.0001",
+          "funding_rate_indicative": "0.0001",
+          "funding_rate_limit": "0.003",
+          "in_delisting": false,
+          "index_price": "79608",
+          "interest_rate": "0.0003",
+          "is_pre_market": false,
+          "last_price": "79587.5",
+          "launch_time": 1574035200,
+          "leverage_max": "200",
+          "leverage_min": "1",
+          "long_users": 23662,
+          "maintenance_rate": "0.003",
+          "maker_fee_rate": "-0.0001",
+          "mark_price": "79587.5",
+          "mark_price_round": "0.01",
+          "mark_type": "index",
+          "market_order_size_max": "10000000",
+          "market_order_slip_ratio": "0.01",
+          "name": "BTC_USDT",
+          "order_price_deviate": "0.03",
+          "order_price_round": "0.1",
+          "order_size_max": 12000000,
+          "order_size_min": 1,
+          "orderbook_id": 129121539832,
+          "orders_limit": 100,
+          "position_size": 292445916,
+          "quanto_multiplier": "0.0001",
+          "ref_discount_rate": "0",
+          "ref_rebate_rate": "0.2",
+          "risk_limit_base": "500000",
+          "risk_limit_max": "1500000000",
+          "risk_limit_step": "1499500000",
+          "short_users": 11390,
+          "status": "trading",
+          "taker_fee_rate": "0.00075",
+          "trade_id": 861373423,
+          "trade_size": 682557913342,
+          "type": "direct",
+          "voucher_leverage": "2"
+        },
+        "contract_snapshot_asof": "2026-10-27T07:16:05.542349+00:00",
+        "cost_config": {
+          "maker_fee_rate": 0.0002,
+          "slippage_bps": 2,
+          "taker_fee_rate": 0.0005,
+          "use_account_fee_rate": true,
+          "use_contract_fee_rate": false,
+          "use_live_funding_rate": true
+        },
+        "end_ts": 1793088000.0,
+        "initial_capital": 10000,
+        "risk_config": {
+          "atr_stop_multiplier": 1.6,
+          "atr_trail_multiplier": 2.2,
+          "daily_loss_limit_enabled": false,
+          "daily_loss_limit_pct": 8,
+          "initial_capital_usdt": 10000,
+          "max_concurrent_positions": 6,
+          "max_correlated_positions": 3,
+          "max_leverage": 100,
+          "max_portfolio_heat_pct": 20,
+          "risk_per_trade_pct": 5,
+          "time_stop_bars": 8,
+          "tp1_close_ratio": 0.5,
+          "tp1_r_multiple": 1
+        },
+        "risk_limit_tiers": [
+          {
+            "deduction": "0",
+            "initial_rate": "0.005",
+            "leverage_max": "200",
+            "maintenance_rate": "0.003",
+            "risk_limit": "500000",
+            "tier": 1
+          },
+          {
+            "deduction": "250",
+            "initial_rate": "0.006666",
+            "leverage_max": "150.01",
+            "maintenance_rate": "0.0035",
+            "risk_limit": "1000000",
+            "tier": 2
+          },
+          {
+            "deduction": "750",
+            "initial_rate": "0.008",
+            "leverage_max": "125",
+            "maintenance_rate": "0.004",
+            "risk_limit": "1500000",
+            "tier": 3
+          },
+          {
+            "deduction": "1500",
+            "initial_rate": "0.00909",
+            "leverage_max": "110.01",
+            "maintenance_rate": "0.0045",
+            "risk_limit": "2000000",
+            "tier": 4
+          },
+          {
+            "deduction": "2500",
+            "initial_rate": "0.01",
+            "leverage_max": "100",
+            "maintenance_rate": "0.005",
+            "risk_limit": "3000000",
+            "tier": 5
+          },
+          {
+            "deduction": "8500",
+            "initial_rate": "0.0125",
+            "leverage_max": "80",
+            "maintenance_rate": "0.007",
+            "risk_limit": "5000000",
+            "tier": 6
+          },
+          {
+            "deduction": "16000",
+            "initial_rate": "0.016666",
+            "leverage_max": "60",
+            "maintenance_rate": "0.0085",
+            "risk_limit": "10000000",
+            "tier": 7
+          },
+          {
+            "deduction": "31000",
+            "initial_rate": "0.02",
+            "leverage_max": "50",
+            "maintenance_rate": "0.01",
+            "risk_limit": "15000000",
+            "tier": 8
+          },
+          {
+            "deduction": "61000",
+            "initial_rate": "0.025",
+            "leverage_max": "40",
+            "maintenance_rate": "0.012",
+            "risk_limit": "20000000",
+            "tier": 9
+          },
+          {
+            "deduction": "141000",
+            "initial_rate": "0.033333",
+            "leverage_max": "30",
+            "maintenance_rate": "0.016",
+            "risk_limit": "30000000",
+            "tier": 10
+          },
+          {
+            "deduction": "261000",
+            "initial_rate": "0.04",
+            "leverage_max": "25",
+            "maintenance_rate": "0.02",
+            "risk_limit": "50000000",
+            "tier": 11
+          },
+          {
+            "deduction": "511000",
+            "initial_rate": "0.05",
+            "leverage_max": "20",
+            "maintenance_rate": "0.025",
+            "risk_limit": "70000000",
+            "tier": 12
+          },
+          {
+            "deduction": "861000",
+            "initial_rate": "0.066666",
+            "leverage_max": "15",
+            "maintenance_rate": "0.03",
+            "risk_limit": "100000000",
+            "tier": 13
+          },
+          {
+            "deduction": "2861000",
+            "initial_rate": "0.1",
+            "leverage_max": "10",
+            "maintenance_rate": "0.05",
+            "risk_limit": "200000000",
+            "tier": 14
+          },
+          {
+            "deduction": "6861000",
+            "initial_rate": "0.133333",
+            "leverage_max": "7.5",
+            "maintenance_rate": "0.07",
+            "risk_limit": "300000000",
+            "tier": 15
+          },
+          {
+            "deduction": "15861000",
+            "initial_rate": "0.2",
+            "leverage_max": "5",
+            "maintenance_rate": "0.1",
+            "risk_limit": "500000000",
+            "tier": 16
+          },
+          {
+            "deduction": "25861000",
+            "initial_rate": "0.25",
+            "leverage_max": "4",
+            "maintenance_rate": "0.12",
+            "risk_limit": "700000000",
+            "tier": 17
+          },
+          {
+            "deduction": "116861000",
+            "initial_rate": "0.5",
+            "leverage_max": "2",
+            "maintenance_rate": "0.25",
+            "risk_limit": "1000000000",
+            "tier": 18
+          },
+          {
+            "deduction": "366861000",
+            "initial_rate": "0.95",
+            "leverage_max": "1.05",
+            "maintenance_rate": "0.5",
+            "risk_limit": "1500000000",
+            "tier": 19
+          }
+        ],
+        "source": "Frozen public BTC contract/tier snapshot; ETH strategy copied with explicit BTC/ETH timing scope",
+        "start_ts": 1785319200.0,
+        "strategy_config": {
+          "adaptive_er_full_risk": 0.35,
+          "adaptive_er_lookback": 24,
+          "adaptive_fast_reduce_threshold": 0.45,
+          "adaptive_max_risk_reduction": 0.65,
+          "adaptive_multiplier_smoothing_span": 4,
+          "adaptive_risk_enabled": true,
+          "adaptive_vol_fast_lambda": 0.75,
+          "adaptive_vol_ratio_full": 1.6,
+          "adaptive_vol_ratio_start": 1.1,
+          "adaptive_vol_slow_lambda": 0.995,
+          "auto_close_removed_symbols": false,
+          "carry_scale_lookback": 1000,
+          "carry_weight": 0.2,
+          "covariance_interval": "4h",
+          "depth_guard_enabled": true,
+          "depth_levels": 20,
+          "ewma_lambda": 0.94,
+          "ewmac_horizons": [
+            [
+              8,
+              32
+            ],
+            [
+              16,
+              64
+            ],
+            [
+              32,
+              128
+            ],
+            [
+              64,
+              256
+            ]
+          ],
+          "execution_timing": {
+            "require_trend_agreement": true,
+            "symbols": [
+              "BTC_USDT",
+              "ETH_USDT"
+            ],
+            "trail_atr": 3.0
+          },
+          "exit_buffer_multiplier": 3,
+          "fdm_lookback": 500,
+          "fdm_max": 2.5,
+          "fdm_min_periods": 60,
+          "forecast_scale_lookback": 1500,
+          "forecast_scale_min_periods": 100,
+          "initial_capital_usdt": 10000,
+          "invert_direction": false,
+          "main_trend_interval": "4h",
+          "main_trend_weight": 0.4,
+          "manage_existing_positions": false,
+          "max_correlated_group_exposure_pct": 60,
+          "max_entry_slippage_bps": 8,
+          "max_entry_spread_bps": 5,
+          "max_instrument_exposure_pct": 55,
+          "max_leverage": 4,
+          "min_bars_main": 300,
+          "min_bars_regime": 220,
+          "min_bars_short": 300,
+          "min_depth_fill_ratio": 1,
+          "ml_min_entry_probability": 0.45,
+          "ml_model_path": "",
+          "no_trade_buffer_pct": 25,
+          "position_sizing_mode": "fixed_margin",
+          "regime_adx_period": 14,
+          "regime_adx_trend_threshold": 15,
+          "regime_ema_fast": 21,
+          "regime_ema_long": 200,
+          "regime_ema_slow": 55,
+          "regime_interval": "1d",
+          "regime_oppose_dampen": 0.5,
+          "regime_range_dampen": 0.8,
+          "short_trend_interval": "1h",
+          "short_trend_weight": 0.6,
+          "target_annual_vol_pct": 10,
+          "tick_interval_sec": 900,
+          "trend_weight": 0.8
+        }
+      }
+    },
+    "ETH_USDT": {
+      "files": {
+        "1d": {
+          "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr001/replay/1d.csv",
+          "select_from": 1764288000,
+          "select_until": 1793091600,
+          "sha256": "d3055bb3d125d27e527f0ea98b3760eada9a11741369765f73ee5de162282692"
+        },
+        "1h": {
+          "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr001/replay/1h.csv",
+          "select_from": 1779919200,
+          "select_until": 1793091600,
+          "sha256": "8fac19a74ec2421f539e1f88a3cfc63e1bed1c50688abec4642925a46848e336"
+        },
+        "4h": {
+          "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr001/replay/4h.csv",
+          "select_from": 1763726400,
+          "select_until": 1793091600,
+          "sha256": "80094c6ad49398bdd8aac8dc00ec7421e3c87c41dfda846f619dafae345b3dd6"
+        },
+        "funding": {
+          "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr001/replay/funding.csv",
+          "select_from": 0,
+          "select_until": 1793091600,
+          "sha256": "f7fec7e61222c7031010bca0027a005bd4ec78eea42b75af02d57ce09717e41c"
+        }
+      },
+      "fixture": {
+        "contract": {
+          "config_change_time": 1788234058,
+          "contract_type": "",
+          "create_time": 1574208000,
+          "cross_leverage_default": "10",
+          "enable_bonus": true,
+          "enable_circuit_breaker": false,
+          "enable_credit": true,
+          "enable_decimal": true,
+          "funding_cap_ratio": "0.75",
+          "funding_impact_value": "20000",
+          "funding_interval": 28800,
+          "funding_next_apply": 1793088000,
+          "funding_offset": 0,
+          "funding_rate": "0.000094",
+          "funding_rate_indicative": "0.000094",
+          "funding_rate_limit": "0.003",
+          "in_delisting": false,
+          "index_price": "2302.58",
+          "interest_rate": "0.0003",
+          "is_pre_market": false,
+          "last_price": "2301.8",
+          "launch_time": 1574208000,
+          "leverage_max": "200",
+          "leverage_min": "1",
+          "long_users": 24390,
+          "maintenance_rate": "0.003",
+          "maker_fee_rate": "-0.0001",
+          "mark_price": "2301.93",
+          "mark_price_round": "0.01",
+          "mark_type": "index",
+          "market_order_size_max": "8000000",
+          "market_order_slip_ratio": "0.01",
+          "name": "ETH_USDT",
+          "order_price_deviate": "0.03",
+          "order_price_round": "0.01",
+          "order_size_max": 10000000,
+          "order_size_min": 0,
+          "orderbook_id": 112439785633,
+          "orders_limit": 100,
+          "position_size": 37272254,
+          "quanto_multiplier": "0.01",
+          "ref_discount_rate": "0",
+          "ref_rebate_rate": "0.2",
+          "risk_limit_base": "300000",
+          "risk_limit_max": "1500000000",
+          "risk_limit_step": "1499700000",
+          "short_users": 10360,
+          "status": "trading",
+          "taker_fee_rate": "0.00075",
+          "trade_id": 954005707,
+          "trade_size": 186746188943,
+          "type": "direct",
+          "voucher_leverage": "2"
+        },
+        "contract_snapshot_asof": "2026-10-27T07:16:05.542349+00:00",
+        "cost_config": {
+          "maker_fee_rate": 0.0002,
+          "slippage_bps": 2,
+          "taker_fee_rate": 0.0005,
+          "use_account_fee_rate": true,
+          "use_contract_fee_rate": false,
+          "use_live_funding_rate": true
+        },
+        "end_ts": 1793088000.0,
+        "expected_execution_sha256": "c305f8477860be4b3fddbfef1b52113b163caa8b7a6fd5c39c689dcbdcafda1e",
+        "expected_executions": 64,
+        "expected_final_equity": 9287.991489687984,
+        "expected_return_pct": -7.1200851031201635,
+        "initial_capital": 10000,
+        "risk_config": {
+          "atr_stop_multiplier": 1.6,
+          "atr_trail_multiplier": 2.2,
+          "daily_loss_limit_enabled": false,
+          "daily_loss_limit_pct": 8,
+          "initial_capital_usdt": 10000,
+          "max_concurrent_positions": 6,
+          "max_correlated_positions": 3,
+          "max_leverage": 100,
+          "max_portfolio_heat_pct": 20,
+          "risk_per_trade_pct": 5,
+          "time_stop_bars": 8,
+          "tp1_close_ratio": 0.5,
+          "tp1_r_multiple": 1
+        },
+        "risk_limit_tiers": [
+          {
+            "deduction": "0",
+            "initial_rate": "0.005",
+            "leverage_max": "200",
+            "maintenance_rate": "0.003",
+            "risk_limit": "300000",
+            "tier": 1
+          },
+          {
+            "deduction": "150",
+            "initial_rate": "0.006666",
+            "leverage_max": "150.01",
+            "maintenance_rate": "0.0035",
+            "risk_limit": "500000",
+            "tier": 2
+          },
+          {
+            "deduction": "400",
+            "initial_rate": "0.008",
+            "leverage_max": "125",
+            "maintenance_rate": "0.004",
+            "risk_limit": "1000000",
+            "tier": 3
+          },
+          {
+            "deduction": "900",
+            "initial_rate": "0.00909",
+            "leverage_max": "110.01",
+            "maintenance_rate": "0.0045",
+            "risk_limit": "2000000",
+            "tier": 4
+          },
+          {
+            "deduction": "1900",
+            "initial_rate": "0.01",
+            "leverage_max": "100",
+            "maintenance_rate": "0.005",
+            "risk_limit": "3000000",
+            "tier": 5
+          },
+          {
+            "deduction": "7900",
+            "initial_rate": "0.0125",
+            "leverage_max": "80",
+            "maintenance_rate": "0.007",
+            "risk_limit": "5000000",
+            "tier": 6
+          },
+          {
+            "deduction": "15400",
+            "initial_rate": "0.016666",
+            "leverage_max": "60",
+            "maintenance_rate": "0.0085",
+            "risk_limit": "10000000",
+            "tier": 7
+          },
+          {
+            "deduction": "30400",
+            "initial_rate": "0.02",
+            "leverage_max": "50",
+            "maintenance_rate": "0.01",
+            "risk_limit": "15000000",
+            "tier": 8
+          },
+          {
+            "deduction": "60400",
+            "initial_rate": "0.025",
+            "leverage_max": "40",
+            "maintenance_rate": "0.012",
+            "risk_limit": "20000000",
+            "tier": 9
+          },
+          {
+            "deduction": "140400",
+            "initial_rate": "0.033333",
+            "leverage_max": "30",
+            "maintenance_rate": "0.016",
+            "risk_limit": "30000000",
+            "tier": 10
+          },
+          {
+            "deduction": "260400",
+            "initial_rate": "0.04",
+            "leverage_max": "25",
+            "maintenance_rate": "0.02",
+            "risk_limit": "50000000",
+            "tier": 11
+          },
+          {
+            "deduction": "510400",
+            "initial_rate": "0.05",
+            "leverage_max": "20",
+            "maintenance_rate": "0.025",
+            "risk_limit": "70000000",
+            "tier": 12
+          },
+          {
+            "deduction": "860400",
+            "initial_rate": "0.066666",
+            "leverage_max": "15",
+            "maintenance_rate": "0.03",
+            "risk_limit": "100000000",
+            "tier": 13
+          },
+          {
+            "deduction": "2860400",
+            "initial_rate": "0.1",
+            "leverage_max": "10",
+            "maintenance_rate": "0.05",
+            "risk_limit": "200000000",
+            "tier": 14
+          },
+          {
+            "deduction": "6860400",
+            "initial_rate": "0.133333",
+            "leverage_max": "7.5",
+            "maintenance_rate": "0.07",
+            "risk_limit": "300000000",
+            "tier": 15
+          },
+          {
+            "deduction": "15860400",
+            "initial_rate": "0.2",
+            "leverage_max": "5",
+            "maintenance_rate": "0.1",
+            "risk_limit": "500000000",
+            "tier": 16
+          },
+          {
+            "deduction": "25860400",
+            "initial_rate": "0.25",
+            "leverage_max": "4",
+            "maintenance_rate": "0.12",
+            "risk_limit": "700000000",
+            "tier": 17
+          },
+          {
+            "deduction": "116860400",
+            "initial_rate": "0.5",
+            "leverage_max": "2",
+            "maintenance_rate": "0.25",
+            "risk_limit": "1000000000",
+            "tier": 18
+          },
+          {
+            "deduction": "366860400",
+            "initial_rate": "0.95",
+            "leverage_max": "1.05",
+            "maintenance_rate": "0.5",
+            "risk_limit": "1500000000",
+            "tier": 19
+          }
+        ],
+        "source": "Prior public/simulated ETH research replay; not account/config data",
+        "start_ts": 1785319200.0,
+        "strategy_config": {
+          "adaptive_er_full_risk": 0.35,
+          "adaptive_er_lookback": 24,
+          "adaptive_fast_reduce_threshold": 0.45,
+          "adaptive_max_risk_reduction": 0.65,
+          "adaptive_multiplier_smoothing_span": 4,
+          "adaptive_risk_enabled": true,
+          "adaptive_vol_fast_lambda": 0.75,
+          "adaptive_vol_ratio_full": 1.6,
+          "adaptive_vol_ratio_start": 1.1,
+          "adaptive_vol_slow_lambda": 0.995,
+          "auto_close_removed_symbols": false,
+          "carry_scale_lookback": 1000,
+          "carry_weight": 0.2,
+          "covariance_interval": "4h",
+          "depth_guard_enabled": true,
+          "depth_levels": 20,
+          "ewma_lambda": 0.94,
+          "ewmac_horizons": [
+            [
+              8,
+              32
+            ],
+            [
+              16,
+              64
+            ],
+            [
+              32,
+              128
+            ],
+            [
+              64,
+              256
+            ]
+          ],
+          "execution_timing": {
+            "require_trend_agreement": true,
+            "symbols": [
+              "BTC_USDT",
+              "ETH_USDT"
+            ],
+            "trail_atr": 3.0
+          },
+          "exit_buffer_multiplier": 3,
+          "fdm_lookback": 500,
+          "fdm_max": 2.5,
+          "fdm_min_periods": 60,
+          "forecast_scale_lookback": 1500,
+          "forecast_scale_min_periods": 100,
+          "initial_capital_usdt": 10000,
+          "invert_direction": false,
+          "main_trend_interval": "4h",
+          "main_trend_weight": 0.4,
+          "manage_existing_positions": false,
+          "max_correlated_group_exposure_pct": 60,
+          "max_entry_slippage_bps": 8,
+          "max_entry_spread_bps": 5,
+          "max_instrument_exposure_pct": 55,
+          "max_leverage": 4,
+          "min_bars_main": 300,
+          "min_bars_regime": 220,
+          "min_bars_short": 300,
+          "min_depth_fill_ratio": 1,
+          "ml_min_entry_probability": 0.45,
+          "ml_model_path": "",
+          "no_trade_buffer_pct": 25,
+          "position_sizing_mode": "fixed_margin",
+          "regime_adx_period": 14,
+          "regime_adx_trend_threshold": 15,
+          "regime_ema_fast": 21,
+          "regime_ema_long": 200,
+          "regime_ema_slow": 55,
+          "regime_interval": "1d",
+          "regime_oppose_dampen": 0.5,
+          "regime_range_dampen": 0.8,
+          "short_trend_interval": "1h",
+          "short_trend_weight": 0.6,
+          "target_annual_vol_pct": 10,
+          "tick_interval_sec": 900,
+          "trend_weight": 0.8
+        }
+      }
+    }
+  },
+  "public_metadata_sha256": {
+    "BTC_USDT_tiers.json": "f3eddcee1f7966cb5d8911d0b0d2635d82d677e8bbecf143b80898705b92e36c",
+    "contracts.json": "b3fa7eecf81cec872c91d9f4fb4713919a7403bcd2bc1f0d899b832326148407"
+  },
+  "qd_probe_commit": "1a2bf705050a0fdc4f47da7e834487f3c37cd800",
+  "qd_probe_parent": "144ce5b75f9548c471cf537425cb7d3847fa3311",
+  "qd_probe_sha256": "4a0e520fa7b0a98565435aec07936bd4425592850a6e2e64b2116acd7d1d45aa",
+  "schema_version": 1,
+  "source_sha256": {
+    "research/qr003/feasibility_audit.py": "c0abc405bc4ce40f0eaaf71a5628b4f4defe3b8040d88ad5d8ba8d9b55e15083",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/backtest.py": "9183091e85c4354720118c53f0d97b72022f018afa03d9e9479f4929f5a8540c",
+    "src/backtest_reporting.py": "9d62a2f01a4c08f330384772ddd05b8cb379af4e389f2cffbf6363a4805af9ed",
+    "src/backtest_runner.py": "66471743433cffef93b5534ef4794bdf53661963e61578bb775322a0a6d1841c",
+    "src/carry.py": "81b370e9b84384be578db2163f7f4397b3edf41ebf78ffc56567522ead5e016f",
+    "src/config.py": "29eed6a35c7ecb8b079b21616754c49774fa0bb9034dbba3fc2112734c968709",
+    "src/contracts.py": "d8f4d208bef3683739273c571e71d889b279b8ed88a3b0012e08d3ec3d96c73d",
+    "src/costs.py": "356d3f5a29df9a64caeb40948fe4408dad81982fa5255cba051deb578b70621e",
+    "src/credentials.py": "3a76992f850a9e0f87abf1e654d1056c195341677792a69d9d0b667c8248ca4c",
+    "src/crypto_ml.py": "63d0d9569cb261c83867b18cde03f9f74c7b54626172eeb5bb36eac09c19a7f6",
+    "src/dashboard_web.py": "4b9c3df5e8142156faa8868d5198dd8ed954d3d12ebe9f9d0ce2d8ae0ddb9f6d",
+    "src/data_fetcher.py": "0cba049063d1df0e0aa32da06516bb60f16b3b52c2125662ac088b0f8ed5c5fe",
+    "src/engine.py": "8bb7aa3eb0dad23c323233be1d114c4d77802e3bc31ff07ae0d68e5a86589b42",
+    "src/exchange_gate.py": "19a0e3760cbb9030c18b4c88da718027ba51679cc073b7852d7a371a5b934015",
+    "src/exchange_paper.py": "499e9e9e0260e63b3c0bf3916007a65d1bd2942fe1380755e86bb8e36e71c498",
+    "src/execution_timing.py": "41d4593eaf345cdc8d26759605651e3e7bcfcb679604416b29fef80b821d9344",
+    "src/indicators.py": "232a22a778a94eb0a101991474788a637078bea3f9832d8383683056878ef828",
+    "src/json_utils.py": "4ac13e59c1b3814ee23afe16d1fd66977d0f6e379f678869f79d73c3af7504ae",
+    "src/ml_training.py": "7c558de68e5225301ea14ac907766ddd027fbc1e7d91cc10dbb21970e8279158",
+    "src/models.py": "01c28b7c42e00fcd6b5fcc6415246a5c73af5348fd5301d11b116f1064a8c20e",
+    "src/ownership.py": "38a79d0b081d0ac7c0c7a1ebcb26115ee953dc3f94ea4c18581bbb7092a48407",
+    "src/performance.py": "13c3a0e6ea749319bd8e8886156b31996a492b0a9a85e40335580f985d8631e3",
+    "src/portfolio.py": "1837e2601c2255515644394b6934f45a933d11c758f93aafae926d9bb120397d",
+    "src/position_sizing.py": "e80773ec1bf0ec88fdf8128f368649cf123d3ad92b615b46d3ce3e754c20efad",
+    "src/risk.py": "95410f4adf88f25e1030d108c43f3a4069c162523ba91bdff91e7462966826ad",
+    "src/state.py": "a2d8989fc15b2d532023c6a95873c3ced10d906f00cc948351cf937b43ce429c",
+    "src/strategy_execution.py": "e1eaa17ea1292c7e906d4634b274fe72f2a415dfa409054674a33c22b9b1f5bb",
+    "src/strategy_signals.py": "aa3b9e71512008ff43f49639d8d2cf113e81def7ab031e41676453def86e78dc",
+    "src/systematic_engine.py": "ac583f50daa3bf0f2c4f77a0efcb54ece3cbfa5acb68a7bd013e840887282b7f",
+    "src/trend.py": "5234e1d35b7da34b8dd3429a6811b5ea5036d1e20a3af51fe70e34e56063a361",
+    "src/universe.py": "1f19c427288fd8860053083ea3ab8682cbed97ab711e7c5a9df7d0323320f4df",
+    "src/updater.py": "299862a8e693bdd703a807ca4f05f28f7d3e85aafe8328a95fb85a90d6caad52",
+    "src/vol.py": "8ed00ac4df7b86ffd2abcf80bcf55c201a631f7ac31d1e786f8e7cf95713ed3a",
+    "src/walkforward.py": "9794ca2798993ad3fa6cad64b4cf99b2f88b62512fea4fac01de22467a3efd16"
+  },
+  "state": "FROZEN_BEFORE_COUNTED_TRAJECTORIES"
+}
