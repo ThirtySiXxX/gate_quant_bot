@@ -101,6 +101,7 @@ class BacktestController:
     避免同时发起过多下载对交易所接口造成压力。"""
 
     MAX_CONCURRENT = 2
+    _ACTIVE_STATUSES = ("pending", "fetching", "running")
 
     def __init__(self, config_store: ConfigStore, cred_store: CredentialStore,
                  result_dir: str = "./data/backtests", cache_dir: str = "./data/klines"):
@@ -163,7 +164,7 @@ class BacktestController:
                 os.remove(temporary)
 
     def _active_count(self) -> int:
-        return sum(1 for j in self._jobs.values() if j.status in ("pending", "fetching", "running"))
+        return sum(1 for j in self._jobs.values() if j.status in self._ACTIVE_STATUSES)
 
     # ------------------------------------------------------------------
     def start_job(self, symbols: Optional[List[str]], days_back: float,
@@ -188,10 +189,6 @@ class BacktestController:
         if not creds.is_set:
             raise RuntimeError("请先在“设置”页填写并保存 Gate.io API Key（下载历史行情需要，但回测只做只读查询，不会下单/不涉及资金）")
 
-        with self._lock:
-            if self._active_count() >= self.MAX_CONCURRENT:
-                raise RuntimeError(f"当前已有 {self.MAX_CONCURRENT} 个回测任务在运行，请等待其中一个完成后再发起新的")
-
         settle = cfg.get("settle", "usdt")
         sys_cfg = SystematicConfig.build(cfg.get("systematic", {}))
         capital = initial_capital if (initial_capital and initial_capital > 0) else sys_cfg.initial_capital_usdt
@@ -200,11 +197,20 @@ class BacktestController:
                            initial_capital=capital, walkforward=bool(walkforward),
                            wf_folds=max(2, min(int(wf_folds or 5), 10)))
         with self._lock:
+            # Checking capacity and reserving a pending job must be atomic.
+            if self._active_count() >= self.MAX_CONCURRENT:
+                raise RuntimeError(f"当前已有 {self.MAX_CONCURRENT} 个回测任务在运行，请等待其中一个完成后再发起新的")
             self._jobs[job.id] = job
 
-        t = threading.Thread(target=self._run_job, args=(job, settle, creds, cfg, sys_cfg, capital),
-                              daemon=True, name=f"backtest-{job.id}")
-        t.start()
+        try:
+            t = threading.Thread(target=self._run_job, args=(job, settle, creds, cfg, sys_cfg, capital),
+                                  daemon=True, name=f"backtest-{job.id}")
+            t.start()
+        except Exception:
+            # No worker owns the reservation if thread creation/start fails.
+            with self._lock:
+                self._jobs.pop(job.id, None)
+            raise
         return job
 
     def _run_job(self, job: BacktestJob, settle: str, creds, cfg: dict,
@@ -379,7 +385,12 @@ class BacktestController:
             job.message = f"回测失败: {e}"
             job.finished_at = time.time()
         finally:
-            self._persist(job)
+            # A terminal job can be deleted while the worker reaches finally.
+            # Serialize deletion and persistence, and never resurrect a removed
+            # record after the terminal status has become visible to the UI.
+            with self._lock:
+                if self._jobs.get(job.id) is job:
+                    self._persist(job)
 
     # ------------------------------------------------------------------
     def get_job(self, job_id: str) -> Optional[BacktestJob]:
@@ -394,10 +405,12 @@ class BacktestController:
 
     def delete_job(self, job_id: str) -> bool:
         with self._lock:
-            job = self._jobs.pop(job_id, None)
-        if job is None:
-            return False
-        path = os.path.join(self.result_dir, f"{job_id}.json")
-        if os.path.exists(path):
-            os.remove(path)
-        return True
+            job = self._jobs.get(job_id)
+            # Deleting is not cancellation: an active worker still owns capacity.
+            if job is None or job.status in self._ACTIVE_STATUSES:
+                return False
+            path = os.path.join(self.result_dir, f"{job_id}.json")
+            if os.path.exists(path):
+                os.remove(path)
+            self._jobs.pop(job_id)
+            return True
