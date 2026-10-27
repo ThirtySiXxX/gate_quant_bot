@@ -51,6 +51,7 @@ class CanonicalHistoryTests(unittest.TestCase):
                 (self.root/path).write_bytes((self.base/path).read_bytes())
                 entry=self.entry(symbol,kind,seconds,path,columns,rows)
                 parent=dict(entry);parent.pop("derivation",None)
+                if kind=="funding":parent['interval_seconds']=None
                 self.base_manifest["normalized_files"].append(parent)
                 entry["derivation"]=dict(method="copy_frozen_bytes",parent_path=path,parent_sha256=entry["sha256"])
                 self.manifest["files"].append(entry)
@@ -131,6 +132,13 @@ class CanonicalHistoryTests(unittest.TestCase):
         item=self.item(0);rows=self.rows(item);rows[1]['timestamp']=str(self.start+8*3600)
         rows[1]['available_at']=rows[1]['timestamp'];self.rewrite(item,rows)
         with self.assertRaisesRegex(ValueError,'copied input differs'):self.audit()
+
+    def test_v1_null_funding_bridge_does_not_accept_a_candle_interval(self):
+        parents=[x for x in self.base_manifest['normalized_files'] if x['kind']=='funding']
+        self.assertTrue(all(x['interval_seconds'] is None for x in parents))
+        self.assertEqual(self.audit()['candidate_files'],8)
+        parents[0]['interval_seconds']=3600
+        with self.assertRaisesRegex(ValueError,'base stream identity'):self.audit()
 
     def test_hourly_source_replacement_rejected(self):
         item=self.item(3600);rows=self.rows(item);rows[0]['volume']='999';self.rewrite(item,rows)

@@ -179,8 +179,12 @@ def inspect_candidate(root, base_root, spec, spec_hash, base):
         demand(type(entry["rows"]) is int and entry["rows"] == len(rows), "descriptor row count differs")
         files[key] = (entry, rows)
     demand(set(files) == expected_keys, "missing required file identity")
-    base_files = {(x["symbol"], x["kind"], x["interval_seconds"]): x
-                  for x in base["normalized_files"]}
+    # V1 uses null for non-candle events; v2 explicitly uses zero to denote
+    # nonperiodic event records. Neither value is a carry/cost interval.
+    base_files = {(x["symbol"], x["kind"],
+                   0 if x["kind"] == "funding" and x["interval_seconds"] is None
+                   else x["interval_seconds"]): x for x in base["normalized_files"]}
+    demand(expected_keys <= set(base_files), "missing/invalid base stream identity")
     tails, counts, funding, native_counts = [], {}, {}, {}
     for symbol in spec["scope"]["symbols"]:
         original_hours = None
