@@ -82,3 +82,28 @@ October tail, with declared overlap checks. Exact JSON conventions agree; fundin
 `interval_seconds: null` records that schedule is not assumed. Identical duplicate
 lineage in the quarantine partition is provenance, not automatically invalid data.
 No downloaded dataset or final collector candidate is accepted by this early review.
+
+## Collector checkpoint review
+
+QR independently reviewed QD commit `5209a13847615214f5c8ca86cdbcc38bed627c1e`
+(parent `e68813c273c66e29eb9950b6d52d144b1e89ab2d`) and the committed
+`research/qd004/results/lineage-examples.json`. Examples match the QR adapter.
+Collector SHA256 `2adfed92c3204244a9ed5e66732d8ce2cee89af624eb1b18feb57bdf7ee0299a`;
+test SHA256 `d1931696ad7fc199767ef2cd7967b260816c5d8ad1f95c2e62d2fce80c5e280e`.
+Both local files matched the exact committed bytes before execution.
+
+**17 QD focused tests independently rerun and passed**, with sockets blocked:
+fixed scope/spec/routes, total attempt and byte limits, retry/resume accounting,
+access restrictions, incomplete transport, gzip integrity, original column units,
+duplicates/conflicts/exclusions and dropped funding, funding-second preservation,
+immutable paths, interrupted reservations, authentic extremes, exclusive collector
+lease and current-only metadata. Tests used only temporary synthetic fixtures.
+QD reported 214 broader Python tests and 8 frontend groups; QR did not rerun
+those broad suites because this review does not change runtime or frontend code.
+
+This technical review supports bounded intake and preserves all unresolved
+semantic gates. Actual collection was still running without a final immutable
+manifest at this checkpoint. No actual dataset acceptance, baseline replay,
+training-readiness approval, merge or runtime integration is implied. QR validator
+code checkpoint is `56e80c975cac260a8ffc8a0af793999e0109bf98`; specification hash
+remains `6e3d4fb99c62d0658fcb3bb779a35b072d65b29df399e9b287fa315943687862`.
