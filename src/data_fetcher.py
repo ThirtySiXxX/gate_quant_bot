@@ -12,11 +12,17 @@
 """
 from __future__ import annotations
 
+from contextlib import ExitStack, contextmanager
+import errno
 import logging
 import math
 import os
+import stat
+import tempfile
+import threading
 import time
 from typing import Callable, Optional
+from weakref import WeakValueDictionary
 
 import pandas as pd
 
@@ -47,6 +53,80 @@ EXCHANGE_MAX_POINTS = 10000
 _EMPTY_COLUMNS = ["timestamp", "open", "high", "low", "close", "volume"]
 
 ProgressCB = Optional[Callable[[int, int, str], None]]
+
+
+class _CacheLockState:
+    def __init__(self):
+        self.mutex = threading.RLock()
+        self.depth = 0
+
+
+_cache_locks_guard = threading.Lock()
+_cache_locks = WeakValueDictionary()
+
+
+def _lock_cache_file(handle):
+    """Lock a permanent sidecar, never the CSV inode replaced by a writer."""
+    if os.name == "nt":
+        import msvcrt
+
+        # Windows byte-range locks need a byte even for a brand-new sidecar.
+        if os.fstat(handle.fileno()).st_size == 0:
+            handle.write(b"\0")
+            handle.flush()
+        while True:
+            handle.seek(0)
+            try:
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+                return
+            except OSError as exc:
+                if exc.errno not in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+                    raise
+                time.sleep(0.05)
+    else:
+        import fcntl
+
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+
+
+@contextmanager
+def _cache_lock(path):
+    """Serialize cooperating threads/processes for one complete cache update.
+
+    Directory aliases use the same key. Keep the sidecar on disk: unlinking it
+    can split waiters across different inodes. Closing releases the OS lock,
+    including on process exit. Reentry on the same thread reuses the outer lock.
+    """
+    path = os.path.realpath(path)
+    key = os.path.normcase(path)
+    with _cache_locks_guard:
+        state = _cache_locks.get(key)
+        if state is None:
+            state = _CacheLockState()
+            _cache_locks[key] = state
+    with state.mutex:
+        with ExitStack() as stack:
+            if state.depth == 0:
+                handle = stack.enter_context(open(path + ".lock", "a+b"))
+                _lock_cache_file(handle)
+            state.depth += 1
+            try:
+                yield
+            finally:
+                state.depth -= 1
+
+
+@contextmanager
+def _cache_access(cache_dir, contract, interval, enabled):
+    # Catch acquisition errors only; never retry/suppress errors from the fetch.
+    with ExitStack() as stack:
+        if enabled:
+            try:
+                stack.enter_context(_cache_lock(_cache_path(cache_dir, contract, interval)))
+            except OSError as exc:
+                logger.warning("无法锁定行情缓存 %s %s，本次跳过缓存: %s", contract, interval, exc)
+                enabled = False
+        yield enabled
 
 
 class HistoryLimitReached(Exception):
@@ -102,11 +182,36 @@ def _load_cache(cache_dir: str, contract: str, interval: str) -> pd.DataFrame:
 
 
 def _save_cache(cache_dir: str, contract: str, interval: str, df: pd.DataFrame) -> None:
-    path = _cache_path(cache_dir, contract, interval)
+    """Publish a complete snapshot; read/merge callers must hold _cache_lock."""
+    temporary = None
     try:
-        df.sort_values("timestamp").drop_duplicates("timestamp", keep="last").to_csv(path, index=False)
+        path = os.path.realpath(_cache_path(cache_dir, contract, interval))
+        # Same-directory temporary + replace keeps readers on a complete old or
+        # new snapshot. A failed serialization/fsync/replace leaves the old file.
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="",
+                                         dir=os.path.dirname(path),
+                                         prefix="." + os.path.basename(path) + ".",
+                                         suffix=".tmp", delete=False) as handle:
+            temporary = handle.name
+            try:
+                previous_mode = stat.S_IMODE(os.stat(path).st_mode)
+            except FileNotFoundError:
+                pass  # New caches retain the temporary file's private mode.
+            else:
+                os.chmod(temporary, previous_mode)
+            df.sort_values("timestamp").drop_duplicates("timestamp", keep="last").to_csv(handle, index=False)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        temporary = None
     except Exception as e:
-        logger.warning("写入K线缓存失败 %s: %s", path, e)
+        logger.warning("写入行情缓存失败 %s %s: %s", contract, interval, e)
+    finally:
+        if temporary is not None:
+            try:
+                os.unlink(temporary)
+            except OSError as exc:
+                logger.warning("清理行情缓存临时文件失败 %s: %s", temporary, exc)
 
 
 def read_cached_candles(cache_dir: str, contract: str, interval: str,
@@ -137,6 +242,11 @@ def fetch_funding_history(exchange, contract: str, days_back: float,
     返回 DataFrame(columns=[timestamp, funding_rate])，按时间升序；
     取不到数据(接口不支持/该合约没有历史)时返回空表，调用方应回退到实时费率近似。
     """
+    with _cache_access(cache_dir, contract, "funding", use_cache) as cache_enabled:
+        return _fetch_funding_history(exchange, contract, days_back, cache_dir, cache_enabled, progress_cb)
+
+
+def _fetch_funding_history(exchange, contract, days_back, cache_dir, use_cache, progress_cb):
     now_ts = int(time.time())
     earliest_needed = now_ts - int(days_back * 86400)
     # Gate 拒绝 from 早于最近180天的请求。保留用户真正需要的 earliest_needed 用于
@@ -259,6 +369,11 @@ def fetch_candles(
     exchange: GateExchange 实例（只用到其只读行情接口 api.list_futures_candlesticks）。
     progress_cb(fetched_bars, target_bars, message): 可选进度回调，用于网页界面显示下载进度。
     """
+    with _cache_access(cache_dir, contract, interval, use_cache) as cache_enabled:
+        return _fetch_candles(exchange, contract, interval, days_back, cache_dir, cache_enabled, progress_cb)
+
+
+def _fetch_candles(exchange, contract, interval, days_back, cache_dir, use_cache, progress_cb):
     interval_sec = INTERVAL_SECONDS.get(interval, 900)
 
     # Gate对每个周期能查询的历史深度有硬性上限（约10000根K线），超出会报错而不是返回空，
