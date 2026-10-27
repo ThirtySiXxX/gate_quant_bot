@@ -164,8 +164,112 @@ diagnostic = sealed_diagnostics(root, spec,
     Path('research/qr003/results/phase-a-input-spec.json'), root.parent/'source-probes')
 ```
 
+### Reviewed-manifest supplement
+
+QD final intake commit `6c0c5c8bf6ec91c50e4850148b847cba7ba6570e` adds a separate
+`candidate-reviewed.json`, SHA256
+`16035c8f9065ea79e4c572ce444b7af6a6b038f2526e5bda9273bf6580274dac`.
+QR independently confirms its only changes are additive quarantine/quality
+evidence and postprocessing provenance. The base manifest, every original raw
+payload and every normalized file still match their original hashes.
+
+Supplement `quarantine/cross-interval-disagreements.json`, SHA256
+`b154d32d8e1f4ef67c42b633dc0850363baa7d5120c8a450877fdcc344603529`, contains exactly
+the same **2,068** discrepancy keys as QR's own computation. QR independently
+reparsed raw sources and verified every native value and all **18,012 hourly
+components**, source rows, aggregates and differing-field labels. All variants
+remain marked unaccepted. Postprocessor SHA256 is
+`79e35285ec03afa4b346cb41b441d7919a3489584f20f511dfbce2fe750b9afd`.
+`results/reviewed-supplement-audit.json` records this PASS of evidence binding;
+it does not change G2 or authorize a replay. QD reports 18 focused/215 full tests
+for the final intake candidate; QR verified the new evidence directly instead of
+repeating the full regression suite for this supplement.
+
+### Bounded source checks completed — final readiness remains NOT_READY
+
+The coordinator dispatched the exact frozen 11-request proposal to QD. QR then
+independently parsed the sealed diagnostic responses, without importing QD's
+comparison implementation. Diagnostic manifest SHA256:
+`784be6cfdece0267abd66c117ad42c15ed7783b82b59bd7e044c5c216d1780d3` at sibling
+`source-checks-v1/diagnostic-manifest.json`. All 11 responses, declared lengths,
+complete objects, gzip CRC/EOF, exact URLs, parsed rows and begin/end reservations
+match the frozen proposal. All original v1 raw/normalized/quarantine hashes remain
+unchanged. This consumed **11 additional attempts and 17,647 bytes**, no retries:
+final shared use is **233/450 attempts and 3,558,243 bytes**. No further collection
+is requested or performed by this task.
+
+QD's completed diagnostic commit is
+`fabe12f883a803e1e98fb7d59621b561d1a92816`, parent
+`6c0c5c8bf6ec91c50e4850148b847cba7ba6570e`. The sealed diagnostic manifest above
+is unchanged. QR's final review commit is the commit containing this closing
+addendum and `results/evidence-index.json`; the exact SHA is sent to the coordinator
+after committing. No entire QD branch was merged or cherry-picked.
+
+| Diagnostic sample | Independent result |
+|---|---|
+| BTC January 2023 native 4h archive, 186 bars | All match original hourly aggregates; 1 volume differs from original REST 4h. |
+| ETH January 2023 native 4h archive, 186 bars | All match hourly aggregates; 1 volume differs from REST 4h. |
+| ETH February 2023 native 4h archive, 168 bars | All match hourly aggregates; 1 volume and the previously identified low differ from REST 4h. |
+| BTC December 2025 native daily archive, 31 bars | All match hourly aggregates; 12 bars differ from REST daily. |
+| ETH December 2025 native daily archive, 31 bars | All match hourly aggregates; 7 bars differ from REST daily. |
+| October BTC/ETH REST repeat, 50 candles | All exactly match original same-interval REST values. Both selected daily-versus-hourly discrepancies persist. |
+| September 21–22 funding, 5 records per coin | All 10 match original archival timestamps and rates exactly, including BTC +1-second and ETH +3-second values. |
+
+Thus **602/602** sampled archive bars agree with the hourly aggregates, while
+**23** disagree with the corresponding original REST bars. The sample does not
+cover or certify all months. The repeated BTC 2026-10-25 daily close remains
+80122.5 versus hourly close 80117.1; ETH 2026-10-18 remains 2409.14 versus 2409.23.
+These persisted across retrievals. No same-interval REST revision was observed in
+the 50 repeated candles; differing archive/REST values are separate source versions,
+not demonstrated repairs or proof of which historical value is correct.
+
+The funding sample specifically supports that the seconds offsets were present
+in official sources, rather than introduced by normalization. It does not certify
+every historical funding rule or real feed-arrival time. Rates/timestamps are not
+rounded, merged by proximity, filled or altered.
+
+**Final decision:** acquisition and reproducibility are sound on the tested scope;
+the frozen cross-interval acceptance requirement is still unmet. Do not choose a
+preferred source merely because it agrees with another, silently replace higher
+timeframes, delete affected periods or waive tolerances. No baseline replay,
+new labels, model fitting, activation or integration follows this result.
+
+The next decision belongs to the user and a separately reviewed data protocol:
+retain native independent intervals and seek an authoritative explanation of their
+aggregation/revision semantics, or explicitly propose a new research-only protocol
+with one declared base price stream and documented derived higher intervals. The
+latter changes this phase's “native inputs, aggregation for QC only” rule and would
+require a versioned proposal/review before implementation. Consistency alone is
+still not proof of historical truth. Neither option has been implemented or used
+to select profitable results. Training confirmation is premature until data gates
+and the subsequent event/validation assessment are complete.
+
+A narrower archive-version investigation is also a proposed choice: assess a
+consistent official historical archive version while separately retaining the
+unresolved recent REST tail as unaccepted evidence. It must not silently shorten
+the frozen range or promote the checked months to a complete calendar. Keeping
+v1 blocked is the default until the user selects a reviewed new protocol. These
+are next-decision options only; no follow-on task, collection or scheduler is started.
+
+Independent final source-check evidence:
+`results/source-check-independent-review.json`, SHA256
+`00c406699c397635fb7244ad29127d0cf302b44d608af8d3bdd4ae8cf3043d64`.
+Supplement binding evidence SHA256:
+`d642b2a48523ac7027e6f55d0bf63a8c5c7785595f3664745491ed14b4bc544c`.
+
+Final QR continuation changed only `research/qr004/validate_history.py`,
+`tests/qr_research/test_qr004_history.py`, this report and its allocated
+`research/qr004/results/` evidence. The final evidence index records exact hashes
+for code, tests, specification, protocol and reports. Source checkout HEAD remains
+`cae0d2395adf2cd3905e41cb1c16748c8247c32c`; its original staged diff SHA256 remains
+`c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce`.
+QR004 is closed with a concrete NOT_READY result. G1 passes; G2 is blocked;
+G3 has zero new baseline/label runs; G4 choices remain proposed; G5 grants no
+training permission. No runtime, risk defaults, account/config, NAS, scheduler,
+deployment or production model was changed.
+
 The following earlier sections preserve implementation checkpoints and their
-then-pending status; the actual sealed-candidate decision above supersedes them.
+then-pending status; the completed data assessment above supersedes them.
 
 ## Completed changes
 
