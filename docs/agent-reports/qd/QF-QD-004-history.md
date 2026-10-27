@@ -413,3 +413,86 @@ and original index-byte SHA256 remains
 `7b518de8325f6f420207fcd49f1821a8fddbe76ffc214fea922180b006c1cf80`.
 Control `QF-CONTROL-20261028-QD004-FINALIZE-INTAKE-1` requests ending this stage.
 Any separately proposed diagnostic acquisition is not executed under this handoff.
+
+## Frozen source diagnostics completed (2026-10-28)
+
+Dispatch `QF-DISPATCH-20261028-QD004-SOURCE-CHECKS-1` separately authorized only
+the 11 requests in QR commit `fcf49886af32c13185cf93b621f4c146004d0f17`, proposal
+SHA256 `7118d0648d3daf6c7ca37d002876b3780923113d1b90e6d1360e703aaa07406d`.
+Exact committed bytes were checked. Base for this stage: 6c0c5c8. The final report
+commit is obtainable with `git log -1 --format='%H %s' -- research/qd004/results/source-check-summary.json`.
+The five coarse-archive objects were explicitly diagnostic exceptions, not an
+intake route change. No production or research-tool source code was edited;
+existing tested bounded parser/TLS/no-redirect primitives were reused in an ad-hoc
+runner restricted to the frozen URLs. No new subsystem was built.
+
+Evidence root:
+`/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/source-checks-v1`.
+It retains exact proposal, begin/end attempt ledger, all raw responses, compressed
+and expanded hashes, response/Content-Range evidence, source mappings, full record
+comparisons and a before/after v1 hash inventory. Only metadata summary/report
+are committed; raw values and detailed comparisons remain ignored.
+
+- `diagnostic-manifest.json` SHA256:
+  `784be6cfdece0267abd66c117ad42c15ed7783b82b59bd7e044c5c216d1780d3`.
+- `comparison-evidence.json` SHA256:
+  `81aedd5bea6734cfd05fc27d3a9f8402bc3fb9f2c1445ecc131eb2b76dfca373`.
+- `diagnostic-verification.json` SHA256:
+  `db451b2c4c9cea738bc8f086acfe30b3894cb2235dc1835900a0c4e665d2092f`.
+- Tracked concise metadata: `research/qd004/results/source-check-summary.json`.
+
+All **11/11** requested objects returned HTTP 200, **11 attempts of the 14 maximum**,
+zero retries/redirects/failures. Additional bytes **17,647**; shared cumulative
+attempts **233/450** and bytes **3,558,243**. Sequential, one-second pauses,
+15-second socket timeout, 10 MiB response / 25 MiB additional / 100 MiB expanded
+caps. Five gzip archives passed full CRC/EOF validation; all eleven bodies have
+complete-response and SHA256 evidence, with no parser exclusions.
+
+### Exact route comparisons (observations, no source preference)
+
+Frozen targets were selected by QR discrepancy category/earliest affected date,
+not by strategy returns. Comparisons use exact parsed numeric equality without
+rounding, tolerance changes, replacement or a waiver.
+
+| Request(s) | Diagnostic observations |
+| --- | --- |
+| 1 BTC 4h January 2023 | All 186 archive rows equal retained hourly aggregates; 185 equal retained native REST rows. The frozen January 22 volume target differs from retained REST, while archive/hourly agree. |
+| 2 ETH 4h January 2023 | Same 186/186 hourly agreement and 185/186 native REST agreement; frozen January 22 target differs in volume. |
+| 3 ETH 4h February 2023 | All 168 archive rows equal hourly aggregates; 166 equal retained native REST. The frozen February 24 20:00 target differs in low; another row differs in volume. |
+| 4 BTC daily December 2025 | All 31 archive rows equal hourly aggregates; 19 equal retained native REST. Twelve rows differ in volume, including two with close differences. Frozen December 11 target differs in close/volume. |
+| 5 ETH daily December 2025 | All 31 archive rows equal hourly aggregates; 24 equal retained native REST. Seven volume differences, one also close; frozen December 10 target differs in close/volume. |
+| 6–7 BTC October REST repeat | New 24 hourly bars and one daily bar each exactly reproduce their retained REST counterparts. New daily vs new hourly aggregate still differs in close and volume at timestamp 1792886400. |
+| 8–9 ETH October REST repeat | New 24 hourly bars and one daily bar each exactly reproduce retained counterparts. Daily vs hourly aggregate still differs in close and volume at timestamp 1792281600. |
+| 10 BTC, 11 ETH settled funding | Each five-record new REST window exactly matches retained archive timestamp/rate pairs, including the selected offset cluster. Zero added/missing exact records and zero chronological timestamp deltas in the compared windows. |
+
+Thus all **602** checked coarse-archive rows agree with retained hourly aggregates;
+23 differ from retained native REST rows. This is limited to five specified
+objects, not certification of every archive or proof one route is universally
+correct. The two fresh REST-vs-REST pairs show the sampled discrepancy is not
+explained solely by archive/API mixing or a nonrepeatable earlier fetch. Funding
+cross-route agreement supports that the sampled offsets are present in official
+source records; it does not establish intended settlement timing, permit rounding,
+or prove the full historical schedule.
+
+Every detailed comparison retains diagnostic raw path/source row/value plus v1
+normalized path/row and original raw path/source row/value. Aggregates retain all
+hourly component references. Funding keeps both exact record sets; optional
+chronological rate/timestamp comparison is descriptive, not event relabeling.
+
+### Preservation and handoff
+
+Before/after hashes confirm **229 v1 files unchanged**, including all 210 raw
+objects, normalized streams, quarantine evidence, original manifest
+`5f5319175c42ba4a82e25ca128ac58ae3b71be4b82911fd7935cfa3678407cfd`
+and reviewed candidate
+`16035c8f9065ea79e4c572ce444b7af6a6b038f2526e5bda9273bf6580274dac`.
+No route, units, period, data values, normalization or tolerance changed. Source
+main HEAD/index preservation was checked again. No tool code changed, so focused
+or full regression suites were not unnecessarily rerun; record-specific raw/hash,
+gzip/EOF/schema/numeric comparisons, immutability and delta-whitespace checks passed.
+
+Status remains **NOT_READY**. QR must assess source semantics and any explicitly
+versioned resolution policy; persistent differences are not automatically resolved.
+No full replay, labels, model fit, training, current-metadata backdating, app/NAS
+operation, main integration, push or scheduling occurred. This finite diagnostic
+stage ends after its report/metadata commit; no further queue or fetch is started.
