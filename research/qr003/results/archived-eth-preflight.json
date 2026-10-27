@@ -1,0 +1,1328 @@
+{
+  "entry_feature_status_counts": {
+    "available": 32,
+    "unavailable": 0
+  },
+  "input_sha256": "8fb056a38d5a22f3fb97f7b5ee4fd58b680750e088abc13ebb1c2d17fcc73133",
+  "limitations": [
+    "No complete candidate observer trace yet",
+    "BTC audit and skip-once trajectories pending",
+    "Historical results already inspected; not a new holdout"
+  ],
+  "positions": [
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 9.0,
+      "entry_at": 1785607200.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 99961.51889696,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1785639600.0,
+      "observation_end": 1785639600.0,
+      "origin_id": "ETH_USDT:1785607200:short",
+      "position_id": "ETH_USDT:1785607200.0",
+      "realized_fees_usdt": 100.38503308744001,
+      "realized_net_pnl_usdt": -945.3750315455783,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -2.0383825018499993,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.00945738962330162,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 60.0,
+      "entry_at": 1785679200.0,
+      "exit_reason": "\u4f4e\u8d28\u91cf\u5f31\u4fe1\u53f7\u6301\u7eed\u786e\u8ba4\uff0c\u9000\u51fa",
+      "initial_notional_usdt": 90519.06046642002,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1785895200.0,
+      "observation_end": 1785895200.0,
+      "origin_id": "ETH_USDT:1785679200:short",
+      "position_id": "ETH_USDT:1785679200.0",
+      "realized_fees_usdt": 90.98454015656002,
+      "realized_net_pnl_usdt": -993.7597647812335,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -28.184155655312495,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.010978458676666114,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 76.0,
+      "entry_at": 1785970800.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 80617.47707136,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1786244400.0,
+      "observation_end": 1786244400.0,
+      "origin_id": "ETH_USDT:1785970800:long",
+      "position_id": "ETH_USDT:1785970800.0",
+      "realized_fees_usdt": 80.77407689907,
+      "realized_net_pnl_usdt": 220.78382519164057,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 11.6417533292875,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.0027386595712516506,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 30.0,
+      "entry_at": 1786262400.0,
+      "exit_reason": "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00",
+      "initial_notional_usdt": 82820.9378754,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1786370400.0,
+      "observation_end": 1786370400.0,
+      "origin_id": "ETH_USDT:1786262400:long",
+      "position_id": "ETH_USDT:1786262400.0",
+      "realized_fees_usdt": 82.34578748625,
+      "realized_net_pnl_usdt": -1042.5994154919351,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 9.952849705687496,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.012588597065399987,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 134.0,
+      "entry_at": 1786464000.0,
+      "exit_reason": "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00",
+      "initial_notional_usdt": 72366.90552364002,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1786946400.0,
+      "observation_end": 1786946400.0,
+      "origin_id": "ETH_USDT:1786464000:short",
+      "position_id": "ETH_USDT:1786464000.0",
+      "realized_fees_usdt": 73.09167873098001,
+      "realized_net_pnl_usdt": -1468.8671735732694,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -53.77091983770003,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.02029749873847288,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 90.0,
+      "entry_at": 1787068800.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 57700.2947514,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1787392800.0,
+      "observation_end": 1787392800.0,
+      "origin_id": "ETH_USDT:1787068800:long",
+      "position_id": "ETH_USDT:1787068800.0",
+      "realized_fees_usdt": 65.28342426270001,
+      "realized_net_pnl_usdt": 15060.480635351569,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 40.49496298574999,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.2610121958690021,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 74.0,
+      "entry_at": 1787425200.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 208336.07988420004,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1787691600.0,
+      "observation_end": 1787691600.0,
+      "origin_id": "ETH_USDT:1787425200:long",
+      "position_id": "ETH_USDT:1787425200.0",
+      "realized_fees_usdt": 208.68195622745003,
+      "realized_net_pnl_usdt": 389.546908047144,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 93.52382222537496,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.0018698005082157002,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 62.0,
+      "entry_at": 1787713200.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 212230.06072464,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1787936400.0,
+      "observation_end": 1787936400.0,
+      "origin_id": "ETH_USDT:1787713200:long",
+      "position_id": "ETH_USDT:1787713200.0",
+      "realized_fees_usdt": 211.20906515076,
+      "realized_net_pnl_usdt": -2237.9918772391115,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": -15.208335671650003,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.010545121975641407,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 24.0,
+      "entry_at": 1788040800.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 189846.72035171997,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1788127200.0,
+      "observation_end": 1788127200.0,
+      "origin_id": "ETH_USDT:1788040800:long",
+      "position_id": "ETH_USDT:1788040800.0",
+      "realized_fees_usdt": 190.97971956096,
+      "realized_net_pnl_usdt": 2070.959517224974,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 4.0591816940999985,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.010908587271817002,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 26.0,
+      "entry_at": 1788192000.0,
+      "exit_reason": "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00",
+      "initial_notional_usdt": 210560.4391671,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1788285600.0,
+      "observation_end": 1788285600.0,
+      "origin_id": "ETH_USDT:1788192000:long",
+      "position_id": "ETH_USDT:1788192000.0",
+      "realized_fees_usdt": 208.43877199590003,
+      "realized_net_pnl_usdt": -4491.2346667319625,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 39.461552336062496,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.021329907386675496,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 21.0,
+      "entry_at": 1788469200.0,
+      "exit_reason": "\u4f4e\u8d28\u91cf\u5f31\u4fe1\u53f7\u6301\u7eed\u786e\u8ba4\uff0c\u9000\u51fa",
+      "initial_notional_usdt": 165641.06758919999,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1788544800.0,
+      "observation_end": 1788544800.0,
+      "origin_id": "ETH_USDT:1788469200:long",
+      "position_id": "ETH_USDT:1788469200.0",
+      "realized_fees_usdt": 163.63472312352,
+      "realized_net_pnl_usdt": -4204.607873131852,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 28.284218648325,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.025383849152430832,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 61.0,
+      "entry_at": 1788631200.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 123589.16048951999,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1788850800.0,
+      "observation_end": 1788850800.0,
+      "origin_id": "ETH_USDT:1788631200:long",
+      "position_id": "ETH_USDT:1788631200.0",
+      "realized_fees_usdt": 123.26552739599998,
+      "realized_net_pnl_usdt": -805.2403411919481,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 34.7086267559625,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.006515460886719351,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 23.0,
+      "entry_at": 1788919200.0,
+      "exit_reason": "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00",
+      "initial_notional_usdt": 115529.67851544,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1789002000.0,
+      "observation_end": 1789002000.0,
+      "origin_id": "ETH_USDT:1788919200:long",
+      "position_id": "ETH_USDT:1788919200.0",
+      "realized_fees_usdt": 114.75807832972,
+      "realized_net_pnl_usdt": -1675.0233151328137,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 17.064865363087502,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.014498640839799053,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 43.0,
+      "entry_at": 1789142400.0,
+      "exit_reason": "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00",
+      "initial_notional_usdt": 98786.44993932,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1789297200.0,
+      "observation_end": 1789297200.0,
+      "origin_id": "ETH_USDT:1789142400:long",
+      "position_id": "ETH_USDT:1789142400.0",
+      "realized_fees_usdt": 97.09579699676999,
+      "realized_net_pnl_usdt": -3505.099663892971,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 26.6979817962,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.03548158341600487,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 21.0,
+      "entry_at": 1789365600.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 63729.85182167999,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1789441200.0,
+      "observation_end": 1789441200.0,
+      "origin_id": "ETH_USDT:1789365600:long",
+      "position_id": "ETH_USDT:1789365600.0",
+      "realized_fees_usdt": 63.664559161949995,
+      "realized_net_pnl_usdt": -201.9105716733742,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 7.660693051425,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.0031682259710619173,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 24.0,
+      "entry_at": 1789574400.0,
+      "exit_reason": "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00",
+      "initial_notional_usdt": 61669.09091455999,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1789660800.0,
+      "observation_end": 1789660800.0,
+      "origin_id": "ETH_USDT:1789574400:short",
+      "position_id": "ETH_USDT:1789574400.0",
+      "realized_fees_usdt": 62.68150547565999,
+      "realized_net_pnl_usdt": -2086.0779723824767,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -1.4326552931874996,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.033826961634194554,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 44.0,
+      "entry_at": 1789714800.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 40827.134394119996,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1789873200.0,
+      "observation_end": 1789873200.0,
+      "origin_id": "ETH_USDT:1789714800:long",
+      "position_id": "ETH_USDT:1789714800.0",
+      "realized_fees_usdt": 41.534000665380006,
+      "realized_net_pnl_usdt": 1357.063499196597,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 15.135042658024997,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.03323925421991027,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 70.0,
+      "entry_at": 1789920000.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 54410.5079256,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1790172000.0,
+      "observation_end": 1790172000.0,
+      "origin_id": "ETH_USDT:1789920000:long",
+      "position_id": "ETH_USDT:1789920000.0",
+      "realized_fees_usdt": 55.474449292740005,
+      "realized_net_pnl_usdt": 2057.960599747245,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 14.447685240025002,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.03782285220643897,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 69.0,
+      "entry_at": 1790208000.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 74991.985398,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1790456400.0,
+      "observation_end": 1790456400.0,
+      "origin_id": "ETH_USDT:1790208000:long",
+      "position_id": "ETH_USDT:1790208000.0",
+      "realized_fees_usdt": 74.8680457932,
+      "realized_net_pnl_usdt": -355.0582197621319,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 32.310964368925006,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.004734615544284565,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 24.0,
+      "entry_at": 1790463600.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 71450.6952816,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1790550000.0,
+      "observation_end": 1790550000.0,
+      "origin_id": "ETH_USDT:1790463600:long",
+      "position_id": "ETH_USDT:1790463600.0",
+      "realized_fees_usdt": 71.25955347798,
+      "realized_net_pnl_usdt": -470.1726511523494,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 16.629490434375004,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.006580378949418402,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 10.0,
+      "entry_at": 1790618400.0,
+      "exit_reason": "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00",
+      "initial_notional_usdt": 66726.93431832,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1790654400.0,
+      "observation_end": 1790654400.0,
+      "origin_id": "ETH_USDT:1790618400:long",
+      "position_id": "ETH_USDT:1790618400.0",
+      "realized_fees_usdt": 66.33904772375999,
+      "realized_net_pnl_usdt": -845.3797094637025,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 3.26747261995,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.012669242459586548,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 13.0,
+      "entry_at": 1790676000.0,
+      "exit_reason": "\u4f4e\u8d28\u91cf\u5f31\u4fe1\u53f7\u6301\u7eed\u786e\u8ba4\uff0c\u9000\u51fa",
+      "initial_notional_usdt": 58282.50967110001,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1790722800.0,
+      "observation_end": 1790722800.0,
+      "origin_id": "ETH_USDT:1790676000:long",
+      "position_id": "ETH_USDT:1790676000.0",
+      "realized_fees_usdt": 57.88740620520001,
+      "realized_net_pnl_usdt": -853.2445253689518,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 5.15018736375,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.014639804122780287,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 38.0,
+      "entry_at": 1790823600.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 49750.03801800001,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1790960400.0,
+      "observation_end": 1790960400.0,
+      "origin_id": "ETH_USDT:1790823600:long",
+      "position_id": "ETH_USDT:1790823600.0",
+      "realized_fees_usdt": 49.768512514360005,
+      "realized_net_pnl_usdt": -20.484056565661838,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 7.664536771299999,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.0004117395158220889,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 59.0,
+      "entry_at": 1791100800.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 49547.73716592,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1791313200.0,
+      "observation_end": 1791313200.0,
+      "origin_id": "ETH_USDT:1791100800:long",
+      "position_id": "ETH_USDT:1791100800.0",
+      "realized_fees_usdt": 49.40485300064,
+      "realized_net_pnl_usdt": -344.85537049733983,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "long",
+      "signed_funding_paid_usdt": 9.682186936699999,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.0069600629659943136,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 33.0,
+      "entry_at": 1791388800.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 46064.25120682,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1791507600.0,
+      "observation_end": 1791507600.0,
+      "origin_id": "ETH_USDT:1791388800:short",
+      "position_id": "ETH_USDT:1791388800.0",
+      "realized_fees_usdt": 45.24054049823,
+      "realized_net_pnl_usdt": 1600.7874047755759,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": 1.3934719062,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.03475118693644526,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 84.0,
+      "entry_at": 1791558000.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 62089.42663060001,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1791860400.0,
+      "observation_end": 1791860400.0,
+      "origin_id": "ETH_USDT:1791558000:short",
+      "position_id": "ETH_USDT:1791558000.0",
+      "realized_fees_usdt": 62.094987128300005,
+      "realized_net_pnl_usdt": -66.23314839808648,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -6.982834130199998,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.0010667379615556683,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 33.0,
+      "entry_at": 1791961200.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 61429.98194592001,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1792080000.0,
+      "observation_end": 1792080000.0,
+      "origin_id": "ETH_USDT:1791961200:short",
+      "position_id": "ETH_USDT:1791961200.0",
+      "realized_fees_usdt": 60.65278343418001,
+      "realized_net_pnl_usdt": 1501.8772184099091,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -8.132978364075,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.024448602634005157,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 57.0,
+      "entry_at": 1792112400.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 76442.12721626,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1792317600.0,
+      "observation_end": 1792317600.0,
+      "origin_id": "ETH_USDT:1792112400:short",
+      "position_id": "ETH_USDT:1792112400.0",
+      "realized_fees_usdt": 76.19435074693,
+      "realized_net_pnl_usdt": 439.1633102210631,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -19.804722307987497,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.005745043030770717,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 7.0,
+      "entry_at": 1792339200.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 80822.2493166,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1792364400.0,
+      "observation_end": 1792364400.0,
+      "origin_id": "ETH_USDT:1792339200:short",
+      "position_id": "ETH_USDT:1792339200.0",
+      "realized_fees_usdt": 81.11651080764,
+      "realized_net_pnl_usdt": -666.8262051686305,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -2.8132877190000003,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.008250527680274195,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 40.0,
+      "entry_at": 1792411200.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 74170.06571946,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1792555200.0,
+      "observation_end": 1792555200.0,
+      "origin_id": "ETH_USDT:1792411200:short",
+      "position_id": "ETH_USDT:1792411200.0",
+      "realized_fees_usdt": 74.56206576753002,
+      "realized_net_pnl_usdt": -839.3746379571025,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -19.187523950425,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": -0.011316892196535776,
+      "target_positive": 0,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [],
+      "censored": false,
+      "duration_hours": 64.0,
+      "entry_at": 1792656000.0,
+      "exit_reason": "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c",
+      "initial_notional_usdt": 65775.17823282,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": 1792886400.0,
+      "observation_end": 1792886400.0,
+      "origin_id": "ETH_USDT:1792656000:short",
+      "position_id": "ETH_USDT:1792656000.0",
+      "realized_fees_usdt": 64.82834524026,
+      "realized_net_pnl_usdt": 1858.1712997454877,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -29.333659865737495,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": 0.028250342297336584,
+      "target_positive": 1,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    },
+    {
+      "censor_reasons": [
+        "terminal_forced_close"
+      ],
+      "censored": true,
+      "duration_hours": 50.0,
+      "entry_at": 1792911600.0,
+      "exit_reason": "\u56de\u6d4b\u7ed3\u675f\u5f3a\u5e73",
+      "initial_notional_usdt": 84340.12860000001,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "label_end": null,
+      "observation_end": 1793091600.0,
+      "origin_id": "ETH_USDT:1792911600:short",
+      "position_id": "ETH_USDT:1792911600.0",
+      "realized_fees_usdt": 83.8864534095,
+      "realized_net_pnl_usdt": 850.613462879258,
+      "reductions": 0,
+      "schema_version": 1,
+      "side": "short",
+      "signed_funding_paid_usdt": -27.149535288750005,
+      "symbol": "ETH_USDT",
+      "target_net_return_fraction": null,
+      "target_positive": null,
+      "trajectory_id": "ETH_USDT:archived_baseline"
+    }
+  ],
+  "reconciliation": {
+    "execution_sha256": "c305f8477860be4b3fddbfef1b52113b163caa8b7a6fd5c39c689dcbdcafda1e",
+    "final_equity_usdt": 9287.991489687984,
+    "initial_equity_usdt": 10000,
+    "ledger_net_pnl_usdt": -712.0085103120198,
+    "residual_usdt": 3.410605131648481e-12,
+    "slippage_already_in_fill_prices": true,
+    "terminal_cash_included": true,
+    "tolerance_usdt": 1e-08
+  },
+  "scope": "Archived ETH trade-only preflight; not Phase A probe completion",
+  "source": "QR-001 existing_strategy_cost1, unchanged",
+  "summary": {
+    "censored": 1,
+    "distinct_market_origins": 32,
+    "effective_independent_sample_size": null,
+    "embargo_clusters": [
+      {
+        "end": 1786456800.0,
+        "origins": [
+          "ETH_USDT:1785607200:short",
+          "ETH_USDT:1785679200:short",
+          "ETH_USDT:1785970800:long",
+          "ETH_USDT:1786262400:long"
+        ],
+        "rows": 4,
+        "start": 1785607200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1787032800.0,
+        "origins": [
+          "ETH_USDT:1786464000:short"
+        ],
+        "rows": 1,
+        "start": 1786464000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1788022800.0,
+        "origins": [
+          "ETH_USDT:1787068800:long",
+          "ETH_USDT:1787425200:long",
+          "ETH_USDT:1787713200:long"
+        ],
+        "rows": 3,
+        "start": 1787068800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1788372000.0,
+        "origins": [
+          "ETH_USDT:1788040800:long",
+          "ETH_USDT:1788192000:long"
+        ],
+        "rows": 2,
+        "start": 1788040800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1789088400.0,
+        "origins": [
+          "ETH_USDT:1788469200:long",
+          "ETH_USDT:1788631200:long",
+          "ETH_USDT:1788919200:long"
+        ],
+        "rows": 3,
+        "start": 1788469200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1789527600.0,
+        "origins": [
+          "ETH_USDT:1789142400:long",
+          "ETH_USDT:1789365600:long"
+        ],
+        "rows": 2,
+        "start": 1789142400.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1790809200.0,
+        "origins": [
+          "ETH_USDT:1789574400:short",
+          "ETH_USDT:1789714800:long",
+          "ETH_USDT:1789920000:long",
+          "ETH_USDT:1790208000:long",
+          "ETH_USDT:1790463600:long",
+          "ETH_USDT:1790618400:long",
+          "ETH_USDT:1790676000:long"
+        ],
+        "rows": 7,
+        "start": 1789574400.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1791046800.0,
+        "origins": [
+          "ETH_USDT:1790823600:long"
+        ],
+        "rows": 1,
+        "start": 1790823600.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1791946800.0,
+        "origins": [
+          "ETH_USDT:1791100800:long",
+          "ETH_USDT:1791388800:short",
+          "ETH_USDT:1791558000:short"
+        ],
+        "rows": 3,
+        "start": 1791100800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1792641600.0,
+        "origins": [
+          "ETH_USDT:1791961200:short",
+          "ETH_USDT:1792112400:short",
+          "ETH_USDT:1792339200:short",
+          "ETH_USDT:1792411200:short"
+        ],
+        "rows": 4,
+        "start": 1791961200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1793178000.0,
+        "origins": [
+          "ETH_USDT:1792656000:short",
+          "ETH_USDT:1792911600:short"
+        ],
+        "rows": 2,
+        "start": 1792656000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      }
+    ],
+    "exit_reasons": {
+      "\u4f4e\u8d28\u91cf\u5f31\u4fe1\u53f7\u6301\u7eed\u786e\u8ba4\uff0c\u9000\u51fa": 3,
+      "\u53cd\u5411\u4fe1\u53f7\u786e\u8ba4\uff0c\u5148\u5e73\u540e\u5f00": 7,
+      "\u56de\u6d4b\u7ed3\u675f\u5f3a\u5e73": 1,
+      "\u76c8\u5229\u540e\u56de\u64a4\u8fbe\u5230ATR\u9000\u51fa\u9608\u503c": 21
+    },
+    "folds": [
+      {
+        "censored": 0,
+        "end_exclusive": 1787911200,
+        "entries": 8,
+        "mature_before_start": 0,
+        "natural_labels": 8,
+        "natural_labels_closed_in_fold": 7,
+        "side_counts": {
+          "long": 5,
+          "short": 3
+        },
+        "start": 1785319200
+      },
+      {
+        "censored": 0,
+        "end_exclusive": 1790503200,
+        "entries": 12,
+        "mature_before_start": 7,
+        "natural_labels": 12,
+        "natural_labels_closed_in_fold": 11,
+        "side_counts": {
+          "long": 11,
+          "short": 1
+        },
+        "start": 1787911200
+      },
+      {
+        "censored": 1,
+        "end_exclusive": 1793091600,
+        "entries": 12,
+        "mature_before_start": 18,
+        "natural_labels": 11,
+        "natural_labels_closed_in_fold": 11,
+        "side_counts": {
+          "long": 4,
+          "short": 8
+        },
+        "start": 1790503200
+      }
+    ],
+    "holding_hours": {
+      "max": 134.0,
+      "median": 41.5,
+      "min": 7.0
+    },
+    "limitation": "Executed position labels alone do not cover all eligible opportunities; clusters are not independent sample estimates",
+    "natural_labels": 31,
+    "overlap_clusters": [
+      {
+        "end": 1785639600.0,
+        "origins": [
+          "ETH_USDT:1785607200:short"
+        ],
+        "rows": 1,
+        "start": 1785607200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1785895200.0,
+        "origins": [
+          "ETH_USDT:1785679200:short"
+        ],
+        "rows": 1,
+        "start": 1785679200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1786244400.0,
+        "origins": [
+          "ETH_USDT:1785970800:long"
+        ],
+        "rows": 1,
+        "start": 1785970800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1786370400.0,
+        "origins": [
+          "ETH_USDT:1786262400:long"
+        ],
+        "rows": 1,
+        "start": 1786262400.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1786946400.0,
+        "origins": [
+          "ETH_USDT:1786464000:short"
+        ],
+        "rows": 1,
+        "start": 1786464000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1787392800.0,
+        "origins": [
+          "ETH_USDT:1787068800:long"
+        ],
+        "rows": 1,
+        "start": 1787068800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1787691600.0,
+        "origins": [
+          "ETH_USDT:1787425200:long"
+        ],
+        "rows": 1,
+        "start": 1787425200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1787936400.0,
+        "origins": [
+          "ETH_USDT:1787713200:long"
+        ],
+        "rows": 1,
+        "start": 1787713200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1788127200.0,
+        "origins": [
+          "ETH_USDT:1788040800:long"
+        ],
+        "rows": 1,
+        "start": 1788040800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1788285600.0,
+        "origins": [
+          "ETH_USDT:1788192000:long"
+        ],
+        "rows": 1,
+        "start": 1788192000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1788544800.0,
+        "origins": [
+          "ETH_USDT:1788469200:long"
+        ],
+        "rows": 1,
+        "start": 1788469200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1788850800.0,
+        "origins": [
+          "ETH_USDT:1788631200:long"
+        ],
+        "rows": 1,
+        "start": 1788631200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1789002000.0,
+        "origins": [
+          "ETH_USDT:1788919200:long"
+        ],
+        "rows": 1,
+        "start": 1788919200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1789297200.0,
+        "origins": [
+          "ETH_USDT:1789142400:long"
+        ],
+        "rows": 1,
+        "start": 1789142400.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1789441200.0,
+        "origins": [
+          "ETH_USDT:1789365600:long"
+        ],
+        "rows": 1,
+        "start": 1789365600.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1789660800.0,
+        "origins": [
+          "ETH_USDT:1789574400:short"
+        ],
+        "rows": 1,
+        "start": 1789574400.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1789873200.0,
+        "origins": [
+          "ETH_USDT:1789714800:long"
+        ],
+        "rows": 1,
+        "start": 1789714800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1790172000.0,
+        "origins": [
+          "ETH_USDT:1789920000:long"
+        ],
+        "rows": 1,
+        "start": 1789920000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1790456400.0,
+        "origins": [
+          "ETH_USDT:1790208000:long"
+        ],
+        "rows": 1,
+        "start": 1790208000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1790550000.0,
+        "origins": [
+          "ETH_USDT:1790463600:long"
+        ],
+        "rows": 1,
+        "start": 1790463600.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1790654400.0,
+        "origins": [
+          "ETH_USDT:1790618400:long"
+        ],
+        "rows": 1,
+        "start": 1790618400.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1790722800.0,
+        "origins": [
+          "ETH_USDT:1790676000:long"
+        ],
+        "rows": 1,
+        "start": 1790676000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1790960400.0,
+        "origins": [
+          "ETH_USDT:1790823600:long"
+        ],
+        "rows": 1,
+        "start": 1790823600.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1791313200.0,
+        "origins": [
+          "ETH_USDT:1791100800:long"
+        ],
+        "rows": 1,
+        "start": 1791100800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1791507600.0,
+        "origins": [
+          "ETH_USDT:1791388800:short"
+        ],
+        "rows": 1,
+        "start": 1791388800.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1791860400.0,
+        "origins": [
+          "ETH_USDT:1791558000:short"
+        ],
+        "rows": 1,
+        "start": 1791558000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1792080000.0,
+        "origins": [
+          "ETH_USDT:1791961200:short"
+        ],
+        "rows": 1,
+        "start": 1791961200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1792317600.0,
+        "origins": [
+          "ETH_USDT:1792112400:short"
+        ],
+        "rows": 1,
+        "start": 1792112400.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1792364400.0,
+        "origins": [
+          "ETH_USDT:1792339200:short"
+        ],
+        "rows": 1,
+        "start": 1792339200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1792555200.0,
+        "origins": [
+          "ETH_USDT:1792411200:short"
+        ],
+        "rows": 1,
+        "start": 1792411200.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1792886400.0,
+        "origins": [
+          "ETH_USDT:1792656000:short"
+        ],
+        "rows": 1,
+        "start": 1792656000.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      },
+      {
+        "end": 1793091600.0,
+        "origins": [
+          "ETH_USDT:1792911600:short"
+        ],
+        "rows": 1,
+        "start": 1792911600.0,
+        "symbols": [
+          "ETH_USDT"
+        ]
+      }
+    ],
+    "position_rows": 32,
+    "repeated_origin_rows": 0,
+    "side_counts": {
+      "long": 20,
+      "short": 12
+    }
+  },
+  "training_performed": false
+}
