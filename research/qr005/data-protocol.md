@@ -1,6 +1,6 @@
 # QF-QR-005: canonical hourly research data v2
 
-Status: DRAFT_FOR_QD_REVIEW. QR owns semantics and independent acceptance; QD owns
+Status: READY_FOR_QD_DATA_ONLY_BUILD; rules frozen after QD counterpart review. QR owns semantics and independent acceptance; QD owns
 the builder and dataset. No runtime/shared interface migration or training.
 Human authorization: BTC/ETH data rules and reacceptance, 2026-10-28. File claims:
 QF-DISPATCH-20261028-QR005-SPEC-1. Preserve every QR004/QD004 artifact unchanged.
@@ -152,3 +152,12 @@ the exact bounded training plan for confirmation; never start automatically.
 Official source formats and source-review evidence remain linked from
 research/qr004/data-protocol.md and its immutable results. No new source lookup
 or network budget is used in this phase.
+
+## Freeze decision
+
+QD accepted the data-only contract in commit a7cdd17d748e9d576ef335c587a90ed3ab5f5c17
+against draft b545c8a9609c53c6ed3bb0735253a43a600eee05. No aggregation,
+funding or source semantics changed during freeze. G3 remains BLOCKED and this
+phase is limited to zero baseline replays. The event descriptor interval 0 is
+not a native annualization/cost parameter. Future replay policy/adapter needs a
+separate reviewable decision. This freeze records approval to build data only.

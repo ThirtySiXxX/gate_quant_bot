@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "protocol_id": "canonical_hourly_v2-r1",
-  "state": "DRAFT_FOR_QD_REVIEW",
+  "state": "READY_FOR_QD_DATA_ONLY_BUILD",
   "owner": "QR semantics; QD producer; QR independent review",
   "scope": {
     "venue": "gate",
@@ -176,8 +176,8 @@
   "budget": {
     "downloads": 0,
     "model_fits": 0,
-    "max_baseline_replays_per_coin": 1,
-    "replay_gate": "data acceptance AND explicit native funding compatibility finding; otherwise zero"
+    "max_baseline_replays_per_coin": 0,
+    "replay_gate": "BLOCKED by counterpart compatibility review; future separate decision required"
   },
   "limitations": [
     "Single frozen official hourly stream is an explicit research basis, not proven historical truth",
@@ -185,5 +185,11 @@
     "Funding schedule and historical contract metadata remain unproven",
     "Native prorated funding cashflow cannot represent exact settlement events",
     "No unseen prospective holdout or training confirmation"
-  ]
+  ],
+  "counterpart_review": {
+    "commit": "a7cdd17d748e9d576ef335c587a90ed3ab5f5c17",
+    "reviewed_draft_commit": "b545c8a9609c53c6ed3bb0735253a43a600eee05",
+    "reviewed_spec_sha256": "4ba409d6270c0c0d6597389fc1b970ddc3657df74d392a444e260c6976cdc4ed",
+    "decision": "ACCEPT_DATA_ONLY; G3_BLOCKED; ZERO_BASELINES"
+  }
 }

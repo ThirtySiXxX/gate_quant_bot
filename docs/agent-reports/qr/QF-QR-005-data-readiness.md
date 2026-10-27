@@ -1,6 +1,6 @@
 # QF-QR-005 BTC/ETH canonical-data reacceptance
 
-Date: 2026-10-28. Role QR. Status: DRAFT_FOR_QD_REVIEW; no training.
+Date: 2026-10-28. Role QR. Status: RULES_FROZEN_FOR_DATA_ONLY_BUILD; G3 BLOCKED; no training.
 Worktree / branch: /Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot,
 codex/qr-validation-baseline. Base: 78d90df97c11880246e8f7323e216c24b6eeae87.
 Dispatch: QF-DISPATCH-20261028-QR005-SPEC-1. User asked to resolve BTC/ETH data
@@ -37,3 +37,13 @@ remain unproven. G3 cannot be called ready by deriving consistent candles alone.
 QD counterpart review -> freeze rules -> QD isolated build/tests -> independent
 QR checks and report. No merge or training. Proposed funding-accounting adapter
 may be specified for later review; no runtime implementation in this task.
+
+## Reviewed freeze
+
+QD commit a7cdd17d748e9d576ef335c587a90ed3ab5f5c17 accepts data production
+and blocks economic-label replay. Spec status/review metadata and the phase budget
+were updated accordingly; price/funding/lineage semantics are unchanged. No new
+baseline will run. QR independent validator is in development; 15 focused offline
+adversarial tests passed with Python socket connections blocked. No raw data or
+runtime file was changed. Next dependency is coordinator dispatch of the isolated
+QD builder, then its exact manifest and producer tests.
