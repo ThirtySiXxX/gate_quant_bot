@@ -90,6 +90,14 @@ quarantine partitions; reject traversal and symlink escapes. Keep downloaded
 payload bytes, URL/parameters, retrieval time, HTTP outcome, lengths and hashes.
 Record failed retrievals in the attempt ledger even when there is no payload.
 
+Concrete serialization agreed in the coordinator handoff: `data_range` has `start`
+and `end_exclusive`; candle `units` is `{timestamp: UTC_unix_seconds,
+price: USDT_per_base, volume: contracts}`, funding `units` is
+`{timestamp: UTC_unix_seconds, funding_rate: fraction_per_settlement}`.
+`availability_basis` equals the corresponding `normalization` value in the JSON.
+Raw `response_headers` retain Content-Range for 206. A deliberately partial probe
+is `complete_object: false` and cannot be a normalized row's source.
+
 Canonical CSV columns and availability rules are in the JSON. Row provenance is
 `source_id` plus one-based parsed data-row `source_row` (header excluded); duplicate
 lineage retains all sources separately. Include source format/header interpretation
@@ -146,3 +154,21 @@ comparators; details are in the JSON. No hyperparameter or threshold search.
 More same-market history is the first choice. More data families are not inherently
 dirty; undocumented origins, mixed meanings, silent repairs and future availability
 are what make them unreliable. Historical profitability never proves future returns.
+
+## Independent validator
+
+Run `python -m research.qr004.validate_history --root DATASET_ROOT --manifest
+MANIFEST_PATH --output NEW_REPORT_PATH` from the QR worktree, using the existing
+read-only interpreter and no network. Output must be new; source files are never
+modified. The validator verifies native raw row values using Decimal, normalized
+row provenance, OHLCV, closed-time boundaries, full candle grids, raw conflicts,
+gzip/206 integrity, hashes and cross-interval consistency. It always reports
+`training_status: NOT_READY`: historical schedule, duplicate lineage, attempt
+ledger, metadata, native warmup, label/evaluation gates and permission require
+separate reviewed evidence. A structural PASS alone never certifies training.
+
+Funding seconds offsets remain exact. Cross-interval comparisons require exact
+Decimal OHLCV equality; discrepancies are retained for source review, never
+automatically tolerated or repaired. Absolute close moves over 30% per candle and
+funding over 1% per settlement are flags for source review, not deletion rules or
+proof of bad data. This diagnostic threshold is fixed before reading the dataset.

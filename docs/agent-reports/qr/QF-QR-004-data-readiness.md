@@ -18,17 +18,29 @@ change. The protocol ranks additional data without authorizing its acquisition.
 
 ## Files modified
 
-This checkpoint: `research/qr004/data-protocol.md`,
-`research/qr004/data-acceptance.json`, and this report. Remaining allocated QR
-paths: `research/qr004/validate_history.py`, `research/qr004/results/`,
-`tests/qr_research/test_qr004_history.py`. Shared progress/decisions remain under
+Specification checkpoint `b573d5278b2bf74770b996bc03ba11fe2cb19a08`:
+`research/qr004/data-protocol.md`, `research/qr004/data-acceptance.json`, and this
+report. Validator checkpoint additionally changes `research/qr004/validate_history.py`
+and `tests/qr_research/test_qr004_history.py`. `research/qr004/results/` is reserved
+for independent acceptance evidence. Shared progress/decisions remain under
 their integration editor; this report is the handoff evidence.
 
 ## Tests and results
 
-Spec JSON parse and date/budget checks pass; `git diff --check` passes at this
-checkpoint. No downloaded dataset is accepted yet. Validator/negative fixtures
-and independent QD intake review are the next steps. No model has been fitted.
+Spec JSON parse and date/budget checks pass; `git diff --check` passes.
+**16 focused offline tests pass**, with socket connections blocked: valid fixture
+cannot grant training permission; raw hash/normalization tampering; advanced
+availability; deleted/duplicate bars; conflicting raw overlap; mark/trade confusion;
+unit/row lineage drift; traversal/symlink escape; cross-interval discrepancy;
+invalid OHLCV/grid/NaN; funding offsets/interval ambiguity; truncated gzip;
+206 completeness; manifest universe/spec drift.
+
+Command: load `tests.qr_research.test_qr004_history` through `unittest`, using
+`PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python`
+and patched `socket.create_connection`, `socket.socket.connect`, `connect_ex`
+raising on use. Independent validator never downloads, repairs, fits or reads
+operational config. No actual downloaded dataset is accepted yet; QD intake and
+semantic evidence are pending. No model has been fitted.
 
 ## Known limitations
 
