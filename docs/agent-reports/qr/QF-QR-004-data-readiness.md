@@ -28,7 +28,7 @@ their integration editor; this report is the handoff evidence.
 ## Tests and results
 
 Spec JSON parse and date/budget checks pass; `git diff --check` passes.
-**21 focused offline tests pass**, with socket connections blocked: valid fixture
+**22 focused offline tests pass**, with socket connections blocked: valid fixture
 cannot grant training permission; raw hash/normalization tampering; advanced
 availability; deleted/duplicate bars; conflicting raw overlap; mark/trade confusion;
 unit/row lineage drift; traversal/symlink escape; cross-interval discrepancy;
@@ -47,6 +47,8 @@ every retained reference, conflict variants and boundary exclusions are compared
 to independent raw parsing, not accepted based on file hashes alone. Non-boundary
 exclusions remain blocked for separate reason review. Historical funding schedule
 is still not inferred from inter-event durations.
+The final transport fixture also rejects a valid-looking JSON body marked
+incomplete/failed and independently checks saved bytes against HTTP Content-Length.
 
 Command: load `tests.qr_research.test_qr004_history` through `unittest`, using
 `PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python`

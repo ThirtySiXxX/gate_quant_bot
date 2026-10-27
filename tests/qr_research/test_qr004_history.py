@@ -292,7 +292,16 @@ class HistoryAcceptanceTests(unittest.TestCase):
         source["complete_object"] = False
         self.assertEqual(raw_rows(path, source, identity, self.spec), ([], False))
         source["response_headers"] = {"Content-Range": f"bytes 0-{source['bytes']-1}/{source['bytes']}"}
+        source["complete_object"] = True
         self.assertTrue(raw_rows(path, source, identity, self.spec)[1])
+
+    def test_failed_complete_json_never_becomes_normalized_source(self):
+        source = self.manifest["raw_files"][0]
+        source["complete_object"] = False
+        self.assert_issue("normalized source missing/incomplete")
+        source["complete_object"] = True
+        source["response_headers"] = {"Content-Length": str(source["bytes"]+1)}
+        self.assert_issue("Content-Length differs")
 
     def test_manifest_universe_and_spec_drift_fail_closed(self):
         self.manifest["symbols"].append("SOL_USDT")

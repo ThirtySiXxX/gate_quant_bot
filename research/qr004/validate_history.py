@@ -111,20 +111,19 @@ def canonical(row, kind):
 def raw_rows(path, item, identity, spec):
     """Verify complete objects and independently parse official native schemas."""
     symbol, kind, seconds, route = identity
-    if item["http_status"] not in (200, 206):
+    if item["http_status"] not in (200, 206) or item.get("accepted") is False or item.get("complete_object") is False:
         return [], False  # Retained failed attempt; never eligible lineage.
     payload = path.read_bytes()
     if len(payload) != item["bytes"]:
         raise ValueError("raw byte length mismatch")
     if len(payload) > spec["intake_budget"]["max_compressed_bytes_per_file"]:
         raise ValueError("raw file exceeds byte limit")
+    headers = {k.lower(): str(v) for k, v in item.get("response_headers", {}).items()}
+    if "content-length" in headers and integer(headers["content-length"]) != len(payload):
+        raise ValueError("HTTP Content-Length differs from saved bytes")
     if item["http_status"] == 206:
-        headers = {k.lower(): str(v) for k, v in item.get("response_headers", {}).items()}
         match = re.fullmatch(r"bytes 0-(\d+)/(\d+)", headers.get("content-range", ""))
         if not match or int(match[1])+1 != len(payload) or int(match[2]) != len(payload):
-            # Intentionally partial source probes may be retained, never consumed.
-            if item.get("complete_object") is False:
-                return [], False
             raise ValueError("partial/unknown 206 object completeness")
     if route == "archive":
         cap = spec["intake_budget"]["max_uncompressed_bytes_per_file"]
