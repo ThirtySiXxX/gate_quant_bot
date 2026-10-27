@@ -1,0 +1,365 @@
+{
+  "G1_G2": "PENDING_INDEPENDENT_QR_ACCEPTANCE",
+  "G3": "BLOCKED",
+  "base_manifest_sha256": "5f5319175c42ba4a82e25ca128ac58ae3b71be4b82911fd7935cfa3678407cfd",
+  "baseline_replays": 0,
+  "builder_commit": "710fbca77f677cfcdcd4fbe10d319f63483f48b9",
+  "builder_sha256": "7f2e0a11b96c97d833437b2c4dcdf20337a56e2199b05f4e153ac5ec92263de5",
+  "candidate_reviewed_sha256": "16035c8f9065ea79e4c572ce444b7af6a6b038f2526e5bda9273bf6580274dac",
+  "data_range": {
+    "end_exclusive": 1793091600,
+    "start": 1672531200
+  },
+  "dataset_root": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd005/canonical-hourly-v2",
+  "disk_verification": "PASS_LOCAL_DISK_RECOMPUTATION",
+  "files": [
+    {
+      "availability_basis": "open_plus_interval_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "available_at",
+        "source_id",
+        "source_row"
+      ],
+      "derivation": {
+        "method": "copy_frozen_bytes",
+        "parent_path": "normalized/BTC_USDT-3600s.csv",
+        "parent_sha256": "e292642723c6f76e97c7565e4b7ed97a76cf382402a3dcad22a7d902ff069789"
+      },
+      "interval_seconds": 3600,
+      "kind": "candles",
+      "path": "normalized/BTC_USDT-3600s.csv",
+      "rows": 33489,
+      "sha256": "e292642723c6f76e97c7565e4b7ed97a76cf382402a3dcad22a7d902ff069789",
+      "symbol": "BTC_USDT",
+      "units": {
+        "price": "USDT_per_base",
+        "timestamp": "UTC_unix_seconds",
+        "volume": "contracts"
+      }
+    },
+    {
+      "availability_basis": "source_settlement_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "funding_rate",
+        "available_at",
+        "source_id",
+        "source_row"
+      ],
+      "derivation": {
+        "method": "copy_frozen_bytes",
+        "parent_path": "normalized/BTC_USDT-funding.csv",
+        "parent_sha256": "d962b994e147a791ee148ae07b0884b0bb8430bc9e4a4b72b48ee51a6782f9a4"
+      },
+      "interval_seconds": 0,
+      "kind": "funding",
+      "path": "normalized/BTC_USDT-funding.csv",
+      "rows": 4187,
+      "sha256": "d962b994e147a791ee148ae07b0884b0bb8430bc9e4a4b72b48ee51a6782f9a4",
+      "symbol": "BTC_USDT",
+      "units": {
+        "funding_rate": "fraction_per_settlement",
+        "timestamp": "UTC_unix_seconds"
+      }
+    },
+    {
+      "availability_basis": "open_plus_interval_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "available_at"
+      ],
+      "derivation": {
+        "lineage_path": "lineage/BTC_USDT-14400s.jsonl",
+        "lineage_rows": 8372,
+        "lineage_sha256": "7effddd1d16038520f25ccea56ee5f60de4d46113818595e446cec53030c3239",
+        "method": "utc_ohlcv_from_frozen_hourly",
+        "parent_path": "normalized/BTC_USDT-3600s.csv",
+        "parent_sha256": "e292642723c6f76e97c7565e4b7ed97a76cf382402a3dcad22a7d902ff069789"
+      },
+      "interval_seconds": 14400,
+      "kind": "candles",
+      "path": "normalized/BTC_USDT-14400s.csv",
+      "rows": 8372,
+      "sha256": "c700b9c3b19a2636a541e71b08582fab5d255959de32d737ef5660972bf6788b",
+      "symbol": "BTC_USDT",
+      "units": {
+        "price": "USDT_per_base",
+        "timestamp": "UTC_unix_seconds",
+        "volume": "contracts"
+      }
+    },
+    {
+      "availability_basis": "open_plus_interval_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "available_at"
+      ],
+      "derivation": {
+        "lineage_path": "lineage/BTC_USDT-86400s.jsonl",
+        "lineage_rows": 1395,
+        "lineage_sha256": "5a33f5536c3179c813b3d2ce33453c7a7fd28b792a72de6e298c569ba5b76f89",
+        "method": "utc_ohlcv_from_frozen_hourly",
+        "parent_path": "normalized/BTC_USDT-3600s.csv",
+        "parent_sha256": "e292642723c6f76e97c7565e4b7ed97a76cf382402a3dcad22a7d902ff069789"
+      },
+      "interval_seconds": 86400,
+      "kind": "candles",
+      "path": "normalized/BTC_USDT-86400s.csv",
+      "rows": 1395,
+      "sha256": "a4801120408ea72342ad48e6c49fa38e5507970bd0ecf8ac2af35ac40effc330",
+      "symbol": "BTC_USDT",
+      "units": {
+        "price": "USDT_per_base",
+        "timestamp": "UTC_unix_seconds",
+        "volume": "contracts"
+      }
+    },
+    {
+      "availability_basis": "open_plus_interval_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "available_at",
+        "source_id",
+        "source_row"
+      ],
+      "derivation": {
+        "method": "copy_frozen_bytes",
+        "parent_path": "normalized/ETH_USDT-3600s.csv",
+        "parent_sha256": "b258376d40a44fb5f3a5cfeddbdc3710a39f360f57881e52af6c497d7690acfc"
+      },
+      "interval_seconds": 3600,
+      "kind": "candles",
+      "path": "normalized/ETH_USDT-3600s.csv",
+      "rows": 33489,
+      "sha256": "b258376d40a44fb5f3a5cfeddbdc3710a39f360f57881e52af6c497d7690acfc",
+      "symbol": "ETH_USDT",
+      "units": {
+        "price": "USDT_per_base",
+        "timestamp": "UTC_unix_seconds",
+        "volume": "contracts"
+      }
+    },
+    {
+      "availability_basis": "source_settlement_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "funding_rate",
+        "available_at",
+        "source_id",
+        "source_row"
+      ],
+      "derivation": {
+        "method": "copy_frozen_bytes",
+        "parent_path": "normalized/ETH_USDT-funding.csv",
+        "parent_sha256": "b4a0bc1adce31a6d23c381a92ced45f72062cecd27101a236d52e240eaf60fcd"
+      },
+      "interval_seconds": 0,
+      "kind": "funding",
+      "path": "normalized/ETH_USDT-funding.csv",
+      "rows": 4187,
+      "sha256": "b4a0bc1adce31a6d23c381a92ced45f72062cecd27101a236d52e240eaf60fcd",
+      "symbol": "ETH_USDT",
+      "units": {
+        "funding_rate": "fraction_per_settlement",
+        "timestamp": "UTC_unix_seconds"
+      }
+    },
+    {
+      "availability_basis": "open_plus_interval_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "available_at"
+      ],
+      "derivation": {
+        "lineage_path": "lineage/ETH_USDT-14400s.jsonl",
+        "lineage_rows": 8372,
+        "lineage_sha256": "7effddd1d16038520f25ccea56ee5f60de4d46113818595e446cec53030c3239",
+        "method": "utc_ohlcv_from_frozen_hourly",
+        "parent_path": "normalized/ETH_USDT-3600s.csv",
+        "parent_sha256": "b258376d40a44fb5f3a5cfeddbdc3710a39f360f57881e52af6c497d7690acfc"
+      },
+      "interval_seconds": 14400,
+      "kind": "candles",
+      "path": "normalized/ETH_USDT-14400s.csv",
+      "rows": 8372,
+      "sha256": "1c216dcce2c265ff33aabd6027e3ac2b86af1eb2ee5fc16075a28b37764bfdf9",
+      "symbol": "ETH_USDT",
+      "units": {
+        "price": "USDT_per_base",
+        "timestamp": "UTC_unix_seconds",
+        "volume": "contracts"
+      }
+    },
+    {
+      "availability_basis": "open_plus_interval_proxy_not_observed_arrival",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "available_at"
+      ],
+      "derivation": {
+        "lineage_path": "lineage/ETH_USDT-86400s.jsonl",
+        "lineage_rows": 1395,
+        "lineage_sha256": "5a33f5536c3179c813b3d2ce33453c7a7fd28b792a72de6e298c569ba5b76f89",
+        "method": "utc_ohlcv_from_frozen_hourly",
+        "parent_path": "normalized/ETH_USDT-3600s.csv",
+        "parent_sha256": "b258376d40a44fb5f3a5cfeddbdc3710a39f360f57881e52af6c497d7690acfc"
+      },
+      "interval_seconds": 86400,
+      "kind": "candles",
+      "path": "normalized/ETH_USDT-86400s.csv",
+      "rows": 1395,
+      "sha256": "4379de5cc217764a59f6a3bf315e0ca5f2924e7424e484c35926466b686a15d3",
+      "symbol": "ETH_USDT",
+      "units": {
+        "price": "USDT_per_base",
+        "timestamp": "UTC_unix_seconds",
+        "volume": "contracts"
+      }
+    }
+  ],
+  "label_computations": 0,
+  "limitations": [
+    "Single frozen official hourly stream is an explicit research basis, not proven historical truth",
+    "Idealized availability, not observed arrival or historical revision vintage",
+    "Funding schedule and historical contract metadata remain unproven",
+    "Native prorated funding cashflow cannot represent exact settlement events",
+    "No unseen prospective holdout or training confirmation",
+    "Unaccepted candidate pending independent QR validation; G3 BLOCKED; zero baseline replays."
+  ],
+  "lineage_files": 4,
+  "lineage_rows": 19534,
+  "manifest": "manifest.json",
+  "manifest_sha256": "cbe95174e6eca704353a06f89e68294ec58a81cc6a59f370bb424c51d1177808",
+  "model_fits": 0,
+  "network_attempts": 0,
+  "normalized_files": 8,
+  "normalized_rows": 94886,
+  "reproducibility_comparison": {
+    "frozen_input_files_unchanged": 229,
+    "identical_normalized_and_lineage_files": 12,
+    "manifest_differences": [
+      "created_at"
+    ]
+  },
+  "reproducibility_manifest_sha256": "7a415b384cbfb3ea865ff189c4e735cfb4bdea417ed4ad79f5eaf5a6abb58772",
+  "reproducibility_root": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd005/reproducibility-v2",
+  "reproducibility_verification": {
+    "G3": "BLOCKED",
+    "independent_qr_acceptance": "PENDING",
+    "lineage_files": 4,
+    "lineage_rows": 19534,
+    "manifest_sha256": "7a415b384cbfb3ea865ff189c4e735cfb4bdea417ed4ad79f5eaf5a6abb58772",
+    "normalized_files": 8,
+    "normalized_rows": 94886,
+    "status": "PASS_LOCAL_DISK_RECOMPUTATION"
+  },
+  "spec_commit": "e1b459434e32e585e8a57d46b4bfedb0e79d7f67",
+  "spec_sha256": "a516075cd2baced65dd659b520c6495d2cdf9d539ff8a1bfa2570c93ccfb63a4",
+  "status": "CANDIDATE_LOCAL_CHECKS_PASS_PENDING_QR",
+  "symbols": [
+    "BTC_USDT",
+    "ETH_USDT"
+  ],
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/qd005/run_offline_tests.py",
+    "focused_passed": 15,
+    "frontend": "not rerun; no frontend changes",
+    "full_python_passed": 230,
+    "full_python_seconds": 10.795,
+    "initial_runner_failure": "stdin incompatible with macOS spawn; 4 existing multiprocessing assertions failed; corrected guarded entry passed all230",
+    "network": "Python socket connects disabled in parent and spawned workers"
+  },
+  "withheld_buckets": [
+    {
+      "available_parent_rows": [
+        33489
+      ],
+      "end_exclusive": 1793102400,
+      "interval_seconds": 14400,
+      "reason": "cutoff_before_bucket_close",
+      "symbol": "BTC_USDT",
+      "timestamp": 1793088000,
+      "unavailable_hours": 3
+    },
+    {
+      "available_parent_rows": [
+        33481,
+        33482,
+        33483,
+        33484,
+        33485,
+        33486,
+        33487,
+        33488,
+        33489
+      ],
+      "end_exclusive": 1793145600,
+      "interval_seconds": 86400,
+      "reason": "cutoff_before_bucket_close",
+      "symbol": "BTC_USDT",
+      "timestamp": 1793059200,
+      "unavailable_hours": 15
+    },
+    {
+      "available_parent_rows": [
+        33489
+      ],
+      "end_exclusive": 1793102400,
+      "interval_seconds": 14400,
+      "reason": "cutoff_before_bucket_close",
+      "symbol": "ETH_USDT",
+      "timestamp": 1793088000,
+      "unavailable_hours": 3
+    },
+    {
+      "available_parent_rows": [
+        33481,
+        33482,
+        33483,
+        33484,
+        33485,
+        33486,
+        33487,
+        33488,
+        33489
+      ],
+      "end_exclusive": 1793145600,
+      "interval_seconds": 86400,
+      "reason": "cutoff_before_bucket_close",
+      "symbol": "ETH_USDT",
+      "timestamp": 1793059200,
+      "unavailable_hours": 15
+    }
+  ]
+}

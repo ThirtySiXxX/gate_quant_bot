@@ -177,3 +177,75 @@ PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin
 Code and tests are committed before actual data generation. Candidate generation
 and its exact code/manifest identities will be appended after the disk checks;
 the implementation alone is not dataset acceptance.
+
+## Candidate generated and handed off for independent QR review
+
+Current status: **CANDIDATE_LOCAL_CHECKS_PASS_PENDING_QR**. The authorized two
+outputs are complete; no additional build or replay is planned. G1/G2 await QR's
+independent acceptance; G3 remains BLOCKED. No labels or models were computed.
+
+Builder implementation/test commit:
+`710fbca77f677cfcdcd4fbe10d319f63483f48b9`.
+Builder source SHA256:
+`7f2e0a11b96c97d833437b2c4dcdf20337a56e2199b05f4e153ac5ec92263de5`.
+The CLI checked this exact source against the committed source before each build.
+
+Candidate root:
+`/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd005/canonical-hourly-v2`.
+Its `manifest.json` SHA256:
+`cbe95174e6eca704353a06f89e68294ec58a81cc6a59f370bb424c51d1177808`.
+Reproducibility root:
+`/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd005/reproducibility-v2`.
+Its `manifest.json` SHA256:
+`7a415b384cbfb3ea865ff189c4e735cfb4bdea417ed4ad79f5eaf5a6abb58772`.
+The two manifests differ only in `created_at`; all normalized/lineage bytes and
+other manifest fields match. Both roots passed local disk reread/recomputation.
+
+Full file descriptors, all eight normalized hashes, four lineage hashes, tests,
+cutoff evidence, source identities and limitations are tracked in
+`research/qd005/results/candidate-summary.json`, SHA256:
+`b61eacf785ccf0bdeed73fedf7c6b7a627ffc1db614c959103a428f5640e80c5`.
+
+| Per coin | Data rows | Lineage rows |
+| --- | ---: | ---: |
+| Copied 1h | 33,489 | Resolved through unchanged v1 raw provenance |
+| Copied funding | 4,187 | Resolved through unchanged v1 raw provenance |
+| Derived 4h | 8,372 | 8,372 |
+| Derived 1d | 1,395 | 1,395 |
+| Both coins total | 94,886 | 19,534 derived-row references |
+
+Both coins explicitly withhold the last 4h bucket with parent row 33,489 (1/4
+hours) and daily bucket with parent rows 33,481..33,489 (9/24 hours). All hourly
+rows remain copied; the range/cutoff remains unchanged. Funding descriptors use
+interval 0 as an event-stream marker, without supplying any native cost setting.
+
+All 229 v1 manifest/raw/normalized/quarantine hashes matched the pre-build
+snapshot after both builds and verification; all 2,068 native discrepancies are
+retained. The local self-ignoring `research/.data/qd005/.gitignore` was verified
+before saving the public frozen spec or output. Candidate/reproduction data,
+input snapshots and local verification records are ignored, not committed.
+Only sanitized metadata and this report accompany the previously committed code.
+
+To reread the candidate without writing to it, from the QD worktree:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/qd005/canonical_history.py verify \
+  --spec research/.data/qd005/specification-frozen.json \
+  --base research/.data/qd004/history-v1 \
+  --output research/.data/qd005/canonical-hourly-v2 \
+  --manifest-sha256 cbe95174e6eca704353a06f89e68294ec58a81cc6a59f370bb424c51d1177808
+```
+
+Generation and local comparison additionally patched Python socket connections
+to fail; the utility has no download/exchange/runtime imports. Zero network
+attempts, baseline replays, label calculations, scaler/model fits, tuning,
+runtime changes or operational actions occurred. Final source-checkout HEAD,
+staged-diff hash and index-byte hash still match the preservation values above.
+No main edits, push, integration or merge occurred.
+
+Next dependency: QR independently recomputes the candidate using its own parser
+and acceptance code. Local checks share the producer's derivation and cannot
+substitute for that review. The single-hourly-source, idealized arrival,
+unproven historical schedule/metadata, funding-proration and prospective-holdout
+limitations remain explicit; data consistency does not establish economic label
+validity, predictive skill or future profitability.
