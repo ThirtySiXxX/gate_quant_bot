@@ -7,9 +7,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from research.qr004.validate_history import (candle_quality, funding_quality, inside,
-    native_warmup, number, raw_rows, sha256, source_identity, validate_dataset)
+    native_warmup, number, raw_rows, sealed_diagnostics, sha256, source_identity, validate_dataset)
 
 
 class HistoryAcceptanceTests(unittest.TestCase):
@@ -311,6 +312,44 @@ class HistoryAcceptanceTests(unittest.TestCase):
         self.manifest["spec_sha256"] = "0"*64
         with self.assertRaisesRegex(ValueError, "spec hash"):
             self.audit()
+
+    def test_sealed_attempt_audit_rejects_lost_reservation_or_changed_request(self):
+        probes = self.root/"probes"
+        probes.mkdir()
+        prior = []
+        for i in range(1, 13):
+            body = probes/str(i)
+            body.write_text("[]")
+            prior.append(dict(id=i, body_file=str(i), sha256=sha256(body), saved_bytes=2,
+                byte_cap=2, method="GET", url=self.manifest["raw_files"][0]["url"]))
+        (probes/"probe-ledger.json").write_text(json.dumps(prior))
+        self.manifest["prior_probe_ledger_sha256"] = sha256(probes/"probe-ledger.json")
+        events, tasks = [], []
+        for i, raw in enumerate(self.manifest["raw_files"], 13):
+            raw.update(attempt_id=i, task_id=str(i), method="GET", params={}, request_headers={}, event="end", accepted=True)
+            begin = dict(raw, event="begin", accepted=False)
+            events.extend((begin, raw))
+            tasks.append(dict(task_id=str(i), url=raw["url"], params={}))
+        self.manifest.update(attempts_including_probes=20,
+            bytes_including_probes=24+sum(r["bytes"] for r in self.manifest["raw_files"]))
+        (self.root/"manifest.json").write_text(json.dumps(self.manifest))
+        (self.root/"plan.json").write_text(json.dumps(dict(requests=tasks, spec_sha256=sha256(self.spec_path))))
+        ledger = self.root/"attempts.jsonl"
+        def save(records):
+            ledger.write_text("\n".join(json.dumps(r) for r in records)+"\n")
+        fixture = Path(__file__).resolve().parents[2]/"research/qr003/results/phase-a-input-spec.json"
+        save(events)
+        with patch('research.qr004.validate_history.native_warmup', return_value={"fixture_only": True}):
+            result = sealed_diagnostics(self.root, self.spec_path, fixture, probes)
+        self.assertEqual(result["attempt_audit"]["total_attempts"], 20)
+        self.assertEqual(result["network_calls_by_QR"], 0)
+        save(events[1:])
+        with self.assertRaisesRegex(ValueError, "attempt event"):
+            sealed_diagnostics(self.root, self.spec_path, fixture, probes)
+        events[1] = dict(events[1], url=events[1]["url"]+"&changed=1")
+        save(events)
+        with self.assertRaisesRegex(ValueError, "identity changed"):
+            sealed_diagnostics(self.root, self.spec_path, fixture, probes)
 
 
 class NativeWarmupTests(unittest.TestCase):

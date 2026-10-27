@@ -542,6 +542,142 @@ def quarantine_accountability(payloads, raw, references, seen, normalized, start
             "other_exclusions": "block until independent reason review; never silently accepted"}
 
 
+def sealed_diagnostics(root, spec_path, phase_a_fixture, probe_root):
+    """Reproduce QR004 offline transport, discrepancy and warmup diagnostics.
+
+    No strategy replay, training, repairs, tolerance acceptance or network use.
+    Funding offsets below describe a fixed reference grid, not a proven schedule.
+    """
+    import pandas as pd
+    from src.config import SystematicConfig
+    from datetime import timezone
+
+    root, probe_root = Path(root), Path(probe_root)
+    spec = json.loads(Path(spec_path).read_text())
+    manifest = json.loads((root/"manifest.json").read_text())
+    plan = json.loads((root/"plan.json").read_text())
+    events = [json.loads(line) for line in (root/"attempts.jsonl").read_text().splitlines()]
+    prior = json.loads((probe_root/"probe-ledger.json").read_text())
+    if sha256(probe_root/"probe-ledger.json") != manifest["prior_probe_ledger_sha256"]:
+        raise ValueError("prior probe ledger drift")
+    if [r["id"] for r in prior] != list(range(1, 13)):
+        raise ValueError("prior probe IDs changed")
+    for probe in prior:
+        path = inside(probe_root, probe["body_file"])
+        if sha256(path) != probe["sha256"] or path.stat().st_size != probe["saved_bytes"]:
+            raise ValueError("prior probe body drift")
+        source_identity(probe["url"], spec)
+        if probe["saved_bytes"] > probe["byte_cap"] or probe["method"] != "GET":
+            raise ValueError("prior probe scope/cap mismatch")
+    begins = [r for r in events if r["event"] == "begin"]
+    ends = [r for r in events if r["event"] == "end"]
+    if len(events) != 2*len(begins) or len(begins) != len(ends):
+        raise ValueError("missing/unknown attempt event")
+    if [r["attempt_id"] for r in begins] != list(range(13, 13+len(begins))):
+        raise ValueError("attempt sequence lost/reset")
+    tasks = {r["task_id"]: r for r in plan["requests"]}
+    if len(tasks) != len(plan["requests"]) or plan["spec_sha256"] != sha256(spec_path):
+        raise ValueError("request plan drift")
+    for i, (begin, finish) in enumerate(zip(begins, ends)):
+        if events[2*i] != begin or events[2*i+1] != finish:
+            raise ValueError("unexpected concurrent or reordered attempt ledger")
+        immutable = ("attempt_id", "source_id", "path", "task_id", "url", "params", "method", "retrieved_at", "request_headers")
+        if any(begin[k] != finish[k] for k in immutable):
+            raise ValueError("attempt identity changed")
+        if begin["method"] != "GET" or any(k.lower() in ("authorization", "key", "sign") for k in begin["request_headers"]):
+            raise ValueError("non-public request evidence")
+        task = tasks[finish["task_id"]]
+        if any(finish[k] != v for k, v in task.items()):
+            raise ValueError("network request differs from frozen task")
+        source_identity(finish["url"], spec)
+    if ends != manifest["raw_files"]:
+        raise ValueError("manifest omits/alters attempt ledger records")
+    attempts = len(prior)+len(begins)
+    byte_count = sum(r["saved_bytes"] for r in prior)+sum(r["bytes"] for r in ends)
+    counts = Counter(r["task_id"] for r in ends)
+    budget = spec["intake_budget"]
+    if (attempts != manifest["attempts_including_probes"] or attempts > budget["max_requests"]
+            or byte_count != manifest["bytes_including_probes"] or byte_count > budget["max_total_compressed_bytes"]
+            or any(c > budget["max_retries_per_request"]+1 for c in counts.values())):
+        raise ValueError("attempt/byte/retry accounting mismatch")
+    fixture = json.loads(Path(phase_a_fixture).read_text())
+    repository = Path(__file__).resolve().parents[2]
+    for path, expected in fixture["source_sha256"].items():
+        if sha256(repository/path) != expected:
+            raise ValueError("frozen native source changed: "+path)
+    output = {"schema_version": 1, "manifest_sha256": sha256(root/"manifest.json"),
+        "spec_sha256": sha256(spec_path), "validator_sha256": sha256(Path(__file__)),
+        "phase_a_fixture_sha256": sha256(phase_a_fixture), "network_calls_by_QR": 0,
+        "attempt_audit": {"status": "PASS", "prior_probes": len(prior), "new_attempts": len(ends),
+            "total_attempts": attempts, "remaining": budget["max_requests"]-attempts,
+            "planned_tasks": len(tasks), "successful_tasks": len({r["task_id"] for r in ends if r["accepted"]}),
+            "failed_attempts": sum(not r["accepted"] for r in ends), "bytes_including_probes": byte_count,
+            "status_counts": dict(Counter(r["http_status"] for r in ends)),
+            "attempt_ledger_sha256": sha256(root/"attempts.jsonl"), "plan_sha256": sha256(root/"plan.json"),
+            "prior_probe_ledger_sha256": sha256(probe_root/"probe-ledger.json")},
+        "cross_interval": [], "funding": {}, "native_warmup": {},
+        "decision": "NOT_READY: unresolved required cross-interval inputs; zero baseline replays/model fits"}
+    def utc(t):
+        return datetime.fromtimestamp(t, timezone.utc).isoformat()
+    for symbol in spec["scope"]["symbols"]:
+        frames, raw_tables = {}, {}
+        for item in manifest["normalized_files"]:
+            if item["symbol"] != symbol or item["kind"] not in ("candles", "funding"):
+                continue
+            key = {3600: "1h", 14400: "4h", 86400: "1d"}.get(item["interval_seconds"], "funding")
+            path = inside(root, item["path"], "normalized")
+            if sha256(path) != item["sha256"]:
+                raise ValueError("normalized source changed")
+            with path.open() as stream:
+                raw_tables[key] = list(csv.DictReader(stream))
+            frames[key] = pd.read_csv(path)
+        hourly = {integer(row["timestamp"]): row for row in raw_tables["1h"]}
+        for interval, seconds in (("4h", 14400), ("1d", 86400)):
+            mismatches = []
+            for row in raw_tables[interval]:
+                actual = canonical(row, "candles")
+                t = actual[0]
+                pieces = [hourly[s] for s in range(t, t+seconds, 3600)]
+                parsed = [canonical(piece, "candles") for piece in pieces]
+                aggregate = (t, parsed[0][1], max(r[2] for r in parsed), min(r[3] for r in parsed),
+                    parsed[-1][4], sum(r[5] for r in parsed))
+                if actual != aggregate:
+                    fields = [field for field, a, b in zip(("timestamp", "open", "high", "low", "close", "volume"), actual, aggregate) if a != b]
+                    mismatches.append({"timestamp": t, "utc": utc(t), "fields": fields,
+                        "native": [str(v) for v in actual], "hourly_aggregate": [str(v) for v in aggregate],
+                        "native_source": {"source_id": row["source_id"], "source_row": integer(row["source_row"])},
+                        "hourly_sources": [{"source_id": p["source_id"], "source_row": integer(p["source_row"])} for p in pieces]})
+            volume_delta = [number(r["native"][-1])-number(r["hourly_aggregate"][-1]) for r in mismatches if "volume" in r["fields"]]
+            relative = [abs(number(r["native"][-1])-number(r["hourly_aggregate"][-1]))/number(r["hourly_aggregate"][-1])
+                        for r in mismatches if "volume" in r["fields"] and number(r["hourly_aggregate"][-1]) > 0]
+            output["cross_interval"].append({"symbol": symbol, "interval": interval, "compared": len(raw_tables[interval]),
+                "mismatches": len(mismatches), "field_counts": dict(Counter(f for r in mismatches for f in r["fields"])),
+                "first_utc": mismatches[0]["utc"] if mismatches else None, "last_utc": mismatches[-1]["utc"] if mismatches else None,
+                "by_month": dict(sorted(Counter(r["utc"][:7] for r in mismatches).items())),
+                "volume_native_minus_hourly": {"min_contracts": str(min(volume_delta, default=0)),
+                    "max_contracts": str(max(volume_delta, default=0)),
+                    "max_absolute_fraction": str(max(relative, default=0)),
+                    "positive": sum(v > 0 for v in volume_delta), "negative": sum(v < 0 for v in volume_delta)},
+                "records": mismatches})
+        funding = raw_tables["funding"]
+        times = [integer(r["timestamp"]) for r in funding]
+        offsets = [t-(spec["calendar"]["raw_start"]+i*28800) for i, t in enumerate(times)]
+        output["funding"][symbol] = {"records": len(times), "first": utc(times[0]), "last": utc(times[-1]),
+            "reference_seconds": 28800, "reference_rule_proven": False,
+            "offset_seconds_counts": dict(sorted(Counter(offsets).items())),
+            "inter_event_seconds_counts": dict(sorted(Counter(b-a for a, b in zip(times, times[1:])).items())),
+            "reference_slots_expected": len(range(spec["calendar"]["raw_start"], spec["calendar"]["raw_end_exclusive"], 28800)),
+            "reference_slot_indices_complete_and_unique":
+                [(t-spec["calendar"]["raw_start"])//28800 for t in times] == list(range(len(times))),
+            "min_offset_seconds": min(offsets), "max_offset_seconds": max(offsets),
+            "first_offset_utc": next((utc(t) for t, o in zip(times, offsets) if o), None),
+            "last_offset_utc": next((utc(t) for t, o in reversed(list(zip(times, offsets))) if o), None),
+            "timestamp_mutations": 0, "meaning": "Diagnostic fixed-grid comparison only; no rounding or schedule inference"}
+        cfg = SystematicConfig.build(fixture["instruments"][symbol]["fixture"]["strategy_config"])
+        output["native_warmup"][symbol] = native_warmup(frames, cfg, spec["calendar"]["baseline_start"], 28800)
+    return output
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", required=True, type=Path)
