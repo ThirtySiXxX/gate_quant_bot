@@ -1,6 +1,7 @@
 # QF-QD-005-HISTORY: canonical hourly v2 counterpart review
 
-Date: 2026-10-28 Australia/Melbourne. Review only; no builder authorization.
+Date: 2026-10-28 Australia/Melbourne. Original review below was review-only;
+the subsequent authorized build phase is recorded at the end of this report.
 Dispatches: `QF-DISPATCH-20261028-QD005-SPEC-REVIEW-1` and
 `QF-CONTROL-20261028-QD005-EXACT-DRAFT-1`.
 Worktree: `/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot`.
@@ -131,3 +132,48 @@ runtime/journals. Next step is freeze/build authorization, not automatic buildin
 baseline execution, fitting or merging. G1/G2 can later pass with declared
 limitations; G3 remains blocked here, and prospective holdout/training permission
 remain separate unresolved gates.
+
+## Authorized producer build: code and tests
+
+Dispatch `QF-DISPATCH-20261028-QD005-BUILD-1` authorizes the data-only builder,
+one candidate and one separate reproducibility output, followed by QR review.
+Frozen QR spec commit: `e1b459434e32e585e8a57d46b4bfedb0e79d7f67`;
+`research/qr005/data-acceptance.json` SHA256:
+`a516075cd2baced65dd659b520c6495d2cdf9d539ff8a1bfa2570c93ccfb63a4`.
+Freeze changes are review metadata/state and zero replay budget; derivation
+semantics are unchanged. G3 remains BLOCKED.
+
+Implemented `research/qd005/canonical_history.py`: pinned-spec loading, complete
+v1 file-hash preservation checks, strict hourly/funding input validation, exact
+price selection and integer contract-volume summation, ordered JSONL lineage,
+explicit unclosed cutoff tails, eight-file descriptors, fresh-root-only writing,
+and local disk reread/recomputation with exact output inventory. Derived bytes
+are independent of ambient Decimal precision/traps. The CLI refuses a build
+whose source differs from the supplied committed source. No shared runtime
+consumer, native cost configuration or QD004 artifact is changed.
+
+Added 15 producer tests in `tests/test_qd_canonical_history.py`. Independent
+literal OHLCV/volume and boundary expectations cover complete/partial windows,
+daily equality, future perturbation, extreme Decimal precision, wrong schema,
+missing/duplicate/shifted/reordered hours, invalid values/provenance, second-offset
+funding, path traversal/symlinks, frozen hashes, duplicate base identities,
+rehashed corruption, exact copies, reproducibility and existing-root rejection.
+Fixtures use synthetic data only; they do not build the actual candidate.
+
+Focused tests: **15 passed**. Full Python offline regression: **230 passed** in
+10.795 seconds using the existing read-only interpreter and
+`research/qd005/run_offline_tests.py`. Python socket connections are blocked in
+the parent and macOS spawned workers. The initial full-suite stdin invocation
+failed four existing multiprocessing checks because spawn could not reload
+`<stdin>`; the real guarded entry script resolved the runner problem, without
+changing the application or existing tests. No frontend change; JS was not rerun.
+
+Reproduce regressions from this worktree:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/qd005/run_offline_tests.py
+```
+
+Code and tests are committed before actual data generation. Candidate generation
+and its exact code/manifest identities will be appended after the disk checks;
+the implementation alone is not dataset acceptance.
