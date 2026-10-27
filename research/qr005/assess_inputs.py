@@ -35,9 +35,12 @@ def assess(root, base_root, spec_path, fixture_path):
         # metadata or from the dataset funding descriptor interval_seconds=0.
         warmup = native_warmup(frames, cfg, start, funding_interval=28800)
         features = causal_features(frames["1h"])
-        selected = features.loc[frames["1h"].timestamp+3600 >= start]
+        decision_times = frames["1h"].timestamp+3600
+        selected = features.loc[(decision_times >= start)
+                                & (decision_times < spec["calendar"]["raw_end_exclusive"])]
         assets[symbol] = {"warmup": warmup,
             "closed_hour_feature_rows_from_start": len(selected),
+            "decision_range": {"start": start, "end_exclusive": spec["calendar"]["raw_end_exclusive"]},
             "feature_columns": list(selected.columns),
             "all_features_finite": bool(np.isfinite(selected.to_numpy()).all()),
             "nonconstant_features": [name for name in selected if selected[name].nunique() > 1],
