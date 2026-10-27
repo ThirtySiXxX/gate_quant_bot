@@ -1,10 +1,32 @@
 # QD006 exact-draft feasibility review and bounded implementation plan
 
-2026-10-28 Australia/Melbourne. Decision: **REVISE**, awaiting QR corrections;
-no implementation or research run is authorized. Reviewed QR commit
-`2c3846c53443307b410a647ba0efbed078884d8b` against QD preflight
-`01bc6e798edd200e9553c17702739279f34f0384`.
+2026-10-28 Australia/Melbourne. Decision: **ACCEPT** for QR revision
+`c7e9a2492247fa31e216035f87e8bb20cca6e6ad` (`qf006-proposal-r2`).
+**Protocol/design review accepted; not implementation-tested or data/training-ready.**
+No implementation or research run is authorized. The initial QR draft
+`2c3846c53443307b410a647ba0efbed078884d8b` was reviewed at QD commit
+`611cb7419e676bde8cb0b2e64968f3a81bd42164`, following preflight
+`01bc6e798edd200e9553c17702739279f34f0384`. Its three requests are now resolved.
 Machine-readable per-ID dispositions: `research/qd006/review.json`.
+
+## Final bounded recheck
+
+All **34 QF006 acceptance criteria and 12 QD constraints ACCEPT** as design.
+All five exact QR committed/file hashes matched; only A02/A13/A14/A21 changed,
+with the other 30 cases and all nine source summaries unchanged. QD independently
+checked 64 literal Decimal assertions and 30 clock/state/contract assertions.
+These are document checks, not implemented producer/validator contract tests.
+
+| Resolved request | Revised contract accepted |
+| --- | --- |
+| QD006-R1 | Independent cumulative obligation T revisions and immutable posting IDs; B sums accepted postings, P=T-B, A/L summed separately by obligation. Revisions change pending only; available postings move cash. Partial payments, separate refunds and late fees are covered. Imported posting revisions >1 explicitly reject; actual later transfers have new evidenced IDs. |
+| QD006-R2 | A02 role_basis is scenario; valid/open/immature/censored/invalid and their nullability/precedence are explicit. Natural flat with pending legitimate outcomes is immature, not zero or prematurely valid. |
+| QD006-R3 | Typed assertion covers origins plus linked postings/corrections, authority/rule and current revision references. Issuance/receipt/consumer availability are separate. Label-known time includes all required availability; supersession changes the latest revision only when available and preserves prior as-known labels. |
+
+No material correction remains outstanding in this bounded review. The exact
+proposed implementation paths below are confirmed by QR as ownership proposals;
+they still require coordinator allocation and separate human implementation/run
+authorization. Stop after this design review.
 
 ## Accepted design and deferred evidence
 
@@ -39,7 +61,11 @@ comparisons are distinct; changing costs/entry filters requires full state repla
 This accepts the specified design directions, not historical input adequacy,
 implemented tests, profitability, a complete executable schema or a future run.
 
-## Required corrections before protocol freeze
+## Resolved initial review requests (historical rationale)
+
+The following counterexamples and original requests explain the initial REVISE
+decision. They are retained as acceptance rationale, not outstanding instructions;
+the final bounded recheck above records their resolution in the exact r2 bytes.
 
 ### QD006-R1: independent obligation revisions and cash-posting identities
 
@@ -56,7 +82,7 @@ At 10:01 total is revised to -0.08 before any extra posting: C=999.95, L=0.03,
 E=999.92, not another 0.08 debit or a 0.02 cash credit. At 10:05 the outstanding
 0.03 posts: C=999.92, L=0, E unchanged. Repeated delivery changes nothing.
 
-Required correction: define a parent obligation identity, authoritative cumulative
+Original correction request (now resolved): define a parent obligation identity, authoritative cumulative
 amount revisions with supersession, independent stable posting IDs/revisions and
 booking/booking-known clocks; specify net-unposted reconciliation against already
 booked amounts. State whether multiple partial postings are supported or explicitly
@@ -66,7 +92,7 @@ conflicting bytes under the same posting revision quarantine. Do not make a new
 rate revision imply an extra cash booking. Apply the same rule to a fee correction
 learned after a closed fill/episode, including refunds and delayed payment.
 
-Extend the existing **A13/A14**, retaining their IDs, with literal two-successive-
+Resolved acceptance: revised **A13/A14** retain their IDs and contain literal two-successive-
 revision and separate-booking cases, a credit/sign-change variant and a late fee
 variant. Preserve as-known history; produce a new restated label revision only
 when its new required information/finality is available. This is a schema/state
@@ -79,7 +105,7 @@ Affected criteria: A02/A21; QD6-C05/C09/C12. Interface Fill.role_basis permits
 permits `valid/open/censored/invalid`, while A21 expects `immature` at cutoff.
 A strict exporter/consumer must have one deterministic interpretation.
 
-Required correction: make A02's wire role_basis `scenario` (or explicitly define
+Original correction request (now resolved): make A02's wire role_basis `scenario` (or explicitly define
 its fixture-to-wire projection). Specify the maturity representation and map A21
 to it. Minimal recommendation: add `immature` for an already-flat episode awaiting
 legitimate outcome/finality information, with target and label_known_at null;
@@ -101,7 +127,7 @@ mature at 08:00:04 using that later assertion. If a new revision at 11:00 supers
 the earlier completeness assertion, the revised label cannot inherit 10:00 as its
 knowledge time or rewrite the earlier causal view.
 
-Required correction: define the watermark's coverage meaning and separate
+Original correction request (now resolved): define the watermark's coverage meaning and separate
 availability/known time, scope/revision and finality-rule reference. These may be
 a small typed nested assertion or explicit fields; unknown authority/coverage or
 knowledge leaves label_known_at null. In a scenario use a preregistered explicit
@@ -112,8 +138,9 @@ later revision; retain A29's null/unknown negative case and stable IDs.
 
 ## File ownership, ordering and compatibility proposal
 
-These are exact **proposed future allowlists**, requiring QR agreement, coordinator
-allocation and separate user implementation authorization. Current changes remain
+These are exact **proposed future allowlists**, confirmed by QR in the reviewed
+r2 draft, still requiring coordinator allocation and separate user implementation
+authorization. Current changes remain
 Markdown/JSON only. One path has one editor; no parallel edits to shared files.
 
 | Stage | Sole editor paths | Reviewer / release boundary |
@@ -127,8 +154,8 @@ This resolves the proposal's ownership wording: **QR owns target mathematics,
 maturity/censoring/selection semantics and its independent validator; QD alone
 writes the EpisodeLabel producer/exporter**. QR's phrase "target construction"
 must refer to semantic specification/independent checking under this proposed
-allocation, not simultaneous edits to the QD exporter. Obtain QR confirmation in
-the corrected freeze. No new schema file outside these paths is implicitly owned.
+allocation, not simultaneous edits to the QD exporter. QR confirmed that allocation
+in the exact r2 interface/report. No new schema file outside these paths is implicitly owned.
 
 Stage 1 supports fees/claims/bookings/corrections, as-known versus restated views,
 FIFO quantities and reconciliation on synthetic tapes. It does not implement a
@@ -169,5 +196,7 @@ without historical mechanism/arrival/booking evidence; no credentials are reques
 QR retains hypothesis/features/model/search-budget/effect/precision choices;
 prospective holdout dates and stop rule must be registered before viewing that
 period. Training has no authorization here, including fitting preprocessing.
-Stop after this review; revised-spec review is the next dependency, not automatic
-implementation, intake, replay, labels or scheduling.
+Stop after this accepted protocol/design review. Next dependency is a separate
+human decision about the bounded synthetic implementation, followed by typed
+manifest/schema detail review, implementation tests and independent validation.
+There is no automatic implementation, intake, replay, label generation or scheduling.

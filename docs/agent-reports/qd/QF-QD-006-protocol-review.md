@@ -1,7 +1,8 @@
 # QF-QD-006-REVIEW: execution, fees and labels preflight
 
 Date: 2026-10-28 Australia/Melbourne.
-Status: **REVISE_AWAITING_QR_CORRECTIONS** (exact-draft review below).
+Status: **PROTOCOL_DESIGN_ACCEPTED_STOP** (final bounded recheck below).
+Protocol/design review accepted; not implementation-tested or data/training-ready.
 Dispatch: `QF-DISPATCH-20261028-QD006-PREFLIGHT-1`.
 Worktree: `/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot`;
 branch `codex/qd-cache-safety`; base:
@@ -99,7 +100,7 @@ acceptance finding. Historical economic-label readiness remains unresolved.
 The final protocol/plan review ends with a report; implementation, data acquisition,
 actual replay/labels and training require their respective later authorizations.
 
-## Exact QR draft review: REVISE
+## Initial exact QR draft review: REVISE (history; superseded below)
 
 Continuation dispatch: `QF-DISPATCH-20261028-QD006-EXACT-REVIEW-1`, with schema
 clarifications requested by `QF-CONTROL-20261028-QD006-SCHEMA-POINTS-1`.
@@ -181,3 +182,77 @@ No new implementation/tests, model/scaler fitting, market labels, replay, data
 download, runtime/shared-schema edit or source-main operation occurred.
 Next action: QR corrects the three specific issues and returns exact new draft
 identities for re-review. Stop here; no automatic freeze, implementation or run.
+
+## Final exact revision recheck: ACCEPT and stop
+
+Dispatch: `QF-DISPATCH-20261028-QD006-FINAL-RECHECK-1`.
+QD parent: `611cb7419e676bde8cb0b2e64968f3a81bd42164`.
+Reviewed QR revision: `c7e9a2492247fa31e216035f87e8bb20cca6e6ad`, parent
+`2c3846c53443307b410a647ba0efbed078884d8b`, protocol `qf006-proposal-r2`.
+
+**ACCEPT — protocol/design review accepted; not implementation-tested or
+data/training-ready.** R1/R2/R3 are resolved, with no material correction left
+outstanding in this bounded review. All **34 acceptance IDs and 12 QD constraint
+IDs ACCEPT as design**. The initial REVISE review, its exact hashes and its
+counterexamples above remain historical evidence; the current JSON also retains
+the prior review identity and the corrected IDs' earlier dispositions.
+
+All five exact committed/file identities passed:
+
+| QR file | SHA256 |
+| --- | --- |
+| `research/qr006/protocol.md` | `4957875f25168ea33d630fb63be00a712d86ac049b932bdc11f731e8b980e270` |
+| `research/qr006/acceptance.json` | `d75fb7d7274ab2da41c71cd097f27982a3d2a7d103b5c1146d84da2429f9058c` |
+| `research/qr006/evidence.json` | `c4fc6fb1cd24ce90f347dff23b8f6c4a86f9a037e9c9e0108a24cea9047c434b` |
+| `docs/interface-requests/qr-qf006-execution-cost-label.md` | `d62c42ddc5cbac286e3b4ebf821fd977a693d7c3986ab019942560fa1348a6d8` |
+| `docs/agent-reports/qr/QF-QR-006-protocol.md` | `3f5c63ba2b08717a6d44d2dcc5740fc9881e3d6017c1a0a947e15b77162554cc` |
+
+| Closed request | Final finding |
+| --- | --- |
+| R1 | Cumulative authoritative T and independent posting sum B determine P=T-B; revisions have zero cash delta, available postings move cash and pending once. A13/A14 reconcile two revisions, partial payments, funding sign-change refund and a late fee refund/surcharge after close. Independent source identities and conflict rejection are explicit. Imported posting_revision>1 rejects as UNSUPPORTED_POSTING_RESTATEMENT; genuine later transfers use new evidenced posting IDs. |
+| R2 | A02 uses role_basis=scenario. Wire label_status includes immature, with deterministic precedence and null target/known-time rules, distinct from open, invalid and censored. A21 conforms. |
+| R3 | Typed completeness assertion separates economic scope, exact obligation/posting revisions, authority/rule, issuance, observer knowledge and consumer availability. The full episode and linked late cash must be covered. Label-known time includes the assertion's availability; only available supersession changes the latest label revision. Prior as-known labels remain immutable. |
+
+Bounded checks passed with the existing interpreter and standard library: **64
+independent literal Decimal assertions**, **30 clock/state/contract assertions**,
+all five committed/file SHA checks, all stable IDs/references, and Git whitespace
+checks. Only A02/A13/A14/A21 bodies changed; the other 30 accepted case bodies and
+all nine source summaries match r1 exactly. The new literal checks are an
+independent arithmetic/contract review, not execution of an event reducer or
+34 implemented acceptance tests. No regression rerun was needed for these
+Markdown/JSON changes. No new browsing or market-data requests occurred.
+
+Current QD artifacts:
+
+| File | SHA256 |
+| --- | --- |
+| `research/qd006/implementation-plan.md` | `199833b1d6d187efe12b153ea10772c123558844b9a9e7b4e9231fb0fb3d5838` |
+| `research/qd006/review.json` | `3bedf35faa9195d3dbe523d374358ae53ab546eaed7ae7ec83b0b043111dfc82` |
+
+Only those two files and this report change in this recheck. The original QD
+preflight remains byte-identical. QR confirmed the sole-editor path proposal:
+QD produces/exports EpisodeLabel, QR defines label semantics and independently
+validates it. Exact future paths and stage ordering remain in the updated plan.
+
+Remaining gates are explicit and do not reopen these closed protocol issues:
+
+1. Separate human authorization/coordinator allocation for the minimal synthetic
+   event ledger; freeze exact typed serialization, nested record/manifest schemas,
+   identity details and deterministic fixtures for counterpart review before code.
+2. Implement QD producer tests and independently run QR literal/causal/corruption
+   checks. No such implementation or test run exists in this stage.
+3. Resolve historical-versus-scenario evidence coverage, mark/rule/snapshot mapping,
+   availability and booking/finality assumptions; preregister the complete bounded
+   execution/cost/valuation manifest before any actual-data run. Public rate rows
+   alone do not establish the needed calendar, valuation or private cash bookings.
+4. Obtain separate authorization for full-state replay and market-label generation,
+   then independent acceptance. Native runtime/defaults/probes/data remain unchanged.
+5. Freeze prospective holdout/effect/precision/model/search decisions and the exact
+   training plan; obtain fresh direct human confirmation before any scaler/model fit.
+
+Final source-main HEAD, staged-diff SHA256 and actual index-byte SHA256 again match
+the preservation values above. No source staging/edit, runtime/shared-schema
+change, implementation/test code, collection, replay, market label, fit, engine/app
+operation, integration, cherry-pick, push, merge or scheduling occurred.
+**Stop:** protocol review is complete; coordinator finalizes the stage report.
+Do not start the proposed implementation or any next task automatically.

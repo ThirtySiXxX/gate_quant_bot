@@ -2,21 +2,22 @@
   "task_id": "QF-QD-006-REVIEW",
   "date": "2026-10-28",
   "timezone": "Australia/Melbourne",
-  "state": "REVISE_AWAITING_QR_CORRECTIONS",
-  "overall_disposition": "REVISE",
+  "state": "PROTOCOL_DESIGN_ACCEPTED_STOP",
+  "overall_disposition": "ACCEPT",
   "dispatch_ids": [
     "QF-DISPATCH-20261028-QD006-EXACT-REVIEW-1",
-    "QF-CONTROL-20261028-QD006-SCHEMA-POINTS-1"
+    "QF-CONTROL-20261028-QD006-SCHEMA-POINTS-1",
+    "QF-DISPATCH-20261028-QD006-FINAL-RECHECK-1"
   ],
-  "reviewed_qr_commit": "2c3846c53443307b410a647ba0efbed078884d8b",
+  "reviewed_qr_commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
   "reviewed_qr_files_sha256": {
-    "research/qr006/protocol.md": "f4434a259ce9974e36fedc32e34aaa910b84553e496c7840b112276baf76cbe8",
-    "research/qr006/acceptance.json": "8c3038dbd613d1d84c9e6c01873fbfee5a125ce2c5a044d4d188ab59897ad510",
-    "research/qr006/evidence.json": "afd3468133ab45eb83fc727d959054389e1d31bdbeb49d2fa27f040f594aa00a",
-    "docs/interface-requests/qr-qf006-execution-cost-label.md": "231f97a5a796eceaa6ddcf18d4f770d0f5ebbf842ff5ece1ad384e9b30282bbc",
-    "docs/agent-reports/qr/QF-QR-006-protocol.md": "68b6ec921c3d6a69f80db72bf4ae207a3525096944ba9674ce10c93de9776d00"
+    "research/qr006/protocol.md": "4957875f25168ea33d630fb63be00a712d86ac049b932bdc11f731e8b980e270",
+    "research/qr006/acceptance.json": "d75fb7d7274ab2da41c71cd097f27982a3d2a7d103b5c1146d84da2429f9058c",
+    "research/qr006/evidence.json": "c4fc6fb1cd24ce90f347dff23b8f6c4a86f9a037e9c9e0108a24cea9047c434b",
+    "docs/interface-requests/qr-qf006-execution-cost-label.md": "d62c42ddc5cbac286e3b4ebf821fd977a693d7c3986ab019942560fa1348a6d8",
+    "docs/agent-reports/qr/QF-QR-006-protocol.md": "3f5c63ba2b08717a6d44d2dcc5740fc9881e3d6017c1a0a947e15b77162554cc"
   },
-  "qd_parent_commit": "01bc6e798edd200e9553c17702739279f34f0384",
+  "qd_parent_commit": "611cb7419e676bde8cb0b2e64968f3a81bd42164",
   "qd_preflight_sha256": "306c1f81d77dd25dcd8a210ab99c3fbc929f12ea85ad8a3ccf578fac361bd505",
   "constraint_reviews": [
     {
@@ -69,11 +70,8 @@
     },
     {
       "id": "QD6-C05",
-      "disposition": "REVISE",
-      "required_changes": [
-        "QD006-R1",
-        "QD006-R2"
-      ],
+      "disposition": "ACCEPT",
+      "required_changes": [],
       "acceptance_ids": [
         "QF006-A01",
         "QF006-A02",
@@ -83,14 +81,18 @@
         "QF006-A13",
         "QF006-A14"
       ],
-      "finding": "Resolve role_basis fixture and late fee revision/posting semantics."
+      "finding": "Per-fill fee arithmetic/role accepted; r2 uses scenario enum and independent late fee obligation/posting revisions.",
+      "closed_changes": [
+        "QD006-R1",
+        "QD006-R2"
+      ],
+      "previous_disposition": "REVISE",
+      "previous_finding": "Resolve role_basis fixture and late fee revision/posting semantics."
     },
     {
       "id": "QD6-C06",
-      "disposition": "REVISE",
-      "required_changes": [
-        "QD006-R1"
-      ],
+      "disposition": "ACCEPT",
+      "required_changes": [],
       "acceptance_ids": [
         "QF006-A07",
         "QF006-A11",
@@ -98,15 +100,17 @@
         "QF006-A13",
         "QF006-A14"
       ],
-      "finding": "Pending survival accepted; independent obligation/posting revisions and cumulative reconciliation need specification."
+      "finding": "Independent cumulative T and posting B yield P=T-B; available posting transfers cash/pending without double count; close preserves lot obligations.",
+      "closed_changes": [
+        "QD006-R1"
+      ],
+      "previous_disposition": "REVISE",
+      "previous_finding": "Pending survival accepted; independent obligation/posting revisions and cumulative reconciliation need specification."
     },
     {
       "id": "QD6-C07",
-      "disposition": "REVISE",
-      "required_changes": [
-        "QD006-R1",
-        "QD006-R3"
-      ],
+      "disposition": "ACCEPT",
+      "required_changes": [],
       "acceptance_ids": [
         "QF006-A14",
         "QF006-A18",
@@ -114,7 +118,13 @@
         "QF006-A21",
         "QF006-A32"
       ],
-      "finding": "Causal versus restated split accepted; finality knowledge and correction booking remain underspecified."
+      "finding": "Causal transitions use available_at; retrospective economic/booking reports remain separate; completeness issuance/receipt/use clocks and supersession are explicit.",
+      "closed_changes": [
+        "QD006-R1",
+        "QD006-R3"
+      ],
+      "previous_disposition": "REVISE",
+      "previous_finding": "Causal versus restated split accepted; finality knowledge and correction booking remain underspecified."
     },
     {
       "id": "QD6-C08",
@@ -128,11 +138,8 @@
     },
     {
       "id": "QD6-C09",
-      "disposition": "REVISE",
-      "required_changes": [
-        "QD006-R2",
-        "QD006-R3"
-      ],
+      "disposition": "ACCEPT",
+      "required_changes": [],
       "acceptance_ids": [
         "QF006-A21",
         "QF006-A22",
@@ -141,7 +148,13 @@
         "QF006-A25",
         "QF006-A29"
       ],
-      "finding": "Exit/known-time distinction and denominator accepted; exact maturity enum/finality assertion need correction."
+      "finding": "Explicit immature state, settled cash target, scoped completeness and latest available assertion/revision determine known-time maturity; strict microsecond/overlap checks retained.",
+      "closed_changes": [
+        "QD006-R2",
+        "QD006-R3"
+      ],
+      "previous_disposition": "REVISE",
+      "previous_finding": "Exit/known-time distinction and denominator accepted; exact maturity enum/finality assertion need correction."
     },
     {
       "id": "QD6-C10",
@@ -171,12 +184,8 @@
     },
     {
       "id": "QD6-C12",
-      "disposition": "REVISE",
-      "required_changes": [
-        "QD006-R1",
-        "QD006-R2",
-        "QD006-R3"
-      ],
+      "disposition": "ACCEPT",
+      "required_changes": [],
       "acceptance_ids": [
         "QF006-A13",
         "QF006-A14",
@@ -186,7 +195,14 @@
         "QF006-A28",
         "QF006-A29"
       ],
-      "finding": "Strict versioned records are appropriate once identity, enum and finality transport gaps are closed."
+      "finding": "R1-R3 closed by typed revision/posting/assertion records and enums; canonical schema/manifest formalization and independent implemented tests remain future gates.",
+      "closed_changes": [
+        "QD006-R1",
+        "QD006-R2",
+        "QD006-R3"
+      ],
+      "previous_disposition": "REVISE",
+      "previous_finding": "Strict versioned records are appropriate once identity, enum and finality transport gaps are closed."
     }
   ],
   "acceptance_reviews": [
@@ -199,12 +215,15 @@
     },
     {
       "id": "QF006-A02",
-      "disposition": "REVISE",
-      "required_changes": [
+      "disposition": "ACCEPT",
+      "required_changes": [],
+      "criterion": "Signed synthetic rebate +0.0499 uses wire role_basis=scenario; enum and arithmetic agree.",
+      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST",
+      "closed_changes": [
         "QD006-R2"
       ],
-      "criterion": "Literal signed rebate +0.0499 accepted arithmetically; replace synthetic role_basis with allowed scenario or explicit wire mapping.",
-      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST"
+      "previous_disposition": "REVISE",
+      "previous_criterion": "Literal signed rebate +0.0499 accepted arithmetically; replace synthetic role_basis with allowed scenario or explicit wire mapping."
     },
     {
       "id": "QF006-A03",
@@ -278,21 +297,27 @@
     },
     {
       "id": "QF006-A13",
-      "disposition": "REVISE",
-      "required_changes": [
+      "disposition": "ACCEPT",
+      "required_changes": [],
+      "criterion": "Independent posting IDs accept -0.02/-0.01 partial payments once; identical source revisions no-op, conflicting source keys quarantine; imported posting_revision>1 explicitly rejects.",
+      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST",
+      "closed_changes": [
         "QD006-R1"
       ],
-      "criterion": "Identical delivery no-op and conflicting payload quarantine; define posting identities separately from obligation revisions.",
-      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST"
+      "previous_disposition": "REVISE",
+      "previous_criterion": "Identical delivery no-op and conflicting payload quarantine; define posting identities separately from obligation revisions."
     },
     {
       "id": "QF006-A14",
-      "disposition": "REVISE",
-      "required_changes": [
+      "disposition": "ACCEPT",
+      "required_changes": [],
+      "criterion": "Successive cumulative T revisions change only pending until independent postings; literal funding sign-change/refund and late fee credit/surcharge reconcile after close; missing successor completeness leaves latest label immature.",
+      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST",
+      "closed_changes": [
         "QD006-R1"
       ],
-      "criterion": "Append authoritative correction without history rewrite; distinguish pending delta from observed cash and support successive revisions/fee corrections.",
-      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST"
+      "previous_disposition": "REVISE",
+      "previous_criterion": "Append authoritative correction without history rewrite; distinguish pending delta from observed cash and support successive revisions/fee corrections."
     },
     {
       "id": "QF006-A15",
@@ -338,13 +363,16 @@
     },
     {
       "id": "QF006-A21",
-      "disposition": "REVISE",
-      "required_changes": [
+      "disposition": "ACCEPT",
+      "required_changes": [],
+      "criterion": "All-event half-open scope includes exit and linked late posting; label remains immature through assertion receipt and becomes known only at consumer availability 10:00:02; available successor requires new label at11:00:02; invalid authority and incomplete coverage/scope reject finality.",
+      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST",
+      "closed_changes": [
         "QD006-R2",
         "QD006-R3"
       ],
-      "criterion": "Natural exit and known-time differ; specify representable immature state and unequal finality coverage/knowledge clocks.",
-      "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST"
+      "previous_disposition": "REVISE",
+      "previous_criterion": "Natural exit and known-time differ; specify representable immature state and unequal finality coverage/knowledge clocks."
     },
     {
       "id": "QF006-A22",
@@ -438,26 +466,13 @@
       "evidence_status": "DESIGN_REVIEW_ONLY_NOT_IMPLEMENTED_TEST"
     }
   ],
-  "required_changes": [
-    {
-      "id": "QD006-R1",
-      "summary": "Independent obligation revision/posting identity and noncash versus cash correction transitions; extend A13/A14."
-    },
-    {
-      "id": "QD006-R2",
-      "summary": "Make A02 role_basis and A21 maturity state representable by the strict typed interface."
-    },
-    {
-      "id": "QD006-R3",
-      "summary": "Define completeness assertion coverage, known time, rule and revision scope; extend A21 without changing A22 strict arithmetic."
-    }
-  ],
+  "required_changes": [],
   "ownership_proposal": {
     "research_schema_and_ledger": "QD sole editor; QR financial reviewer",
     "episode_label_producer": "QD research/qd009/episode_export.py sole editor",
     "episode_label_semantics": "QR research/qr009/label-policy.md sole editor",
     "episode_label_validator": "QR research/qr009/validate_episode_labels.py sole editor; no QD reducer import",
-    "confirmation": "Proposed future allocation, QR agreement and separate implementation authorization required"
+    "confirmation": "QR confirmed exact sole-editor allocation in c7e9a2492247fa31e216035f87e8bb20cca6e6ad; future dispatch/human implementation authorization still required."
   },
   "execution_evidence": {
     "actual_contract_tests_implemented": 0,
@@ -466,14 +481,63 @@
     "market_labels_generated": 0,
     "model_or_scaler_fits": 0,
     "market_data_requests": 0,
-    "checks": "Five exact committed/file hashes; JSON IDs/references; independent synthetic arithmetic and shape checks only."
+    "checks": "Bounded delta recheck: five exact committed/file hashes, exactly four changed cases, 30 unchanged cases and nine unchanged sources, 64 independent literal Decimal assertions and 30 clock/state/contract assertions passed. No implementation tests executed.",
+    "document_decimal_assertions": 64,
+    "document_clock_state_contract_assertions": 30
   },
   "deferred_gates": [
-    "QR correction and exact frozen-spec re-review",
-    "Separate synthetic-ledger implementation authorization",
-    "Historical/scenario data coverage and fixed run parameters",
-    "Separate full-state replay and market-label authorization",
-    "Prospective protocol/effect/precision decisions and fresh direct human confirmation before fitting"
+    "Separate bounded synthetic-ledger implementation authorization and exact path allocation",
+    "Freeze canonical typed schema/manifest/identity details without changing accepted semantics; counterpart review",
+    "QD implementation tests and independent QR synthetic validation",
+    "Historical/scenario evidence coverage and preregistered run/scenario parameters",
+    "Separate full-state replay and market-label generation authorization and independent acceptance",
+    "Prospective holdout/effect/precision/training plan and fresh direct human confirmation before any fit"
   ],
-  "next_action": "Stop for QR/coordinator review; no implementation, acquisition, replay, labels or fitting"
+  "next_action": "STOP: coordinator finalizes protocol-stage report; await separate human decision, no next implementation/run task.",
+  "previous_review": {
+    "qd_commit": "611cb7419e676bde8cb0b2e64968f3a81bd42164",
+    "review_json_sha256": "9a0a29dc95b1706c0ea037f16c9903bc1ee4c7081467360674be79ca52cf8695",
+    "reviewed_qr_commit": "2c3846c53443307b410a647ba0efbed078884d8b",
+    "reviewed_qr_files_sha256": {
+      "research/qr006/protocol.md": "f4434a259ce9974e36fedc32e34aaa910b84553e496c7840b112276baf76cbe8",
+      "research/qr006/acceptance.json": "8c3038dbd613d1d84c9e6c01873fbfee5a125ce2c5a044d4d188ab59897ad510",
+      "research/qr006/evidence.json": "afd3468133ab45eb83fc727d959054389e1d31bdbeb49d2fa27f040f594aa00a",
+      "docs/interface-requests/qr-qf006-execution-cost-label.md": "231f97a5a796eceaa6ddcf18d4f770d0f5ebbf842ff5ece1ad384e9b30282bbc",
+      "docs/agent-reports/qr/QF-QR-006-protocol.md": "68b6ec921c3d6a69f80db72bf4ae207a3525096944ba9674ce10c93de9776d00"
+    },
+    "overall_disposition": "REVISE",
+    "acceptance_counts": {
+      "ACCEPT": 30,
+      "REVISE": 4
+    },
+    "revised_ids": [
+      "QF006-A02",
+      "QF006-A13",
+      "QF006-A14",
+      "QF006-A21"
+    ],
+    "history": "Original rationale and checks remain in the report and prior committed JSON."
+  },
+  "acceptance_scope": "protocol/design review accepted; not implementation-tested or data/training-ready",
+  "protocol_id": "qf006-proposal-r2",
+  "resolved_changes": [
+    {
+      "id": "QD006-R1",
+      "summary": "Independent obligation revision/posting identity and noncash versus cash correction transitions; extend A13/A14.",
+      "disposition": "ACCEPT",
+      "resolution": "ACCEPT: independent T revisions/B postings, P=T-B, immutable posting revision1 restriction, partial payments/refunds/late fees and causal closed-episode accounting are explicit."
+    },
+    {
+      "id": "QD006-R2",
+      "summary": "Make A02 role_basis and A21 maturity state representable by the strict typed interface.",
+      "disposition": "ACCEPT",
+      "resolution": "ACCEPT: role_basis=scenario and explicit valid/open/immature/censored/invalid states/nullability/precedence match corrected fixtures."
+    },
+    {
+      "id": "QD006-R3",
+      "summary": "Define completeness assertion coverage, known time, rule and revision scope; extend A21 without changing A22 strict arithmetic.",
+      "disposition": "ACCEPT",
+      "resolution": "ACCEPT: typed scoped assertion with source/rule/revision refs and separate issuance/receipt/available clocks; coverage and availability negatives plus causal supersession are explicit."
+    }
+  ]
 }
