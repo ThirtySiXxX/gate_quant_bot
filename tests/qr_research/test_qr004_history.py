@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 from research.qr004.validate_history import (candle_quality, funding_quality, inside,
-    number, raw_rows, sha256, source_identity, validate_dataset)
+    native_warmup, number, raw_rows, sha256, source_identity, validate_dataset)
 
 
 class HistoryAcceptanceTests(unittest.TestCase):
@@ -226,6 +226,36 @@ class HistoryAcceptanceTests(unittest.TestCase):
         self.manifest["spec_sha256"] = "0"*64
         with self.assertRaisesRegex(ValueError, "spec hash"):
             self.audit()
+
+
+class NativeWarmupTests(unittest.TestCase):
+    def test_full_native_windows_and_future_funding_causality(self):
+        import numpy as np
+        import pandas as pd
+        from src.config import SystematicConfig
+        # Original long-window policy; a full synthetic year, no order engine.
+        fixture = Path(__file__).resolve().parents[2]/"research/qr003/results/phase-a-input-spec.json"
+        cfg = SystematicConfig.build(json.loads(fixture.read_text())["instruments"]["BTC_USDT"]["fixture"]["strategy_config"])
+        start, decision = 1672531200, 1704067200
+        frames = {}
+        for key, step in (("1h", 3600), ("4h", 14400), ("1d", 86400)):
+            times = np.arange(start, decision, step)
+            close = 100 + np.arange(len(times))*0.005 + np.sin(np.arange(len(times))*0.13)
+            frames[key] = pd.DataFrame(dict(timestamp=times, open=close-.2,
+                high=close+1, low=close-1, close=close, volume=100+np.arange(len(times))%7))
+        frames["funding"] = pd.DataFrame(dict(timestamp=np.arange(start, decision+28800, 28800)+1,
+            funding_rate=0.0001))
+        baseline = native_warmup(frames, cfg, decision, 28800)
+        self.assertTrue(baseline["full_windows_at_start"])
+        self.assertFalse(baseline["training_permission"])
+        frames["funding"].loc[frames["funding"].timestamp > decision, "funding_rate"] = 0.2
+        self.assertEqual(baseline, native_warmup(frames, cfg, decision, 28800))
+        # Finite native minimum is insufficient for the full 1000-observation scaler.
+        frames["funding"] = frames["funding"][frames["funding"].timestamp >= decision-500*14400]
+        short = native_warmup(frames, cfg, decision, 28800)
+        self.assertTrue(short["findings"]["carry"]["native_finite"])
+        self.assertFalse(short["full_windows_at_start"])
+        self.assertLess(short["findings"]["carry"]["finite_prior_raw"], 1000)
 
 
 if __name__ == "__main__":

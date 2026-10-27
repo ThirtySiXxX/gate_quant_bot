@@ -28,12 +28,16 @@ their integration editor; this report is the handoff evidence.
 ## Tests and results
 
 Spec JSON parse and date/budget checks pass; `git diff --check` passes.
-**16 focused offline tests pass**, with socket connections blocked: valid fixture
+**17 focused offline tests pass**, with socket connections blocked: valid fixture
 cannot grant training permission; raw hash/normalization tampering; advanced
 availability; deleted/duplicate bars; conflicting raw overlap; mark/trade confusion;
 unit/row lineage drift; traversal/symlink escape; cross-interval discrepancy;
 invalid OHLCV/grid/NaN; funding offsets/interval ambiguity; truncated gzip;
-206 completeness; manifest universe/spec drift.
+206 completeness; manifest universe/spec drift. The native warmup fixture exercises
+the original long-window EMA/scaler/FDM/Carry functions and causal feature code:
+a year passes full windows; changing future funding leaves the result unchanged;
+500 past Carry observations produce a finite native signal but correctly fail the
+full 1000-observation requirement. This is a synthetic test, not actual data acceptance.
 
 Command: load `tests.qr_research.test_qr004_history` through `unittest`, using
 `PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python`
@@ -60,3 +64,10 @@ pass, generate at most two unchanged baseline trajectories to assess labels.
 Then report READY_FOR_USER_TRAINING_CONFIRMATION or concrete NOT_READY blockers.
 At the future training decision, the human must confirm the holdout and economic
 precision goal as well as permission to fit. No automatic merge or integration.
+
+Early QD adapter `research/qd004/results/intake-contract.json` reviewed and accepted:
+hybrid_native_v1 uses monthly 1h/settled funding plus native REST 4h/daily and
+October tail, with declared overlap checks. Exact JSON conventions agree; funding
+`interval_seconds: null` records that schedule is not assumed. Identical duplicate
+lineage in the quarantine partition is provenance, not automatically invalid data.
+No downloaded dataset or final collector candidate is accepted by this early review.

@@ -218,6 +218,76 @@ def cross_interval(hourly, native, seconds):
     return {"compared": len(native)-len(incomplete), "incomplete": incomplete, "mismatches": mismatches}
 
 
+def native_warmup(frames, cfg, decision_at, funding_interval):
+    """Inspect the original indicators at the first scored decision, without replay.
+
+    A nominal funding interval is an explicit caller assumption, never inferred
+    from today's contract. This diagnostic cannot prove historical completeness.
+    """
+    import numpy as np
+    from src import carry, trend, vol
+    from src.crypto_ml import causal_features
+
+    if cfg.ml_model_path:
+        raise ValueError("warmup must have ML disabled")
+    if funding_interval <= 0:
+        raise ValueError("funding interval must be explicitly positive")
+    periods = {"1h": 3600, "4h": 14400, "1d": 86400}
+    clipped = {interval: frames[interval][frames[interval].timestamp+seconds <= decision_at].reset_index(drop=True)
+               for interval, seconds in periods.items()}
+    findings, checks = {}, []
+    for interval in ("1h", "4h"):
+        frame = clipped[interval]
+        if frame.empty:
+            raise ValueError("empty warmup frame")
+        i = len(frame)-1
+        raw_counts = []
+        for fast, slow in cfg.ewmac_horizons:
+            raw = trend.ewmac_raw(frame.close, fast, slow, interval, cfg.ewma_lambda)
+            count = int(np.isfinite(raw.iloc[max(0, i-cfg.forecast_scale_lookback):i]).sum())
+            raw_counts.append({"fast": fast, "slow": slow, "finite_prior_raw": count})
+            checks.append(count == cfg.forecast_scale_lookback and np.isfinite(raw.iloc[i]))
+        sub = trend.compute_ewmac_group(frame.close, interval, cfg)
+        previous_sub = sub.shift(1).iloc[max(0, i-cfg.fdm_lookback+1):i+1]
+        fdm_count = int(np.isfinite(previous_sub).all(axis=1).sum())
+        native_last = float(trend.group_trend_forecast(frame.close, interval, cfg).iloc[-1])
+        contiguous = bool((frame.timestamp.diff().dropna() == periods[interval]).all())
+        exactly_closed = int(frame.timestamp.iloc[-1])+periods[interval] == decision_at
+        checks.extend((fdm_count == cfg.fdm_lookback, np.isfinite(native_last), contiguous, exactly_closed))
+        findings[interval] = {"closed_bars": len(frame), "last_open": int(frame.timestamp.iloc[-1]),
+            "trend_raw_counts": raw_counts, "required_raw": cfg.forecast_scale_lookback,
+            "fdm_prior_complete_rows": fdm_count, "required_fdm": cfg.fdm_lookback,
+            "native_trend_finite": bool(np.isfinite(native_last)), "contiguous": contiguous,
+            "exactly_closed_at_start": exactly_closed}
+    main = clipped["4h"]
+    rates = carry.align_funding_to_bars(frames["funding"], main.timestamp)
+    ann_vol = vol.price_vol_annualized(main.close, "4h", cfg.ewma_lambda)
+    raw_carry = -rates * (365*86400/funding_interval) / ann_vol.replace(0, np.nan)
+    i = len(main)-1
+    count = int(np.isfinite(raw_carry.iloc[max(0, i-cfg.carry_scale_lookback):i]).sum())
+    native_carry = carry.carry_forecast_series_from_history(main.close, "4h", frames["funding"],
+        funding_interval, cfg, bar_timestamps=main.timestamp)
+    carry_finite = bool(np.isfinite(native_carry.iloc[-1]))
+    checks.extend((count == cfg.carry_scale_lookback, carry_finite))
+    findings["carry"] = {"finite_prior_raw": count, "required": cfg.carry_scale_lookback,
+        "native_finite": carry_finite, "interval_assumption_seconds": funding_interval,
+        "schedule_proven": False}
+    day = clipped["1d"]
+    day_count = len(day)
+    day_contiguous = bool((day.timestamp.diff().dropna() == 86400).all())
+    checks.extend((day_count >= cfg.regime_ema_long+5, day_contiguous))
+    findings["daily"] = {"closed_bars": day_count, "required": cfg.regime_ema_long+5,
+                          "contiguous": day_contiguous}
+    features = causal_features(clipped["1h"])
+    feature_finite = bool(np.isfinite(features.iloc[-1]).all())
+    checks.append(feature_finite)
+    findings["ml_features"] = {"native_last_vector_finite": feature_finite, "fits": 0}
+    return {"decision_at": decision_at, "full_windows_at_start": bool(all(checks)),
+            "findings": findings, "training_permission": False,
+            "limitations": ["EMA initialization approximate", "funding schedule requires independent evidence",
+                            "first decision only; all scored inputs checked separately"]}
+
+
 def validate_dataset(root, manifest_path, spec_path):
     root = Path(root).resolve(strict=True)
     spec_path, manifest_path = Path(spec_path), Path(manifest_path)
