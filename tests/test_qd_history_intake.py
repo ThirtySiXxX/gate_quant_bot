@@ -279,6 +279,25 @@ class HistoryIntakeTests(unittest.TestCase):
         self.assertIsNone(observed["historical_effective_at"])
         hi.verify_dataset(self.root, self.rules)
 
+    def test_cross_interval_evidence_is_quarantined_without_rewriting_candidates(self):
+        hourly = gzip.compress(b"".join(f"{1672531200+i*3600},10,100,200,1,100\n".encode() for i in range(4)), mtime=0)
+        a = self.record(hourly, "hourly")
+        b = self.record(hi.json_bytes([dict(t=1672531200, o="100", h="200", l="1", c="100", v="41")]),
+                        "native", seconds=14400, fmt="candles_json")
+        b["url"] = hi.API + "candlesticks?contract=BTC_USDT&interval=4h&from=1672531200&to=1672545599"
+        hi.normalize(self.root, self.rules, [a, b], [task()])
+        original = (self.root / "manifest.json").read_bytes()
+        normalized = {p.name: p.read_bytes() for p in (self.root / "normalized").iterdir()}
+        checked = hi.quarantine_qc(self.root, self.rules)
+        self.assertEqual(checked["status"], "PASS_LOCAL_FILE_AND_LINEAGE_RECHECK")
+        self.assertEqual(original, (self.root / "manifest.json").read_bytes())
+        self.assertEqual(normalized, {p.name: p.read_bytes() for p in (self.root / "normalized").iterdir()})
+        evidence = json.loads((self.root / "quarantine/cross-interval-disagreements.json").read_text())
+        self.assertEqual(evidence[0]["differing_fields"], ["volume"])
+        self.assertEqual(len(evidence[0]["hourly_components"]), 4)
+        self.assertEqual(evidence[0]["native"]["source_row"], 1)
+        hi.verify_dataset(self.root, self.rules, "candidate-reviewed.json")
+
 
 if __name__ == "__main__":
     unittest.main()

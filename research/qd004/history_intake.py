@@ -629,14 +629,14 @@ def normalize(root, spec, records, tasks, *, acquisition_error=None, prior_sha=N
     return manifest
 
 
-def verify_dataset(root, spec):
+def verify_dataset(root, spec, manifest_name="manifest.json"):
     """Second disk-reading pass: every source origin is retained/accounted for.
 
     This does not replace QR's independently implemented semantic validator.
     Gaps/quarantines may be reported candidates; missing provenance is an error.
     """
     root = Path(root)
-    manifest = json.loads(safe_path(root, "manifest.json").read_bytes())
+    manifest = json.loads(safe_path(root, manifest_name).read_bytes())
     if manifest["spec_sha256"] != SPEC_SHA256 or manifest["symbols"] != list(SYMBOLS):
         raise IntakeError("manifest scope/spec changed")
     if manifest["data_range"] != dict(start=spec["calendar"]["raw_start"], end_exclusive=spec["calendar"]["raw_end_exclusive"]):
@@ -746,18 +746,98 @@ def verify_dataset(root, spec):
                 if raw_by_ref.get(key) != identity:
                     raise IntakeError("conflict lineage changed numeric values")
                 accountable.add(key)
+    for finding in retained.get("cross-interval-disagreements.json", []):
+        symbol, seconds = finding["symbol"], finding["interval_seconds"]
+        native = finding["native"]
+        values = tuple(number(v) for v in native["values"])
+        if raw_by_ref.get((native["source_id"], native["source_row"])) != (symbol, "candles", seconds, values):
+            raise IntakeError("cross-interval native evidence not equal to raw")
+        pieces = []
+        for component in finding["hourly_components"]:
+            row_values = tuple(number(v) for v in component["values"])
+            if raw_by_ref.get((component["source_id"], component["source_row"])) != (symbol, "candles", 3600, row_values):
+                raise IntakeError("cross-interval hourly evidence not equal to raw")
+            pieces.append(row_values)
+        if [p[0] for p in pieces] != [values[0] + offset for offset in range(0, seconds, 3600)]:
+            raise IntakeError("cross-interval evidence has missing/shifted components")
+        aggregate = (pieces[0][0], pieces[0][1], max(p[2] for p in pieces), min(p[3] for p in pieces),
+                     pieces[-1][4], sum(p[5] for p in pieces))
+        if aggregate != tuple(number(v) for v in finding["hourly_aggregate"]) or aggregate == values:
+            raise IntakeError("cross-interval disagreement is not reproducible")
     if accountable != set(raw_by_ref):
         raise IntakeError("eligible raw record silently dropped from normalization/quarantine")
     return dict(status="PASS_LOCAL_FILE_AND_LINEAGE_RECHECK", training="NOT_READY",
-        manifest_sha256=digest(safe_path(root, "manifest.json").read_bytes()),
+        manifest_sha256=digest(safe_path(root, manifest_name).read_bytes()),
         raw_files=len(raw_sources), normalized_rows=normalized_rows,
         accountable_raw_origins=len(accountable), excluded_origins=len(excluded),
         failed_sources_retained=len(failed_sources), independent_QR_review="PENDING")
 
 
+def quarantine_qc(root, spec):
+    """Offline evidence supplement; never rewrite the frozen dataset or prefer a source.
+
+    Different native intervals are distinct logical streams. Their disagreement
+    does not identify a corrupt member. All implicated versions are retained as
+    unaccepted candidate evidence; QR resolves semantics before any replay.
+    """
+    root = Path(root)
+    child_name = "candidate-reviewed.json"
+    if safe_path(root, child_name).exists():
+        return verify_dataset(root, spec, child_name)
+    verify_dataset(root, spec)
+    base = json.loads(safe_path(root, "manifest.json").read_bytes())
+    lookup = {}
+    for entry in base["normalized_files"]:
+        if entry["kind"] == "candles":
+            with safe_path(root, entry["path"]).open(newline="") as handle:
+                for row in csv.DictReader(handle):
+                    lookup[(entry["symbol"], entry["interval_seconds"], number(row["timestamp"]))] = dict(
+                        source_id=row["source_id"], source_row=int(row["source_row"]),
+                        values=[row[k] for k in ("timestamp", "open", "high", "low", "close", "volume")])
+    findings, summaries, source_ids = [], [], set()
+    fields = ("open", "high", "low", "close", "volume")
+    for qc in base["quality_summary"]["cross_interval_qc"]:
+        symbol, seconds = qc["symbol"], qc["interval_seconds"]
+        changes = Counter()
+        volume_only = 0
+        for item in qc["mismatches"]:
+            t = number(item["timestamp"])
+            native = lookup[(symbol, seconds, t)]
+            pieces = [lookup[(symbol, 3600, t + offset)] for offset in range(0, seconds, 3600)]
+            differing = [name for i, name in enumerate(fields, 1)
+                         if number(native["values"][i]) != number(item["hourly_aggregate"][i])]
+            changes.update(differing)
+            volume_only += differing == ["volume"]
+            source_ids.update(r["source_id"] for r in [native, *pieces])
+            findings.append(dict(symbol=symbol, kind="candles", interval_seconds=seconds,
+                timestamp=item["timestamp"], reason="native_vs_hourly_aggregate_disagreement",
+                resolution="pending_QR_source_review_no_preference", native=native,
+                hourly_components=pieces, hourly_aggregate=item["hourly_aggregate"],
+                differing_fields=differing, normalized_status="retained_candidate_not_accepted",
+                destination="quarantine/cross-interval-disagreements.json"))
+        summaries.append(dict(symbol=symbol, interval_seconds=seconds,
+            mismatch_windows=len(qc["mismatches"]), differing_field_counts=dict(changes),
+            volume_only_windows=volume_only, price_difference_windows=len(qc["mismatches"]) - volume_only))
+    path = "quarantine/cross-interval-disagreements.json"
+    content = json_bytes(findings)
+    write_once(root, path, content)
+    child = dict(base)
+    child["quarantine_files"] = [*base["quarantine_files"], dict(path=path, sha256=digest(content),
+        reason="cross_interval_variants_pending_QR_review", rows=len(findings), source_ids=sorted(source_ids))]
+    child["quality_summary"] = dict(base["quality_summary"], cross_interval_quarantine=path,
+                                    cross_interval_summary=summaries)
+    child["postprocessing"] = dict(parent_manifest_sha256=digest(safe_path(root, "manifest.json").read_bytes()),
+        created_at=now(), action="retain_all_cross_interval_disagreement_evidence_no_data_repair",
+        code_sha256=digest(Path(__file__).read_bytes()), normalized_files_changed=False)
+    write_once(root, child_name, json_bytes(child))
+    checked = verify_dataset(root, spec, child_name)
+    write_once(root, "reviewed-verification.json", json_bytes(checked))
+    return checked
+
+
 def execute(args, spec):
     if args.verify_only or (args.root / "manifest.json").exists():
-        print(json.dumps(verify_dataset(args.root, spec), sort_keys=True))
+        print(json.dumps(verify_dataset(args.root, spec, args.manifest), sort_keys=True))
         return
     if args.prior_probe_ledger is None:
         raise IntakeError("--prior-probe-ledger is required for acquisition/normalization")
@@ -785,13 +865,18 @@ def main():
     parser.add_argument("--spec", type=Path, required=True)
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--prior-probe-ledger", type=Path)
+    parser.add_argument("--manifest", default="manifest.json", help="relative manifest for offline verification")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--fetch", action="store_true")
     mode.add_argument("--normalize-only", action="store_true")
     mode.add_argument("--verify-only", action="store_true")
+    mode.add_argument("--quarantine-qc", action="store_true", help="offline evidence supplement; immutable inputs")
     args = parser.parse_args()
     spec = load_spec(args.spec)
-    if args.verify_only:
+    if args.quarantine_qc:
+        with acquisition_lease(args.root):
+            print(json.dumps(quarantine_qc(args.root, spec), sort_keys=True))
+    elif args.verify_only:
         execute(args, spec)
     else:
         with acquisition_lease(args.root):

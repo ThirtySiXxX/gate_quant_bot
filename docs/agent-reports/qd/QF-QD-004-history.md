@@ -4,8 +4,9 @@ Date: 2026-10-28 Australia/Melbourne. Dispatch:
 `QF-DISPATCH-20261028-QD004-SOURCE-FEASIBILITY-1`.
 Parent: `1a2bf705050a0fdc4f47da7e834487f3c37cd800`.
 Worktree: `/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot`;
-branch `codex/qd-cache-safety`. Status: finite discovery complete, conditional
-source feasibility established; bulk intake awaits the coordinator's frozen QR spec.
+branch `codex/qd-cache-safety`. Current status: finite acquisition complete;
+candidate **NOT_READY** pending QR source/semantic review. Discovery findings below
+are preserved as history; the final handoff has current coverage and hashes.
 
 ## Ownership and scope
 
@@ -242,3 +243,173 @@ Concrete synthetic duplicate/conflict/exclusion examples are published in
 The pinned plan has **210 new requests**, expected **222 total** with the 12 probes
 and no retries. Collector source SHA256 before acquisition:
 `2adfed92c3204244a9ed5e66732d8ce2cee89af624eb1b18feb57bdf7ee0299a`.
+
+## Final intake handoff (2026-10-28)
+
+Acquisition implementation commit:
+`5209a13847615214f5c8ca86cdbcc38bed627c1e` (parent e68813c).
+The final follow-up commit containing this section adds offline cross-interval
+quarantine evidence support and metadata summary; resolve its exact SHA with
+`git log -1 --format='%H %s' -- research/qd004/results/intake-summary.json`.
+No source route or acquired market record was changed after inspection.
+
+**Dataset root:**
+`/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1`.
+
+- Final review manifest: `candidate-reviewed.json`, SHA256
+  `16035c8f9065ea79e4c572ce444b7af6a6b038f2526e5bda9273bf6580274dac`.
+- Original immutable acquisition manifest: `manifest.json`, SHA256
+  `5f5319175c42ba4a82e25ca128ac58ae3b71be4b82911fd7935cfa3678407cfd`.
+- Spec: exact b573d527 JSON SHA256
+  `6e3d4fb99c62d0658fcb3bb779a35b072d65b29df399e9b287fa315943687862`;
+  ignored exact copy at `research/.data/qd004/specification-b573d527.json`.
+- Metadata-only tracked summary: `research/qd004/results/intake-summary.json`,
+  SHA256 `9bd0cd3c66e9d9feee5104bf945c1bf45eef3a79c0adcde9e99bdec037f732a4`.
+  Full raw/normalized/quarantine records remain ignored; they are not copied into Git.
+
+The offline review manifest references an additional quarantine file; the parent
+manifest and every raw/normalized file are unchanged. `postprocessing` records
+the parent hash and review-code hash
+`79e35285ec03afa4b346cb41b441d7919a3489584f20f511dfbce2fe750b9afd`.
+Original `collector_sha256` still identifies the acquisition code, not the later
+offline supplement. This preserves both phases' provenance without rewriting it.
+
+### Acquisition/resource accounting
+
+All **210/210** planned new tasks returned complete HTTP 200 responses: 180 monthly
+gzip objects and 30 public JSON requests. **222/450 total attempts** includes the
+12 source probes. No retries, redirects, paid/authenticated endpoints, extra
+symbols/venues or replacement sources. Sequential collector, one-second pauses,
+15-second socket timeout. Total retained response bytes including probes:
+**3,540,596**; new raw bytes **3,530,520**; largest new response **111,586 bytes**.
+All source objects are below the 10 MiB per-file and 250 MiB total limits; full gzip
+CRC/EOF/expanded-size checks passed. Remaining 228 attempts were not consumed.
+No further acquisition is scheduled or implied by that remainder.
+
+Attempt ledger: `attempts.jsonl` (begin/end reservations, IDs 13–222); prior probe
+ledger/body hashes were rechecked unchanged. The request plan is frozen in
+`plan.json`. Public current-only metadata was retrieved around
+2026-10-27T15:04:31–15:04:36Z, after the historical cutoff; its actual observed_at
+is retained and historical_effective_at is null. It is not a historical tier,
+multiplier or funding-interval reconstruction.
+
+### Exact candidate coverage
+
+All stream timestamps below are inclusive first/last source event/open times.
+The declared data_range remains [1672531200,1793091600); candles whose close
+exceeds cutoff are not included. Counts are data rows, not independent labels.
+
+| Symbol / series | Rows | First / last timestamp | Normalized CSV SHA256 |
+| --- | ---: | --- | --- |
+| BTC 1h | 33489 | 1672531200 / 1793088000 | e292642723c6f76e97c7565e4b7ed97a76cf382402a3dcad22a7d902ff069789 |
+| BTC 4h | 8372 | 1672531200 / 1793073600 | 063fe0aa8856063bb545e3a02ba207b898af94f7ff7e53e6c5745e2f9cc82b8a |
+| BTC 1d | 1395 | 1672531200 / 1792972800 | 371d46b75a0f25c53a9bc1a552a13e5c799ec7b005d7b0e9c3f62bf0278c8935 |
+| BTC settled funding | 4187 | 1672531200 / 1793088000 | d962b994e147a791ee148ae07b0884b0bb8430bc9e4a4b72b48ee51a6782f9a4 |
+| ETH 1h | 33489 | 1672531200 / 1793088000 | b258376d40a44fb5f3a5cfeddbdc3710a39f360f57881e52af6c497d7690acfc |
+| ETH 4h | 8372 | 1672531200 / 1793073600 | 04be5a081dd08aeb49088b8541fa5ab056cde7f6f2eb249e9bbaa049f29aa7a4 |
+| ETH 1d | 1395 | 1672531200 / 1792972800 | 24af98956640bd404f36745340bab14bd8abfdfe292d7e0d705c579bee7b0ba1 |
+| ETH settled funding | 4187 | 1672531200 / 1793088000 | b4a0bc1adce31a6d23c381a92ced45f72062cecd27101a236d52e240eaf60fcd |
+
+Files are `normalized/{symbol}-{3600s|14400s|86400s|funding}.csv`.
+Four additional JSON files retain public current contract/tier snapshots.
+Local reread verification accounts for **94,914 eligible raw origins** and
+**94,886 normalized market rows**. The difference is 28 identical duplicate groups,
+each retaining both source references. No invalid/excluded row, same-stream numeric
+conflict or missing candle-grid interval was observed. This does not assert a
+historically complete funding schedule or satisfy QR's later warmup/event gates.
+
+Duplicate overlaps, per asset: eight 4h API page joins, one daily page join, two
+hourly September/October rows, three funding September/October rows. All matched
+numerically. Old disjoint monthly files also underwent grid continuity and native
+coarser-bar QC; that is not claimed as independent same-row old-funding overlap.
+
+### Unresolved quality blockers — keep NOT_READY
+
+**2,068 cross-interval QC windows disagree.** No native stream was replaced by an
+hourly aggregate, no volume correction was selected, and no outcome was inspected.
+
+| Native comparison | Mismatch windows | Volume only | Windows with price differences |
+| --- | ---: | ---: | ---: |
+| BTC 4h vs 1h aggregate | 188 | 188 | 0 |
+| BTC day vs 1h aggregate | 148 | 137 | 11 (close) |
+| ETH 4h vs 1h aggregate | 1393 | 1392 | 1 (low) |
+| ETH day vs 1h aggregate | 339 | 318 | 21 (close) |
+
+All involved native records and hourly component values/references are retained
+in `quarantine/cross-interval-disagreements.json` (2068 evidence records, 5,971,571
+bytes), SHA256
+`b154d32d8e1f4ef67c42b633dc0850363baa7d5120c8a450877fdcc344603529`.
+Resolution is `pending_QR_source_review_no_preference`. Native and hourly streams
+remain **unaccepted candidates**; neither member is declared corrupt merely from
+the comparison. 2035 windows differ only in volume, 33 include price differences.
+This evidence quarantine does not silently drop authentic rows or manufacture
+replacement inputs. Independent local reread reproduces every disagreement from
+its referenced raw rows.
+
+Funding inter-event durations, in seconds (all source timestamps kept unrounded):
+
+- BTC: 28800×4145, 28799×21, 28801×19, 28802×1; **41 deviations** from strict 8h.
+- ETH: 28800×4077, 28799×51, 28801×52, 28797×2, 28798×1, 28802×2, 28803×1;
+  **109 deviations**.
+
+The counts/near-eight-hour durations do not establish intended historical
+settlement scheduling. Source timestamp/processing jitter is another possible
+explanation; no event is rounded, shifted, inserted or zero-filled. These are
+unresolved semantics for unchanged constant-interval replay, not proven missing
+payments or proof that the venue deliberately changed intervals. Full exact
+deviation pairs are in quality_summary.funding_schedule for QR review.
+
+One ETH daily >20% close-to-close move at timestamp 1746662400 was flagged and
+retained. Its OHLC agrees with the independently sourced hourly aggregation;
+price authenticity is supported by that cross-check, not clipped or claimed
+fully certified. The source reference is in the tracked metadata summary.
+
+Current metadata remains hypothetical historical simulation input only. No
+historical tier/multiplier schedule was reconstructed. G2 is blocked pending
+source/semantic review; QD ran **no real-data replay, baseline labels or model fit**.
+G3 full native warmup/usable events belongs to QR after prerequisites pass. G4
+proposal and fresh direct human G5 permission remain required before training.
+
+### Verification, reproducibility and next steps
+
+Final dedicated fixtures: **18 passed** (0.063 seconds). Final socket-blocked full
+suite: **215 passed** (10.879 seconds). The added fixture proves cross-interval
+quarantine preserves the original manifest and normalized bytes while binding all
+variants to raw row references. Frontend's 8 regression groups passed before
+collection; no frontend/runtime code changed. Delta whitespace checks passed.
+
+Actual acquisition command, after committing the tested collector:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python -m research.qd004.history_intake --spec research/.data/qd004/specification-b573d527.json --root research/.data/qd004/history-v1 --prior-probe-ledger research/.data/qd004/source-probes/probe-ledger.json --fetch
+```
+
+The later `--quarantine-qc` phase ran with socket connects blocked. To reproduce
+the final offline file/CRC/hash/schema/lineage/evidence reread, without networking:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python -m research.qd004.history_intake --spec research/.data/qd004/specification-b573d527.json --root research/.data/qd004/history-v1 --manifest candidate-reviewed.json --verify-only
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python -m unittest discover -s tests -p test_qd_history_intake.py -v
+```
+
+Both base and final reviewed manifests passed local full-file/origin-accountability
+checks; `verification.json` and `reviewed-verification.json` record their distinct
+hashes. This is a second disk-reading pass, not independent QR semantic acceptance.
+All source-probe hashes remain unchanged. Raw/normalized bytes were not rewritten
+by the offline evidence supplement, and no data files are staged in Git.
+
+Handoff to QR: independently revalidate the final review manifest and retained
+evidence, resolve/characterize the cross-interval and funding timestamp semantics,
+and assess historical metadata/warmup compatibility before any permitted baseline.
+Do not silently switch routes, correct volume, round settlements, shrink dates or
+train to work around these blockers. A changed source/resolution policy needs a
+versioned handoff. This task stops after this report/metadata/code/test commit;
+no extra acquisition, replay, training, backlog work, automation or integration.
+
+Final preservation check: original source main HEAD remains
+`cae0d2395adf2cd3905e41cb1c16748c8247c32c`, staged binary-diff SHA256 remains
+`c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce`,
+and original index-byte SHA256 remains
+`7b518de8325f6f420207fcd49f1821a8fddbe76ffc214fea922180b006c1cf80`.
+Control `QF-CONTROL-20261028-QD004-FINALIZE-INTAKE-1` requests ending this stage.
+Any separately proposed diagnostic acquisition is not executed under this handoff.
