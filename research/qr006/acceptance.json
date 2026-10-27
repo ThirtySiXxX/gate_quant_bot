@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "protocol_id": "qf006-proposal-r1",
-  "state": "READY_FOR_QD_REVIEW",
+  "protocol_id": "qf006-proposal-r2",
+  "state": "READY_FOR_QD_RECHECK",
   "all_values_synthetic": true,
   "not_generated_market_labels": true,
   "clock_note": "Human-readable UTC clock literals below are fixture input specifications, to be parsed into integer microseconds by a future test; source precision remains explicit",
@@ -36,7 +36,7 @@
         "fill_price": "49900",
         "fee_fraction": "-0.0001",
         "role": "maker",
-        "role_basis": "synthetic"
+        "role_basis": "scenario"
       },
       "expected": {
         "fee_cost_usdt": "-0.0499",
@@ -304,36 +304,259 @@
     },
     {
       "id": "QF006-A13",
-      "name": "duplicates and conflicts",
+      "name": "independent posting identity, partial postings and duplicate conflicts",
       "evidence_mode": "SCENARIO",
       "input": {
-        "same_event_same_revision_same_bytes": "delivered_twice",
-        "same_id_revision_conflicting_rate": "separate_negative_fixture"
+        "all_times_utc": "same synthetic date; known_at=available_at for these observations",
+        "initial": {
+          "C": "999.95",
+          "obligation_id": "funding-old-episode",
+          "obligation_revision": 3,
+          "T": "-0.08",
+          "B": "-0.05",
+          "U": "0"
+        },
+        "deliveries": [
+          {
+            "posting_id": "p-extra-1",
+            "posting_revision": 1,
+            "obligation_id": "funding-old-episode",
+            "signed_amount_usdt": "-0.02",
+            "booking_at": "10:03:00",
+            "booking_known_at": "10:03:00",
+            "available_at": "10:03:00"
+          },
+          {
+            "posting_id": "p-extra-2",
+            "posting_revision": 1,
+            "obligation_id": "funding-old-episode",
+            "signed_amount_usdt": "-0.01",
+            "booking_at": "10:05:00",
+            "booking_known_at": "10:05:00",
+            "available_at": "10:05:00"
+          },
+          {
+            "redeliver_identical": "p-extra-1/revision1"
+          },
+          {
+            "redeliver_identical_obligation": "funding-old-episode/revision3/T=-0.08"
+          }
+        ],
+        "independent_negative_variants": [
+          {
+            "same_posting_id": "p-extra-1",
+            "posting_revision": 1,
+            "conflicting_signed_amount_usdt": "-0.03"
+          },
+          {
+            "same_obligation_id": "funding-old-episode",
+            "obligation_revision": 3,
+            "conflicting_T": "-0.09"
+          },
+          {
+            "same_posting_id": "p-extra-1",
+            "posting_revision": 2,
+            "claimed_observation_restatement": "-0.015"
+          }
+        ]
       },
       "expected": {
+        "after_partial_1": {
+          "C": "999.93",
+          "B": "-0.07",
+          "A": "0",
+          "L": "0.01",
+          "E": "999.92"
+        },
+        "after_partial_2": {
+          "C": "999.92",
+          "B": "-0.08",
+          "A": "0",
+          "L": "0",
+          "E": "999.92"
+        },
         "duplicate_extra_cash": "0",
-        "conflict_is_quarantined": true
+        "duplicate_extra_pending": "0",
+        "conflict_extra_cash": "0",
+        "conflict_is_quarantined": true,
+        "posting_revision_2_rejected": true,
+        "different_posting_ids_accepted": true,
+        "parent_obligation_and_closed_episode_retained": true
       },
-      "reject_reason": "CONFLICTING_EVENT_REVISION for conflicting fixture",
+      "reject_reason": "CONFLICTING_POSTING_REVISION / CONFLICTING_OBLIGATION_REVISION / UNSUPPORTED_POSTING_RESTATEMENT in respective negative variants",
       "producer_owner": "QD",
       "independent_check_owner": "QR",
       "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"
     },
     {
       "id": "QF006-A14",
-      "name": "late authoritative correction",
+      "name": "cumulative revisions change pending; independent funding and late-fee refunds change cash",
       "evidence_mode": "SCENARIO",
       "input": {
-        "previous_funding_cash": "-0.05",
-        "revised_total": "-0.1",
-        "revision_seen": "10:00",
-        "original_booking": "08:00:03"
+        "all_values_synthetic": true,
+        "U": "0",
+        "clock_rule": "obligation known_at=available_at; posting booking_at=booking_known_at=available_at in these literal sequences",
+        "primary": {
+          "initial_C_before_original_posting": "1000",
+          "obligation_id": "funding-old-episode",
+          "episode_closed": true,
+          "initial_obligation_revision": 1,
+          "initial_T": "-0.05",
+          "initial_posting": {
+            "posting_id": "p-original",
+            "posting_revision": 1,
+            "amount": "-0.05"
+          },
+          "steps": [
+            {
+              "at": "10:00:00",
+              "obligation_revision": 2,
+              "supersedes_obligation_revision": 1,
+              "cumulative_signed_total_usdt": "-0.10"
+            },
+            {
+              "at": "10:01:00",
+              "obligation_revision": 3,
+              "supersedes_obligation_revision": 2,
+              "cumulative_signed_total_usdt": "-0.08"
+            },
+            {
+              "at": "10:05:00",
+              "posting_id": "p-remainder",
+              "posting_revision": 1,
+              "signed_amount_usdt": "-0.03"
+            }
+          ]
+        },
+        "independent_sign_change": {
+          "initial_C_before_original_posting": "1000",
+          "initial_T": "-0.05",
+          "initial_B": "-0.05",
+          "revised_T": "+0.02",
+          "revision_at": "10:00:00",
+          "refund_posting_id": "p-funding-refund",
+          "refund_amount": "+0.07",
+          "refund_at": "10:05:00"
+        },
+        "independent_late_fee": {
+          "initial_C_before_original_fee": "1000",
+          "fee_obligation_id": "fee-closed-fill",
+          "original_fill_id": "fill-closed",
+          "episode_naturally_closed_at": "08:00:01",
+          "initial_T": "-0.25",
+          "initial_B": "-0.25",
+          "steps": [
+            {
+              "at": "10:00:00",
+              "obligation_revision": 2,
+              "supersedes_obligation_revision": 1,
+              "cumulative_signed_total_usdt": "-0.20"
+            },
+            {
+              "at": "10:05:00",
+              "posting_id": "p-fee-refund",
+              "posting_revision": 1,
+              "signed_amount_usdt": "+0.05",
+              "corrects_posting_id": "p-original-fee"
+            },
+            {
+              "at": "11:00:00",
+              "obligation_revision": 3,
+              "supersedes_obligation_revision": 2,
+              "cumulative_signed_total_usdt": "-0.30"
+            },
+            {
+              "at": "11:05:00",
+              "posting_id": "p-fee-surcharge",
+              "posting_revision": 1,
+              "signed_amount_usdt": "-0.10"
+            }
+          ],
+          "initial_posting_id": "p-original-fee",
+          "initial_obligation_revision": 1
+        },
+        "successor_completeness_assertion": null
       },
       "expected": {
-        "appended_delta": "-0.05",
-        "original_entry_preserved": true,
-        "as_known_before_10_unchanged": true,
-        "label_known_at_at_least": "10:00"
+        "primary_after_original": {
+          "C": "999.95",
+          "A": "0",
+          "L": "0",
+          "E": "999.95"
+        },
+        "primary_after_revision_2": {
+          "C": "999.95",
+          "B": "-0.05",
+          "P": "-0.05",
+          "A": "0",
+          "L": "0.05",
+          "E": "999.90",
+          "cash_delta": "0",
+          "pending_delta": "-0.05"
+        },
+        "primary_after_revision_3": {
+          "C": "999.95",
+          "B": "-0.05",
+          "P": "-0.03",
+          "A": "0",
+          "L": "0.03",
+          "E": "999.92",
+          "cash_delta": "0",
+          "pending_delta": "+0.02"
+        },
+        "primary_after_posting": {
+          "C": "999.92",
+          "B": "-0.08",
+          "P": "0",
+          "A": "0",
+          "L": "0",
+          "E": "999.92",
+          "cash_delta": "-0.03",
+          "pending_delta": "+0.03"
+        },
+        "sign_change_before_refund": {
+          "C": "999.95",
+          "A": "0.07",
+          "L": "0",
+          "E": "1000.02"
+        },
+        "sign_change_after_refund": {
+          "C": "1000.02",
+          "A": "0",
+          "L": "0",
+          "E": "1000.02"
+        },
+        "late_fee_after_revision_2": {
+          "C": "999.75",
+          "A": "0.05",
+          "L": "0",
+          "E": "999.80"
+        },
+        "late_fee_after_refund": {
+          "C": "999.80",
+          "A": "0",
+          "L": "0",
+          "E": "999.80"
+        },
+        "late_fee_after_revision_3": {
+          "C": "999.80",
+          "A": "0",
+          "L": "0.10",
+          "E": "999.70"
+        },
+        "late_fee_after_surcharge": {
+          "C": "999.70",
+          "A": "0",
+          "L": "0",
+          "E": "999.70"
+        },
+        "original_entries_and_as_known_labels_preserved": true,
+        "cash_changes_only_on_independent_posting": true,
+        "closed_episode_keeps_fee_and_funding_attribution": true,
+        "latest_target_without_successor_assertion": null,
+        "latest_label_known_at_without_successor_assertion": null,
+        "latest_label_status": "immature",
+        "new_label_revision_cannot_precede_new_required_information": true
       },
       "reject_reason": null,
       "producer_owner": "QD",
@@ -479,22 +702,143 @@
     },
     {
       "id": "QF006-A21",
-      "name": "known-time later than position-flat",
+      "name": "cash-settled maturity waits for complete scope and consumer-available assertion",
       "evidence_mode": "SCENARIO",
       "input": {
-        "natural_exit": "08:00:01",
-        "booking": "08:00:03",
-        "booking_known": "08:00:04",
-        "completeness_watermark": "08:00:04",
-        "cutoff_for_negative_fixture": "08:00:02"
+        "synthetic_date_utc": "2026-01-01",
+        "episode": {
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "trajectory_id": "fixture-trajectory",
+          "episode_id": "fixture-episode",
+          "entry_at": "07:00:00",
+          "natural_exit": "08:00:01",
+          "funding_snapshot": "08:00:00",
+          "booking_at": "08:00:03",
+          "booking_known_at": "08:00:04",
+          "posting_available_at": "08:00:04",
+          "all_required_postings_reconciled": true,
+          "all_obligations_P": "0"
+        },
+        "assertion_revision_1": {
+          "assertion_id": "complete-fixture-episode",
+          "assertion_revision": 1,
+          "supersedes_assertion_revision": null,
+          "authority_id": "synthetic-fixture-authority",
+          "finality_rule_id": "fixture-all-episode-origins-and-linked-postings-v1",
+          "basis": "scenario",
+          "scope": {
+            "instrument_id": "gate:usdt:BTC_USDT",
+            "trajectory_id": "fixture-trajectory",
+            "episode_id": "fixture-episode",
+            "event_kinds": [
+              "fills",
+              "fees",
+              "funding",
+              "postings"
+            ],
+            "economic_from": "07:00:00",
+            "economic_to_exclusive": "08:00:02"
+          },
+          "obligation_revision_refs": [
+            "entry-fee/1",
+            "exit-fee/1",
+            "funding-snapshot/1"
+          ],
+          "posting_refs": [
+            "entry-fee-posting/1",
+            "exit-fee-posting/1",
+            "funding-posting/1"
+          ],
+          "asserted_at": "09:59:59",
+          "known_at": "10:00:00",
+          "available_at": "10:00:02",
+          "reason_codes": []
+        },
+        "assertion_revision_2": {
+          "same_scope_and_refs_as": 1,
+          "assertion_id": "complete-fixture-episode",
+          "assertion_revision": 2,
+          "supersedes_assertion_revision": 1,
+          "asserted_at": "10:59:59",
+          "known_at": "11:00:00",
+          "available_at": "11:00:02"
+        },
+        "independent_insufficient_coverage": {
+          "same_as_assertion_revision": 1,
+          "economic_to_exclusive": "08:00:01",
+          "exit_at_exclusive_end_not_covered": true
+        },
+        "independent_insufficient_scope": {
+          "same_as_assertion_revision": 1,
+          "event_kinds": [
+            "funding"
+          ],
+          "all_other_event_kinds_uncovered": true
+        },
+        "independent_missing_authority": {
+          "same_as_assertion_revision": 1,
+          "authority_id": null
+        },
+        "cutoffs": [
+          "08:00:02",
+          "08:00:04",
+          "10:00:00",
+          "10:00:02",
+          "11:00:02"
+        ]
       },
       "expected": {
         "label_end": "08:00:01",
-        "label_known_at": "08:00:04",
-        "at_cutoff_target": null,
-        "at_cutoff_status": "immature"
+        "at_08_00_02": {
+          "label_status": "immature",
+          "target": null,
+          "label_known_at": null
+        },
+        "at_08_00_04": {
+          "label_status": "immature",
+          "target": null,
+          "label_known_at": null
+        },
+        "at_10_00_00": {
+          "label_status": "immature",
+          "target": null,
+          "label_known_at": null
+        },
+        "at_10_00_02": {
+          "label_status": "valid",
+          "label_known_at": "10:00:02",
+          "target_nonnull_if_other_validity_conditions_hold": true,
+          "assertion_revision": 1
+        },
+        "at_11_00_02": {
+          "label_status": "valid",
+          "label_known_at": "11:00:02",
+          "target_nonnull_if_other_validity_conditions_hold": true,
+          "assertion_revision": 2,
+          "new_label_revision_required": true
+        },
+        "old_as_known_label_preserved": true,
+        "coverage_time_is_not_knowledge_time": true,
+        "insufficient_coverage": {
+          "label_status": "immature",
+          "target": null,
+          "label_known_at": null,
+          "reason": "INCOMPLETE_EPISODE_COVERAGE"
+        },
+        "insufficient_scope": {
+          "label_status": "immature",
+          "target": null,
+          "label_known_at": null,
+          "reason": "INCOMPLETE_EPISODE_SCOPE"
+        },
+        "missing_authority": {
+          "label_status": "invalid",
+          "target": null,
+          "label_known_at": null,
+          "reason": "UNPROVEN_FINALITY_AUTHORITY"
+        }
       },
-      "reject_reason": null,
+      "reject_reason": "Incomplete scope/coverage cannot finalize; invalid assertion authority is rejected in its negative variant",
       "producer_owner": "QD",
       "independent_check_owner": "QR",
       "status": "SPECIFICATION_ONLY_NOT_IMPLEMENTED"

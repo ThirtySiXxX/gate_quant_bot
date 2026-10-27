@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "protocol_id": "qf006-proposal-r1",
+  "protocol_id": "qf006-proposal-r2",
   "status": "DOCUMENT_SUMMARIES_NOT_HISTORICAL_DATA",
   "sources": [
     {
@@ -194,5 +194,6 @@
     "No signed-in/private endpoint or market-data download",
     "Displayed help date is not paragraph effective date",
     "Search snippets and illustrative examples cannot supply historical rule activation"
-  ]
+  ],
+  "revision_note": "QD006 R1-R3 document correction only; all nine source summaries and access evidence unchanged; no new browsing or data intake."
 }

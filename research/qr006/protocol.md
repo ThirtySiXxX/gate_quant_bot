@@ -1,7 +1,7 @@
 # QF006 Gate execution, cost and label protocol
 
-Revision qf006-proposal-r1; 2026-10-28 Australia/Melbourne.
-State: READY_FOR_QD_REVIEW. Document review only: no implementation, data intake,
+Revision qf006-proposal-r2; 2026-10-28 Australia/Melbourne.
+State: READY_FOR_QD_RECHECK. Document review only: no implementation, data intake,
 replay, label generation, fitting, integration or automatic next stage.
 Scope: Gate USDT linear perpetual BTC_USDT and ETH_USDT, existing frozen v2 data
 and original strategy/risk configuration. All times below are UTC.
@@ -204,12 +204,55 @@ Retrospectively computed E must never leak final future funding into a decision'
 budget. Known and posthoc ledgers stay separate. No survival claim without full
 margin/liquidation/ADL evidence.
 
-Idempotency: key `(instrument,event_id,revision,entry_kind,allocation_id)`; exact
-duplicate delivery has zero new posting. Same revision/different bytes quarantines.
-A later authoritative correction appends a reversing/delta entry linked to its
-original; do not rewrite earlier cash or feature history. Store restated economic
-outcome and as-known revision history; affected old labels get a new revision and
-new label_known_at. Unknown completeness watermark prevents finalization.
+### 5.1 Obligation revisions and independent cash postings (QD006-R1)
+
+A funding snapshot or fee-bearing fill has a stable `obligation_id`, retained
+after its episode closes. An authoritative `obligation_revision` supersedes the
+previous revision's **cumulative signed total T**, not an additional charge.
+Revision identity is `(instrument, obligation_id, obligation_revision)`; store
+the superseded revision and authority, economic time, known time and consumer
+available time. Recognition happens only when that revision is available.
+It changes the pending claim, never cash. Unknown totals remain unresolved.
+
+Cash uses independent `posting_id` / `posting_revision` identities, linked to
+the parent obligation, with a signed amount b, booking time, booking-known time
+and consumer available time. Multiple partial postings are supported, each with
+a distinct ID. A posting must have observed evidence or the declared scenario
+booking rule; an obligation revision is never that evidence. This first proposed
+schema accepts immutable `posting_revision=1` only. A purported revision of an
+already imported posting is quarantined as `UNSUPPORTED_POSTING_RESTATEMENT`;
+it is not a new cash movement. Actual later refunds/reversals are distinct signed
+postings with their own booking clocks and `corrects_posting_id` when applicable.
+This explicit restriction concerns corrections of imported posting observations,
+not normal partial payments or later fee/funding refunds, which are supported.
+
+For each obligation, B is the sum of accepted independent postings and
+`P = T - B`, `A_obligation = max(P,0)`, `L_obligation = max(-P,0)`.
+Sum A and L separately across obligations; do not net unrelated claims. Learning
+T_new changes P by T_new-T_old with cash_delta=0. A newly available posting b
+changes C by b and B by b, hence P by -b; E is unchanged absent another event.
+Cash in the causal view incorporates only postings already available to that
+consumer; later discovery retains the original booking time without rewriting
+an earlier decision. Restated audit views remain separately identified.
+Derived entries reference the source obligation revision or posting identity
+and allocation ID; identical source delivery cannot produce another entry.
+
+Example, U=0 and all values synthetic: C0=1000 and T=-0.05 already booked gives
+C=999.95, P=0. Learning T=-0.10 at 10:00 gives C=999.95, L=0.05, E=999.90.
+Learning T=-0.08 at 10:01 gives C=999.95, L=0.03, E=999.92. Booking -0.03
+at 10:05 gives C=999.92, L=0, E=999.92. Alternatively, independent postings
+-0.02 and -0.01 reach the same balances without recharging either total.
+If instead T changes from booked -0.05 to +0.02, the unposted refund is +0.07;
+cash stays 999.95 until that +0.07 posting. The same arithmetic applies to a
+fee correction/refund learned after its fill and episode have closed.
+
+Identical identity/revision and canonical payload is a no-op; conflicting payload
+under that identity/revision is quarantined, never last-write-wins. Obligation
+revision chains must reference the prior accepted revision; a gap/conflict blocks
+affected finality instead of guessing order. Preserve all as-known history.
+An available revision invalidates the old assertion for the latest view until
+a covering successor assertion and required postings are available. A revised
+label has a new revision/known time; earlier causal labels remain immutable.
 
 ## 6. Episode labels and maturity
 
@@ -247,16 +290,72 @@ different proposal requiring review, not an implicit fallback for missing bookin
 `label_end` = last natural risk-closing fill time, independent of late funding
 booking. `label_known_at` = earliest evidenced/as-assumed time the episode's
 complete price/fee/funding result and revisions can be known, including late
-bookings and a completeness watermark. It is >= label_end and must identify
+bookings and applicable completeness assertions. It is >= label_end and must identify
 SCENARIO versus observed clock. It is null when finality is unknown. Do not set
 it to exit merely because the dashboard omits a later fee. Retrospective retrieval
 does not supply historical first knowledge; actual historical maturity may remain
 unproved, whereas a preregistered scenario can evaluate its declared information
 clock. Training-dataset receipt is also bound before the real fitting operation.
 
-Terminal forced closes, incomplete history, unresolved snapshots/marks/rules,
-liquidation without supported modeling, missing fees/bookings or conflicting
-revisions yield a separate invalid/censored status and null target. Observed
+### 6.1 Completeness coverage and knowledge (QD006-R3)
+
+Replace the ambiguous scalar watermark with a typed `CompletenessAssertion`.
+Its scope identifies instrument, trajectory, episode, event kinds, and the
+half-open economic-origin interval `[economic_from, economic_to_exclusive)`.
+The interval must cover entry through the natural exit, including exit-fill fees;
+funding events are scoped by their eligibility snapshot, not their later posting.
+For the label's complete scope, assertions collectively cover fills, fees,
+funding and **all postings/corrections of the enumerated obligation revisions**,
+even when those bookings occur outside the economic-origin interval. A funding-
+only assertion through the snapshot cannot certify an entire later-closing episode.
+
+Every assertion carries assertion ID/revision/superseded revision, authority ID,
+finality_rule_id, evidence basis, exact obligation-revision and posting references,
+asserted_at, known_at and available_at. asserted_at is authority issuance;
+known_at is evidenced observer receipt; available_at is first permitted consumer
+use, with available_at >= known_at >= asserted_at under the declared clock rule.
+Coverage endpoints are never knowledge times. Unknown authority, interval,
+revision scope or availability cannot establish completeness. SCENARIO uses a
+preregistered finality rule, not retrieval time disguised as historical knowledge.
+
+A cash-settled label needs all required postings, P=0 for every obligation,
+covered fill/outcome information and current covering assertions. Its known time
+is the maximum of natural exit, all required input/revision/posting available
+times and all required assertion available times. An available later supersession
+invalidates the old assertion for the latest view; a successor label cannot
+inherit an earlier known time. Finality is relative to the referenced revision
+set under that authority/rule, not a claim that future corrections are impossible.
+
+Positive example: an episode entered at 07:00 and exited at 08:00:01. All-event
+coverage `[07:00,08:00:02)` includes both fills and the 08:00 funding snapshot,
+and explicitly includes its 08:00:03 posting, known/available at 08:00:04.
+The complete assertion is issued 09:59:59, received 10:00:00 and available
+10:00:02: label_known_at is 10:00:02, never 08:00:04. A successor assertion
+received 11:00:00 and available 11:00:02 gives the revised label that later
+known time. The old as-known label is preserved. Coverage ending at 08:00:01
+exclusive misses the exit; a funding-only scope also fails full label coverage.
+
+### 6.2 Label states (QD006-R2)
+
+Wire `label_status` is exactly valid/open/immature/censored/invalid. `valid`
+means naturally flat, supported, cash-settled and complete under the referenced
+current assertions; target and label_known_at are nonnull. `open` means exposure
+remains, with target, natural label_end and label_known_at null. `immature` means
+naturally flat with pending legitimate outcomes/postings/completeness information;
+label_end is the natural exit, but target and label_known_at are null. `censored`
+means the declared observation/exit policy truncated the outcome (including forced
+terminal closes); `invalid` means an unsupported or conflicting contract/evidence
+condition. Both have null target/label_known_at; retain a natural label_end only
+if one actually exists. A missing expected assertion may be immature; a purported
+assertion with invalid authority/scope cannot promote it to valid. For simultaneous
+conditions, hard invalidity precedes censoring, then open, immature, valid.
+Negative returns never determine status. A02's synthetic example uses wire
+`role_basis=scenario`; `synthetic` remains descriptive prose, not an allowed enum.
+
+Terminal forced closes or irrecoverably incomplete observation yield censored
+status; unsupported snapshots/marks/rules or liquidation models and conflicting
+revisions yield invalid status. Legitimate pending fees/bookings/finality leave
+a naturally flat episode immature. All have null targets as specified above. Observed
 natural loss is valid; never censor because it is bad. Open episodes carry across
 folds with no forced split exit or reset; pending late charges are retained after
 the market cutoff as unresolved unless covered by a separately approved evidence
@@ -329,10 +428,16 @@ inconclusive evidence; never move the threshold after seeing PnL.
 
 ## 8. Minimum next implementation proposal and missing data
 
-After separate authorization, build a small offline event ledger and contract
-checker first, test synthetic acceptance cases, then add a read-only projection
-from frozen market data, then an episode-label exporter and full-state replay
-hook reviewed by both roles. Exact future paths belong to QD's design review.
+After separate authorization, follow QD's bounded sequence: synthetic offline
+event ledger and independent checker -> existing-evidence coverage assessment ->
+separately authorized full-state replay adapter -> episode exporter and independent
+label validation. Actual replay and label generation each need their own bounded
+authorization. QR confirms the reviewed QD allocation proposal:
+QD alone writes `research/qd009/episode_export.py` and its producer tests;
+QR owns semantics in `research/qr009/label-policy.md` and independent validation
+in `research/qr009/validate_episode_labels.py` with QR tests. "Target construction"
+here means QR semantic responsibility, not editing the QD exporter. These remain
+future path proposals, with no implementation claim or permission now.
 Do not change existing runtime/carry/backtest/schema/defaults as part of this
 proposal. Publish isolated artifacts and review before integration.
 

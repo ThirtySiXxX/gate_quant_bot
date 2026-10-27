@@ -1,6 +1,6 @@
 # QF-QR-006 protocol review
 
-Date 2026-10-28 Australia/Melbourne. Role QR. Status READY_FOR_QD_REVIEW.
+Date 2026-10-28 Australia/Melbourne. Role QR. Status READY_FOR_QD_RECHECK.
 Task QF-QR-006-PROTOCOL; dispatch QF-DISPATCH-20261028-QR006-PROTOCOL-1.
 Worktree `/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot`,
 branch `codex/qr-validation-baseline`, base
@@ -11,7 +11,7 @@ docs/interface-requests/qr-qf006-execution-cost-label.md and this report.
 Parent research protocol hash independently verified:
 `f399514d8724d61b4b091b95ea495dbf20f223ec93877457bc78392817d0c276`.
 
-## Completed draft
+## Initial draft (qf006-proposal-r1)
 
 Verified public official fee/funding/API pages and two dated funding-rule
 announcements. Distinguished source record time, nominal snapshot, information
@@ -54,7 +54,9 @@ Modified files (five, all in the exclusive claim):
 `research/qr006/protocol.md`, `research/qr006/evidence.json`,
 `research/qr006/acceptance.json`,
 `docs/interface-requests/qr-qf006-execution-cost-label.md`, and this role report.
-Next step is QD review of this committed draft; stop and await that review.
+Initial draft commit: `2c3846c53443307b410a647ba0efbed078884d8b`.
+It received the exact QD review recorded below; no original acceptance result
+is being relabeled as approval of the corrected draft.
 
 ## QD preflight response and bounded implementation proposal
 
@@ -83,7 +85,8 @@ and `tests/test_qd_event_ledger.py`; QR independent checker
 `research/qr007/validate_event_ledger.py` and
 `tests/qr_research/test_qr007_ledger.py`. Then separately allocate evidence
 coverage, QD `research/qd008/native_adapter.py` with
-`tests/test_qd_event_replay.py`, and QR target construction. Each has its own
+`tests/test_qd_event_replay.py`, then QD target export with QR semantics and
+independent validation under the confirmed future allocation below. Each has its own
 role report and fresh ignored results. These are proposed future paths only.
 Start with synthetic ledger acceptance, then resolve data coverage, then approve
 full-state replay and label generation separately. No Python file is created now.
@@ -100,3 +103,74 @@ snapshot sequence, complete funding calendars, settlement mark or private cash
 booking. These remain explicit data/assumption gates in the proposal. Candidate
 constants, latency, budget and prospective final-test dates must be frozen before
 any future experiment; no statistical performance or trading edge is reported.
+
+## Revision 1 response (qf006-proposal-r2)
+
+Dispatch `QF-DISPATCH-20261028-QR006-REVISION-1`, with narrow consistency note
+`QF-CONTROL-20261028-QR006-R2-CONSISTENCY-1`. Started from clean QR commit
+`2c3846c53443307b410a647ba0efbed078884d8b`. Read and independently verified exact
+QD review commit `611cb7419e676bde8cb0b2e64968f3a81bd42164`, parent
+`01bc6e798edd200e9553c17702739279f34f0384`:
+
+| QD read-only file | Verified SHA256 |
+| --- | --- |
+| research/qd006/implementation-plan.md | ed84ef1276b78a0aebe2fb465942fba46cf77676dae9c55d7745f5f9f6111337 |
+| research/qd006/review.json | 9a0a29dc95b1706c0ea037f16c9903bc1ee4c7081467360674be79ca52cf8695 |
+| docs/agent-reports/qd/QF-QD-006-protocol-review.md | 76b12ab102638cce9fc9a8b75dc0201f7105d84a8a906085ef96906745cfd370 |
+
+That review accepted 30 initial criteria and requested revision of A02/A13/A14/A21.
+The following are **QR dispositions implemented in documentation, pending QD
+exact recheck**, not claims that QD has accepted the revised protocol.
+
+| Request | Disposition in corrected draft |
+| --- | --- |
+| QD006-R1 | Stable parent obligation with cumulative T revisions, independent posting IDs and B totals; pending P=T-B, revision cash_delta=0. Supports partial postings and separate signed late fee/funding refunds after close. Immutable posting revision 1 is explicitly bounded; imported-posting restatements >1 fail closed, while actual later cash transfers use new IDs. A13/A14 now specify duplicates/conflicts, successive revisions, split payments, sign change and late fees. |
+| QD006-R2 | A02 wire role_basis is scenario. Added explicit immature label enum and allowed state/null combinations. Pending supported outcomes differ from invalid evidence and censored observations, consistently in protocol/interface/A21. |
+| QD006-R3 | Typed assertion covers economic-origin interval plus linked cash obligations/postings, with authority/rule, revision refs and separate issue/receipt/consumer availability. A21 covers the natural exit and delayed posting positively; negative scopes omit exit or nonfunding events. Later available assertions set later label-known times; supersession creates a new label revision without rewriting old causal views. A22 strict microseconds and A29 unknown-finality negative are unchanged. |
+
+Confirmed ownership proposal: **QD alone** produces/exports labels at
+`research/qd009/episode_export.py`, with `tests/test_qd_episode_export.py` and
+QD009 report. QR alone owns `research/qr009/label-policy.md`,
+`research/qr009/validate_episode_labels.py`,
+`tests/qr_research/test_qr009_labels.py` and QR009 report. No current file claim
+is created. The future sequence is synthetic ledger -> evidence coverage ->
+full-state replay -> producer and independent label validation, with the QD
+plan's separate authorizations. No implementation or actual run is authorized.
+
+The original five-file allowlist is unchanged; evidence.json only advances its
+protocol revision link and records no new sources. Only four acceptance case
+bodies change; all 34 stable IDs remain. Other runtime, schema, source/main,
+previous research and shared journal files remain untouched.
+
+## Corrected-draft verification and stop
+
+Passed document-only checks with the existing interpreter and standard library:
+68 independent Decimal assertions for cumulative pending/cash, partial postings,
+refund/sign-change and late-fee examples; 26 clock/coverage/state assertions,
+including distinct assertion receipt/availability, insufficient exit coverage,
+strict 24h microseconds and the unchanged unknown-finality negative case.
+Both JSON files parse; all 34 IDs remain unique; exactly A02/A13/A14/A21 changed.
+The other 30 accepted case bodies and all nine source summaries equal the initial
+committed draft. Git whitespace check passes; modifications are exactly the five
+allowed Markdown/JSON files and no untracked implementation files exist.
+
+Original source main HEAD, staged-diff SHA256 and index-byte SHA256 match the
+preservation values recorded by QD. No source staging or worktree changes,
+new browsing, market-data request, implementation/test code, market replay,
+market-label generation, model/scaler fit, runtime edit, merge or push occurred.
+These assertions are literal document checks, not implemented acceptance tests.
+
+Corrected non-report content identities (the report itself is identified by the
+commit and separately returned SHA256):
+
+| QR file | SHA256 |
+| --- | --- |
+| research/qr006/protocol.md | 4957875f25168ea33d630fb63be00a712d86ac049b932bdc11f731e8b980e270 |
+| research/qr006/evidence.json | c4fc6fb1cd24ce90f347dff23b8f6c4a86f9a037e9c9e0108a24cea9047c434b |
+| research/qr006/acceptance.json | d75fb7d7274ab2da41c71cd097f27982a3d2a7d103b5c1146d84da2429f9058c |
+| docs/interface-requests/qr-qf006-execution-cost-label.md | d62c42ddc5cbac286e3b4ebf821fd977a693d7c3986ab019942560fa1348a6d8 |
+
+Status READY_FOR_QD_RECHECK. QD must re-review these exact corrected bytes;
+no protocol-freeze acceptance is inferred. Stop here. Future implementation,
+coverage/run decisions and direct human confirmation before training remain
+separate gates; this revision grants none of them.
