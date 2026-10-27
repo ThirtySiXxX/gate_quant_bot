@@ -1,6 +1,7 @@
 """Offline adversarial tests for history acceptance, not profitability tests."""
 import copy
 import csv
+from datetime import datetime
 import gzip
 import json
 from pathlib import Path
@@ -82,6 +83,13 @@ class HistoryAcceptanceTests(unittest.TestCase):
         path.write_text(json.dumps(self.manifest))
         return validate_dataset(self.root, path, self.spec_path)
 
+    def quarantine(self, name, reason, records):
+        path = self.root/"quarantine"/(name+".json")
+        path.write_text(json.dumps(records))
+        entry = dict(path=str(path.relative_to(self.root)), sha256=sha256(path), reason=reason,
+            rows=len(records), source_ids=[r["source_id"] for r in self.manifest["raw_files"]])
+        self.manifest["quarantine_files"] = [r for r in self.manifest["quarantine_files"] if r["path"] != entry["path"]]+[entry]
+
     def assert_issue(self, fragment):
         result = self.audit()
         self.assertEqual(result["structural_status"], "FAIL")
@@ -124,6 +132,19 @@ class HistoryAcceptanceTests(unittest.TestCase):
         self.assertEqual(result["normalized"][0]["missing"], [missing])
         self.assertEqual(result["structural_status"], "FAIL")
 
+    def test_dropped_raw_funding_record_cannot_silently_disappear(self):
+        item = self.manifest["normalized_files"][3]
+        rows = self.rows(item)
+        missing = int(rows.pop(2)["timestamp"])
+        self.write_normalized(item, rows)
+        result = self.audit()
+        self.assertEqual(result["structural_status"], "FAIL")
+        absent = result["raw_coverage"]["omitted_origins"]
+        self.assertEqual(len(absent), 1)
+        self.assertEqual(absent[0]["timestamp"], missing)
+        self.assertEqual(absent[0]["kind"], "funding")
+        self.assertEqual(absent[0]["raw_references"], [{"source_id": "BTC_USDT-funding", "source_row": 3}])
+
     def test_normalized_duplicates_rejected_even_if_identical(self):
         item = self.manifest["normalized_files"][0]
         rows = self.rows(item)
@@ -142,6 +163,61 @@ class HistoryAcceptanceTests(unittest.TestCase):
         extra.update(sha256=sha256(path), bytes=path.stat().st_size)
         self.manifest["raw_files"].append(extra)
         self.assert_issue("raw source conflicts")
+
+    def test_duplicate_lineage_must_cover_all_references_and_destination(self):
+        original = self.manifest["raw_files"][0]
+        extra = dict(original, source_id="duplicate", path="raw/duplicate.json")
+        path = self.root/extra["path"]
+        path.write_text(json.dumps(json.loads((self.root/original["path"]).read_text())[:1]))
+        extra.update(sha256=sha256(path), bytes=path.stat().st_size)
+        self.manifest["raw_files"].append(extra)
+        self.assert_issue("missing complete duplicate lineage")
+        record = dict(symbol="BTC_USDT", kind="candles", interval_seconds=3600,
+            timestamp=self.start, values=[str(self.start), "100", "102", "99", "101", "1"],
+            references=[dict(source_id=original["source_id"], source_row=1), dict(source_id="duplicate", source_row=1)],
+            resolution="deduplicated_identical", destination=dict(path=self.manifest["normalized_files"][0]["path"],
+                source_id=original["source_id"], source_row=1))
+        self.quarantine("duplicates", "identical_duplicate_provenance", [record])
+        result = self.audit()
+        self.assertEqual(result["issues"], [])
+        self.assertEqual(result["quarantine_accountability"]["verified_duplicate_origins"], 1)
+        record["references"].pop()
+        self.quarantine("duplicates", "identical_duplicate_provenance", [record])
+        self.assert_issue("duplicate lineage does not account")
+
+    def test_quarantine_cannot_disguise_in_range_funding_omission(self):
+        item = self.manifest["normalized_files"][3]
+        rows = self.rows(item)
+        omitted = rows.pop(2)
+        self.write_normalized(item, rows)
+        self.quarantine("exclusions", "invalid_or_excluded_rows", [dict(
+            source_id=omitted["source_id"], source_row=int(omitted["source_row"]),
+            values=[omitted["timestamp"], omitted["funding_rate"]], reason="outside_global_closed_range")])
+        self.assert_issue("not a validated boundary exclusion")
+
+    def test_current_metadata_cannot_be_backdated(self):
+        source = dict(source_id="metadata", path="raw/metadata.json", url="https://api.gateio.ws/api/v4/futures/usdt/contracts/BTC_USDT",
+            retrieved_at="2026-10-28T00:00:00Z", http_status=200, format="contract_json")
+        path = self.root/source["path"]
+        payload = dict(name="BTC_USDT", quanto_multiplier="0.0001")
+        path.write_text(json.dumps(payload))
+        source.update(sha256=sha256(path), bytes=path.stat().st_size)
+        self.manifest["raw_files"].append(source)
+        observed = datetime.fromisoformat(source["retrieved_at"].replace("Z", "+00:00")).timestamp()
+        normalized = dict(symbol="BTC_USDT", kind="contract_metadata", interval_seconds=None,
+            path="normalized/metadata.json", rows=1, start_ts=observed, end_ts=observed,
+            columns=[], source_ids=["metadata"], units={}, availability_basis="current_snapshot_not_historical",
+            observed_at=source["retrieved_at"], historical_effective_at=None)
+        envelope = dict(source_id="metadata", observed_at=source["retrieved_at"], historical_effective_at=None, data=payload)
+        target = self.root/normalized["path"]
+        target.write_text(json.dumps(envelope))
+        normalized["sha256"] = sha256(target)
+        self.manifest["normalized_files"].append(normalized)
+        self.assertEqual(self.audit()["issues"], [])
+        envelope["historical_effective_at"] = self.start
+        target.write_text(json.dumps(envelope))
+        normalized["sha256"] = sha256(target)
+        self.assert_issue("metadata snapshot lineage/backdating")
 
     def test_mark_price_cannot_masquerade_as_trade_candles(self):
         self.manifest["raw_files"][0]["url"] = self.manifest["raw_files"][0]["url"].replace("BTC_USDT", "mark_BTC_USDT")

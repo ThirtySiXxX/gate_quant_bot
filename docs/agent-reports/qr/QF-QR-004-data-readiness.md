@@ -28,7 +28,7 @@ their integration editor; this report is the handoff evidence.
 ## Tests and results
 
 Spec JSON parse and date/budget checks pass; `git diff --check` passes.
-**17 focused offline tests pass**, with socket connections blocked: valid fixture
+**21 focused offline tests pass**, with socket connections blocked: valid fixture
 cannot grant training permission; raw hash/normalization tampering; advanced
 availability; deleted/duplicate bars; conflicting raw overlap; mark/trade confusion;
 unit/row lineage drift; traversal/symlink escape; cross-interval discrepancy;
@@ -38,6 +38,15 @@ the original long-window EMA/scaler/FDM/Carry functions and causal feature code:
 a year passes full windows; changing future funding leaves the result unchanged;
 500 past Carry observations produce a finite native signal but correctly fail the
 full 1000-observation requirement. This is a synthetic test, not actual data acceptance.
+
+Coordinator review identified that row-to-raw equality alone did not detect an
+omitted raw funding record. The validator now checks raw-to-normalized coverage
+as well. Added negative fixtures for omitted funding, incomplete duplicate lineage,
+mislabelled quarantine exclusions and metadata backdating. Duplicate destination,
+every retained reference, conflict variants and boundary exclusions are compared
+to independent raw parsing, not accepted based on file hashes alone. Non-boundary
+exclusions remain blocked for separate reason review. Historical funding schedule
+is still not inferred from inter-event durations.
 
 Command: load `tests.qr_research.test_qr004_history` through `unittest`, using
 `PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python`

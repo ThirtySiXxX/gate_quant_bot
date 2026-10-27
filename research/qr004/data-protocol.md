@@ -141,6 +141,21 @@ permission. No automatic training. The proposal permits only one fixed ridge
 model, six named causal features, train-only scaling and training-mean/ML-off
 comparators; details are in the JSON. No hyperparameter or threshold search.
 
+The five market features reuse existing feature-version-1 definitions on the
+last exactly closed hour: `return_4h`/`return_24h` are log close ratios;
+`volatility_24h` is the sample standard deviation of 24 hourly log returns;
+`efficiency_24h` is absolute 24-hour close change divided by the sum of absolute
+hourly changes; `volume_relative_24h` is log((current contracts + 1)/(24-hour mean
+contracts + 1)). `proposed_side_sign` is +1 long/-1 short from the pre-ML proposal.
+All are dimensionless. Preserve the existing 169-contiguous-bar feature guard.
+
+This proposed regression is research-only: the existing runtime bundle expects
+21 features and three-class logistic/boosting models and cannot consume this
+six-feature ridge output. Future artifact/prediction integration needs a separate
+reviewed contract; none is changed here. Natural exit labels measure outcomes
+under continuation of the existing policy, not causal advantage over skipping;
+later policy comparisons need complete account trajectories and cost sensitivity.
+
 | Additional history | Recommendation / contamination risk |
 |---|---|
 | Actual settled funding and historical interval meaning | Essential within current scope; mixing predicted rates is unacceptable. |
@@ -166,6 +181,12 @@ gzip/206 integrity, hashes and cross-interval consistency. It always reports
 `training_status: NOT_READY`: historical schedule, duplicate lineage, attempt
 ledger, metadata, native warmup, label/evaluation gates and permission require
 separate reviewed evidence. A structural PASS alone never certifies training.
+
+The inverse lineage check also detects raw records silently omitted during
+normalization, including funding. The reviewed QD quarantine adapter is checked
+against raw values/references and actual normalized destinations; identical
+duplicates are legitimate only with complete lineage. Other quarantined records
+remain unresolved input limitations, not a way to waive missing-data acceptance.
 
 Funding seconds offsets remain exact. Cross-interval comparisons require exact
 Decimal OHLCV equality; discrepancies are retained for source review, never

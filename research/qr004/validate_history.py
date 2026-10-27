@@ -148,7 +148,7 @@ def raw_rows(path, item, identity, spec):
                 row["volume"] = row.pop("size")
             rows.append(canonical(row, kind))
         return rows, True
-    payload = json.loads(payload)
+    payload = json.loads(payload, parse_float=Decimal)
     if kind not in ("candles", "funding"):
         return payload, True
     if not isinstance(payload, list):
@@ -302,6 +302,7 @@ def validate_dataset(root, manifest_path, spec_path):
     if manifest["data_range"] != {"start": start, "end_exclusive": end}:
         raise ValueError("manifest calendar mismatch")
     issues, raw, all_sources, data, normalized = [], {}, {}, {}, []
+    normalized_origins = {}
     total_bytes = 0
     for item in manifest["raw_files"]:
         try:
@@ -337,6 +338,21 @@ def validate_dataset(root, manifest_path, spec_path):
             if not item["source_ids"] or not set(item["source_ids"]).issubset(raw):
                 raise ValueError("normalized source missing/incomplete")
             if kind not in ("candles", "funding"):
+                if len(item["source_ids"]) != 1:
+                    raise ValueError("metadata needs one exact source snapshot")
+                sid = item["source_ids"][0]
+                identity, payload = raw[sid]
+                envelope = json.loads(path.read_text(), parse_float=Decimal)
+                observed = utc_time(all_sources[sid]["retrieved_at"])
+                if (identity[:2] != (symbol, kind) or envelope["source_id"] != sid
+                        or envelope["data"] != payload or envelope["historical_effective_at"] is not None
+                        or utc_time(envelope["observed_at"]) != observed
+                        or item["availability_basis"] != "current_snapshot_not_historical"
+                        or item["historical_effective_at"] is not None
+                        or utc_time(item["observed_at"]) != observed
+                        or item["start_ts"] != observed or item["end_ts"] != observed
+                        or item["rows"] != 1 or item["columns"] != [] or item["units"] != {}):
+                    raise ValueError("metadata snapshot lineage/backdating mismatch")
                 normalized.append({"symbol": symbol, "kind": kind,
                     "status": "CURRENT_METADATA_ONLY; historical effective time independently unproven"})
                 continue
@@ -368,6 +384,8 @@ def validate_dataset(root, manifest_path, spec_path):
                     raise ValueError("row does not equal referenced raw values")
                 if integer(row["available_at"]) != parsed[0]+(seconds if kind == "candles" else 0):
                     raise ValueError("availability advanced or altered")
+                normalized_origins[(symbol, kind, seconds if kind == "candles" else 0, parsed[0])] = {
+                    "source_id": sid, "source_row": index+1, "path": item["path"]}
             key = symbol, kind, seconds if kind == "candles" else 0
             if key in data:
                 raise ValueError("multiple normalized files for same logical stream")
@@ -388,27 +406,45 @@ def validate_dataset(root, manifest_path, spec_path):
                 qc.append({"symbol": symbol, "interval_seconds": seconds, **result})
                 if result["mismatches"]:
                     issues.append(f"{symbol} {seconds}: {len(result['mismatches'])} cross-interval mismatches require source review")
-    quarantine = []
+    quarantine, quarantine_payloads = [], {}
     for item in manifest["quarantine_files"]:
         try:
             required(item, contract["quarantine_required_fields"])
             path = inside(root, item["path"], "quarantine")
             if sha256(path) != item["sha256"] or not set(item["source_ids"]).issubset(all_sources):
                 raise ValueError("quarantine hash/source mismatch")
+            payload = json.loads(path.read_text(), parse_float=Decimal)
+            if not isinstance(payload, list) or len(payload) != item["rows"]:
+                raise ValueError("quarantine count/type mismatch")
+            quarantine_payloads[item["reason"]] = payload
             quarantine.append(item)
         except (ValueError, TypeError, KeyError, OSError) as error:
             issues.append(f"quarantine {item.get('path')}: {error}")
     # Raw overlapping records are checked independently of collector assertions.
     seen = defaultdict(set)
-    for identity, rows in raw.values():
+    references = defaultdict(list)
+    boundary_excluded = Counter()
+    for sid, (identity, rows) in raw.items():
         if identity[1] in ("candles", "funding"):
-            for row in rows:
-                if start <= row[0] < end:
-                    seen[identity[:3]+(row[0],)].add(row[1:])
+            for index, row in enumerate(rows, 1):
+                if start <= row[0] < end and (identity[1] != "candles" or row[0]+identity[2] <= end):
+                    key = identity[:3]+(row[0],)
+                    seen[key].add(row[1:])
+                    references[key].append({"source_id": sid, "source_row": index})
+                else:
+                    boundary_excluded[sid] += 1
+    normalized_keys = {key+(row[0],) for key, rows in data.items() for row in rows}
+    missing_raw = [{"symbol": k[0], "kind": k[1], "interval_seconds": k[2], "timestamp": k[3],
+                    "raw_references": references[k]} for k in sorted(seen) if k not in normalized_keys]
+    if missing_raw:
+        issues.append(f"{len(missing_raw)} eligible raw record origins absent from normalization; explicit quarantine accountability required")
     conflicts = [{"symbol": k[0], "kind": k[1], "interval_seconds": k[2], "timestamp": k[3],
                   "versions": len(v)} for k, v in sorted(seen.items()) if len(v) > 1]
     if conflicts:
         issues.append(f"{len(conflicts)} raw source conflicts require explicit resolution; no automatic preference")
+    accountability = quarantine_accountability(quarantine_payloads, raw, references,
+        seen, normalized_origins, start, end)
+    issues.extend(accountability["issues"])
     return {"schema_version": 1, "dataset_id": manifest["dataset_id"],
             "manifest_sha256": sha256(manifest_path), "spec_sha256": sha256(spec_path),
             "structural_status": "FAIL" if issues else "PASS",
@@ -418,8 +454,93 @@ def validate_dataset(root, manifest_path, spec_path):
                 "native full warmup; permitted baseline labels, maturity and dependence",
                 "human training protocol/precision/holdout acceptance and fresh confirmation"],
             "raw_files": len(all_sources), "complete_sources": len(raw), "raw_bytes": total_bytes,
+            "raw_coverage": {"eligible_unique_origins": len(seen),
+                "normalized_unique_origins": len(normalized_keys), "omitted_origins": missing_raw,
+                "duplicate_origins": sum(len(refs) > 1 for refs in references.values()),
+                "boundary_excluded_raw_rows": dict(boundary_excluded)},
             "normalized": normalized, "cross_interval": qc, "source_conflicts": conflicts,
-            "quarantine": quarantine, "limitations": manifest["limitations"]}
+            "quarantine": quarantine, "quarantine_accountability": accountability,
+            "limitations": manifest["limitations"]}
+
+
+def quarantine_accountability(payloads, raw, references, seen, normalized, start, end):
+    """Verify the reviewed QD lineage adapter against independently parsed values."""
+    problems, duplicate_keys, conflict_keys, excluded_refs = [], set(), set(), set()
+
+    def key_of(record):
+        return (record["symbol"], record["kind"], record["interval_seconds"] or 0, integer(record["timestamp"]))
+
+    def refs_of(refs):
+        result = {(r["source_id"], integer(r["source_row"])) for r in refs}
+        if len(result) != len(refs):
+            raise ValueError("duplicate provenance reference")
+        return result
+
+    def referenced_value(ref):
+        sid, index = ref[0], ref[1]-1
+        identity, rows = raw[sid]
+        if identity[1] not in ("candles", "funding") or index < 0 or index >= len(rows):
+            raise ValueError("quarantine reference outside parsed rows")
+        return identity, rows[index]
+
+    for record in payloads.get("identical_duplicate_provenance", []):
+        try:
+            key, values = key_of(record), tuple(number(v) for v in record["values"])
+            refs = refs_of(record["references"])
+            if (key in duplicate_keys or len(refs) < 2 or len(seen[key]) != 1
+                    or refs != refs_of(references[key]) or values[0] != key[3]
+                    or values[1:] not in seen[key] or record["destination"] != normalized.get(key)
+                    or record["resolution"] != "deduplicated_identical"):
+                raise ValueError("duplicate lineage does not account for exact raw origins/destination")
+            duplicate_keys.add(key)
+        except (ValueError, TypeError, KeyError) as error:
+            problems.append(f"duplicate lineage: {error}")
+    for key in references:
+        if len(references[key]) > 1 and len(seen[key]) == 1 and key not in duplicate_keys:
+            problems.append(f"missing complete duplicate lineage: {key}")
+    for record in payloads.get("all_conflicting_versions", []):
+        try:
+            key = key_of(record)
+            all_refs, variants = set(), set()
+            for variant in record["variants"]:
+                values = tuple(number(v) for v in variant["values"])
+                refs = refs_of(variant["references"])
+                if values in variants or all_refs & refs or values[0] != key[3]:
+                    raise ValueError("repeated/misaligned conflict variant")
+                for ref in refs:
+                    identity, actual = referenced_value(ref)
+                    if identity[:3]+(actual[0],) != key or actual != values:
+                        raise ValueError("conflict variant differs from raw source")
+                variants.add(values)
+                all_refs |= refs
+            if (key in conflict_keys or len(variants) < 2 or all_refs != refs_of(references[key])
+                    or {v[1:] for v in variants} != seen[key] or key in normalized
+                    or record["resolution"] != "quarantined_all_versions"):
+                raise ValueError("conflicting origins not all retained/excluded")
+            conflict_keys.add(key)
+        except (ValueError, TypeError, KeyError) as error:
+            problems.append(f"conflict quarantine: {error}")
+    for key, variants in seen.items():
+        if len(variants) > 1 and key not in conflict_keys:
+            problems.append(f"missing complete conflict quarantine: {key}")
+    for record in payloads.get("invalid_or_excluded_rows", []):
+        try:
+            ref = record["source_id"], integer(record["source_row"])
+            identity, actual = referenced_value(ref)
+            outside = actual[0] < start or actual[0] >= end or (identity[1] == "candles" and actual[0]+identity[2] > end)
+            if (ref in excluded_refs or tuple(number(v) for v in record["values"]) != actual
+                    or record["reason"] != "outside_global_closed_range" or not outside):
+                raise ValueError("exclusion needs independent reason review; not a validated boundary exclusion")
+            excluded_refs.add(ref)
+        except (ValueError, TypeError, KeyError) as error:
+            problems.append(f"row exclusion: {error}")
+    expected_excluded = {(sid, i) for sid, (identity, rows) in raw.items() if identity[1] in ("candles", "funding")
+        for i, row in enumerate(rows, 1) if row[0] < start or row[0] >= end or (identity[1] == "candles" and row[0]+identity[2] > end)}
+    if excluded_refs != expected_excluded:
+        problems.append("raw boundary exclusions not fully accounted for")
+    return {"issues": problems, "verified_duplicate_origins": len(duplicate_keys),
+            "verified_conflict_origins": len(conflict_keys), "verified_boundary_exclusions": len(excluded_refs),
+            "other_exclusions": "block until independent reason review; never silently accepted"}
 
 
 def main():
