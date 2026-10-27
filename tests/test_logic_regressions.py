@@ -290,6 +290,8 @@ class LiveReversalSafetyTests(unittest.TestCase):
             target_annual_vol_pct=10,
             no_trade_buffer_pct=0,
             depth_guard_enabled=False,
+            execution_timing={"enabled": False},
+            position_sizing_mode="volatility",
         )
         target = InstrumentTarget("BTC_USDT", -10, -1000, -0.1, -0.1)
         signal = InstrumentSignal("BTC_USDT", -10, 0, -10, 0.2)
@@ -373,6 +375,8 @@ class BacktestAccountingTests(unittest.TestCase):
             test_start_ts=timestamps[0],
         )
         cfg = SystematicConfig(
+            execution_timing={"enabled": False},
+            position_sizing_mode="volatility",
             short_trend_interval="1h",
             main_trend_interval="1h",
             regime_interval="1h",
@@ -420,6 +424,18 @@ class BacktestAccountingTests(unittest.TestCase):
             places=8,
         )
         self.assertTrue(math.isclose(result.gross_pnl_before_costs, 0.0, abs_tol=1e-8))
+        self.assertAlmostEqual(sum(e['fee'] for e in result.executions),result.total_fees)
+        self.assertAlmostEqual(sum(e['notional'] for e in result.executions),result.total_traded_notional)
+        self.assertAlmostEqual(result.avg_trade_notional,result.total_traded_notional/len(result.executions))
+        balances={}
+        for event in result.executions:
+            key=(event['symbol'],event['side'])
+            self.assertEqual(balances.get(key,0),event['position_before'])
+            change=event['quantity']*(1 if event['action'] in ('open','add') else -1)
+            self.assertEqual(event['position_before']+change,event['position_after'])
+            balances[key]=event['position_after']
+        self.assertTrue(all(q==0 for q in balances.values()))
+
 
 
 if __name__ == "__main__":

@@ -6,14 +6,16 @@ vol.py / trend.py / carry.py / portfolio.py / systematic_engine.plan_orders
 关键性能/正确性设计：趋势/Carry/波动率/协方差这些信号只在各自的K线周期
 (1H短趋势 / 4H主趋势 / 1D regime / 协方差周期)边界更新，两根边界K线之间信号
 完全不变。所以回测按"短趋势周期"(默认1H)这个最细粒度走查，得到的调仓决策
-和实盘每15分钟复核一次是完全等价的（15分钟只是实盘的"复核频率"，不代表
-信号真的每15分钟都会变），但快得多，几年的多标的历史也能在合理时间内跑完。
+便于比较收盘信号；实盘15分钟复核还受实时价格、权益、深度及部分成交影响，
+因此不能认为1H回测与实盘逐笔完全等价。回测不模拟全仓维持保证金或强平。
 
 协方差矩阵同理：用 vol.ewma_covariance_series 一次性算出"逐协方差周期K线"的
 协方差矩阵快照序列(O(bars))，回测时对每个时间点做 asof 二分查找定位到对应快照，
 而不是每一步都重新对截至当时的全部历史重算一遍(那样是 O(bars^2)，会很慢)。
 """
 from __future__ import annotations
+
+from .performance import compounded_performance
 
 import bisect
 from dataclasses import dataclass, field
@@ -28,8 +30,12 @@ from . import data_fetcher
 from . import portfolio as pf
 from . import trend as trend_mod
 from . import vol as vol_mod
-from .config import CostConfig, SystematicConfig
-from .systematic_engine import plan_orders
+from .config import CostConfig, RiskConfig, SystematicConfig
+from . import strategy_execution as execution
+from . import strategy_signals as signal_policy
+from .risk import daily_risk_state
+from .execution_timing import ExecutionTiming
+from .position_sizing import EntrySizingBook
 
 ProgressCB = Optional[Callable[[int, str], None]]
 
@@ -41,16 +47,21 @@ class SymbolBacktestInputs:
     df_main: pd.DataFrame         # 主趋势周期K线(默认4H)
     df_regime: pd.DataFrame       # regime周期K线(默认1D)
     df_cov: pd.DataFrame          # 协方差周期K线(默认4H，可以和df_main是同一份)
-    funding_rate: float            # 当前实时费率，仅在拿不到历史费率时作为降级回退用
+    funding_rate: float            # 无历史费率时仅供成本近似；Carry信号回退为零
     funding_interval_sec: float
     quanto_multiplier: float
     taker_fee_rate: float
     order_size_min: int = 1
     # 真实历史资金费率 DataFrame(columns=[timestamp, funding_rate])，
-    # 来自 data_fetcher.fetch_funding_history()；为空则回退到常数 funding_rate 近似
+    # 来自 data_fetcher.fetch_funding_history()；为空则成本按常数近似、Carry信号按零
     funding_history: Optional[pd.DataFrame] = None
     # 指标可以使用此前的预热数据，但交易和绩效统计只能从该时间开始。
     test_start_ts: Optional[float] = None
+    leverage_min: Optional[float] = None
+    leverage_max: Optional[float] = None
+    order_size_max: Optional[int] = None
+    risk_limit_tiers: Optional[List[dict]] = None
+    market_order_size_max: Optional[float] = None
 
 
 @dataclass
@@ -87,9 +98,19 @@ class PortfolioBacktestResult:
     per_symbol: Dict[str, dict] = field(default_factory=dict)
     bar_counts: Dict[str, Dict[str, int]] = field(default_factory=dict)
     warnings: List[str] = field(default_factory=list)
+    executions: List[dict] = field(default_factory=list)
+    execution_diagnostics: dict = field(default_factory=dict)
+    chart_candles: dict = field(default_factory=dict)
+    short_interval: str = "1h"
+    performance: dict = field(default_factory=dict)
+    schema_version: int = 3
 
     def to_dict(self) -> dict:
         return {
+            "schema_version": self.schema_version, "executions": self.executions,
+            "performance": self.performance,
+            "execution_diagnostics": self.execution_diagnostics,
+            "chart_candles": self.chart_candles, "short_interval": self.short_interval,
             "symbols": self.symbols, "start_ts": self.start_ts, "end_ts": self.end_ts,
             "initial_capital": self.initial_capital, "final_equity": self.final_equity,
             "return_pct": self.return_pct, "annualized_return_pct": self.annualized_return_pct,
@@ -120,48 +141,32 @@ def _prep(sb: SymbolBacktestInputs, cfg: SystematicConfig) -> dict:
     df_regime = sb.df_regime.sort_values("timestamp").drop_duplicates("timestamp").reset_index(drop=True)
     df_cov = sb.df_cov.sort_values("timestamp").drop_duplicates("timestamp").reset_index(drop=True)
 
-    short_f = trend_mod.group_trend_forecast(df_short["close"], cfg.short_trend_interval, cfg)
-    main_f = trend_mod.group_trend_forecast(df_main["close"], cfg.main_trend_interval, cfg)
-    if len(df_regime) >= cfg.regime_ema_long + 5:
-        regime_s = trend_mod.daily_regime_series(df_regime, cfg)
-    else:
-        regime_s = pd.Series(["range"] * len(df_regime), index=df_regime.index)
-    # carry 优先用真实的逐期历史资金费率(严格因果对齐到K线时间轴)；
-    # 拿不到历史时才退回"当前实时费率当常数"的近似
-    carry_f = carry_mod.carry_forecast_series_from_history(
-        df_main["close"], cfg.main_trend_interval, sb.funding_history,
-        sb.funding_interval_sec, cfg,
-        bar_timestamps=df_main["timestamp"].values,
-        fallback_funding_rate=sb.funding_rate,
-    )
+    features = signal_policy.prepare_features(df_short, df_main, df_regime, sb.funding_history,
+                                               sb.funding_interval_sec, cfg)
     used_funding_history = sb.funding_history is not None and len(sb.funding_history) > 0
     funding_history_complete = bool(
         used_funding_history
         and len(df_main) > 0
         and float(sb.funding_history["timestamp"].min()) <= float(df_main["timestamp"].iloc[0])
     )
-    vol_ann = vol_mod.price_vol_annualized(df_main["close"], cfg.main_trend_interval, lam=cfg.ewma_lambda)
-    adaptive = vol_mod.adaptive_chop_risk_from_config(df_short, cfg)
     returns_cov = vol_mod.log_returns(df_cov["close"])
     returns_cov.index = df_cov["timestamp"].values
 
-
     return {
-        "symbol": sb.symbol,
-        "short_ts": df_short["timestamp"].tolist(), "short_open": df_short["open"].values,
+        **features,
+        "symbol": sb.symbol, "short_open": df_short["open"].values,
         "short_close": df_short["close"].values,
-        "main_ts": df_main["timestamp"].tolist(), "main_f": main_f.values, "short_f": short_f.values,
-        "regime_ts": df_regime["timestamp"].tolist(), "regime": regime_s.values,
-        "carry_f": carry_f.values, "vol_ann": vol_ann.values,
-        "adaptive_risk_multiplier": adaptive["risk_multiplier"].values,
-        "adaptive_efficiency_ratio": adaptive["efficiency_ratio"].values,
-        "adaptive_vol_ratio": adaptive["vol_ratio"].values,
-        "returns_cov": returns_cov,
+        "returns_cov": returns_cov.dropna(),
         "quanto_multiplier": sb.quanto_multiplier, "taker_fee_rate": sb.taker_fee_rate,
         "funding_rate": sb.funding_rate, "funding_interval_sec": sb.funding_interval_sec,
         "funding_history": sb.funding_history, "used_funding_history": used_funding_history,
         "funding_history_complete": funding_history_complete,
         "test_start_ts": sb.test_start_ts,
+        "entry_contract": {"quanto_multiplier": sb.quanto_multiplier,
+                           "leverage_min": sb.leverage_min, "leverage_max": sb.leverage_max,
+                           "order_size_min": sb.order_size_min, "order_size_max": sb.order_size_max,
+                           "market_order_size_max": sb.market_order_size_max},
+        "risk_limit_tiers": sb.risk_limit_tiers,
         # 供资金费"实际成本"计提时按时间asof查找当期真实费率(不是只用一个常数)
         "funding_ts": (sb.funding_history["timestamp"].tolist() if used_funding_history else []),
         "funding_rates": (sb.funding_history["funding_rate"].values if used_funding_history else None),
@@ -215,9 +220,9 @@ def _performance_stats(equity_curve: List[dict], initial_capital: float) -> dict
 
     total_days = max((df["t"].iloc[-1] - df["t"].iloc[0]) / 86400.0, 1.0)
     years = total_days / 365.0
-    final_e, start_e = df["e"].iloc[-1], df["e"].iloc[0]
+    final_e, start_e = df["e"].iloc[-1], float(initial_capital)
     if start_e > 0 and years > 0:
-        cagr = (final_e / start_e) ** (1.0 / years) - 1.0
+        cagr = (max(final_e, 0.0) / start_e) ** (1.0 / years) - 1.0
     else:
         cagr = 0.0
 
@@ -229,7 +234,7 @@ def _performance_stats(equity_curve: List[dict], initial_capital: float) -> dict
     downside_vol = float(downside.std() * np.sqrt(365)) if len(downside) > 1 else 0.0
     sortino = (mean_daily * 365) / downside_vol if downside_vol > 1e-9 else 0.0
 
-    peak = df["e"].iloc[0]
+    peak = float(initial_capital)
     max_dd = 0.0
     for e in df["e"]:
         peak = max(peak, e)
@@ -250,8 +255,20 @@ def run_portfolio_backtest(
     cost_cfg: CostConfig,
     initial_capital: float,
     progress_cb: ProgressCB = None,
+    risk_cfg: Optional[RiskConfig] = None,
 ) -> PortfolioBacktestResult:
+    risk_cfg = risk_cfg or RiskConfig()
     warnings: List[str] = []
+    fixed_margin = sys_cfg.position_sizing_mode == "fixed_margin"
+    sizing = EntrySizingBook()
+    if fixed_margin:
+        warnings.append("固定保证金模式：每次新开仓使用当时权益的5%×请求杠杆，SOL/山寨低杠杆等价换算；"
+                        "缺失合约杠杆或风险档位时拒绝开仓。档位为输入快照，不是历史逐时档位。"
+                        "已检查初始保证金及费用可用额度，但尚未模拟完整全仓维持保证金、盘中强平或ADL，"
+                        "本结果不能证明高杠杆账户的真实存活率。")
+    if sys_cfg.depth_guard_enabled:
+        warnings.append("已共用实盘信号、仓位和风险决策；历史K线没有逐时盘口，"
+                        "无法复现实盘盘口保护、部分成交及网络拒单，成交按配置滑点模拟。")
     prepared: Dict[str, dict] = {}
     for sb in symbol_inputs:
         try:
@@ -265,11 +282,16 @@ def run_portfolio_backtest(
                 "已跳过该标的（可能是新上线合约，或者历史数据下载范围不够）"
             )
             continue
+        for frame, interval in ((sb.df_short, sys_cfg.short_trend_interval),
+                                (sb.df_main, sys_cfg.main_trend_interval), (sb.df_regime, sys_cfg.regime_interval)):
+            gaps = data_fetcher.candle_gaps(frame, interval)
+            if gaps:
+                warnings.append(f"{sb.symbol} {interval} 历史缺少{sum(g[2] for g in gaps)}根K线："
+                                "本结果仅为不完整输入的研究回放，收益及回撤不能作为完整区间业绩。")
         if not p["used_funding_history"]:
             warnings.append(
-                f"{sb.symbol} 没有拿到历史资金费率，carry信号和资金费成本都退回用"
-                f"当前实时费率({sb.funding_rate:.6f})当常数近似——这段回测里 carry 的贡献"
-                "会失真(真实费率会随行情反号)，结果仅供参考"
+                f"{sb.symbol} 没有拿到历史资金费率，Carry与实盘一致按零计算；"
+                f"资金费成本暂按输入费率({sb.funding_rate:.6f})近似，结果仅供参考"
             )
         elif not p["funding_history_complete"]:
             first_funding = float(sb.funding_history["timestamp"].min())
@@ -287,7 +309,7 @@ def run_portfolio_backtest(
 
     # ---- 组合协方差：逐协方差周期K线的快照序列(一次遍历，O(bars)) ----
     combined_returns = pd.DataFrame({s: prepared[s]["returns_cov"] for s in symbols})
-    cov_min_periods = min(30, max(5, len(combined_returns) // 4))
+    cov_min_periods = vol_mod.MIN_PERIODS
     cov_ts, cov_mats_raw, cov_cols = vol_mod.ewma_covariance_series(
         combined_returns, lam=sys_cfg.ewma_lambda, min_periods=cov_min_periods)
     bars_per_year_cov = vol_mod.BARS_PER_YEAR.get(sys_cfg.covariance_interval, 365)
@@ -313,9 +335,13 @@ def run_portfolio_backtest(
     if total_steps == 0:
         return PortfolioBacktestResult(symbols=symbols, warnings=warnings + ["主时间轴为空，无法回测"])
 
+    timing = ExecutionTiming()
     equity = initial_capital
+    day_start_equity, day_start_ts, circuit_active = initial_capital, all_ts[0], False
     positions: Dict[str, dict] = {}
     trades: List[dict] = []
+    executions: List[dict] = []
+    diagnostics = {s: {"flat_signal_bars": 0, "entry_blocks": {}, "held_signal_bars": 0} for s in symbols}
     equity_curve: List[dict] = []
     total_traded_notional = 0.0
     total_slippage_cost = 0.0
@@ -342,46 +368,12 @@ def run_portfolio_backtest(
             price_now[s] = float(d["short_open"][exec_i])
             mark_price_now[s] = float(d["short_close"][exec_i])
 
-            # Gate K线时间戳是该根K线的起点。t时刻只能使用 t-周期 及更早、已经完整收盘的K线，
-            # 然后在t这根K线的开盘成交；不能用本根close算信号后又按同一个close成交。
-            short_cutoff = t - data_fetcher.INTERVAL_SECONDS.get(sys_cfg.short_trend_interval, 3600)
-            main_cutoff = t - data_fetcher.INTERVAL_SECONDS.get(sys_cfg.main_trend_interval, 14400)
-            regime_cutoff = t - data_fetcher.INTERVAL_SECONDS.get(sys_cfg.regime_interval, 86400)
-            si = _asof(d["short_ts"], short_cutoff)
-            mi = _asof(d["main_ts"], main_cutoff)
-            if si < 0 or mi < 0:
-                continue
-            short_val, main_val = d["short_f"][si], d["main_f"][mi]
-            if np.isnan(short_val) or np.isnan(main_val):
-                continue
-            combined_trend = trend_mod.combine_trend(float(short_val), float(main_val), sys_cfg)
-            ri = _asof(d["regime_ts"], regime_cutoff)
-            regime = d["regime"][ri] if ri >= 0 else "range"
-            gated_trend = trend_mod.apply_regime_gate(combined_trend, regime, sys_cfg)
-            carry_val = d["carry_f"][mi]
-            carry_val = 0.0 if np.isnan(carry_val) else float(carry_val)
-            combined = pf.combine_forecast(gated_trend, carry_val, sys_cfg)
-            vol_ann = d["vol_ann"][mi]
-            if np.isnan(vol_ann) or vol_ann <= 0:
-                continue
-            risk_multiplier = float(d["adaptive_risk_multiplier"][si])
-            efficiency_ratio = float(d["adaptive_efficiency_ratio"][si])
-            range_vol_ratio = float(d["adaptive_vol_ratio"][si])
-            if not np.isfinite(risk_multiplier):
-                risk_multiplier = 1.0
-            if not np.isfinite(efficiency_ratio):
-                efficiency_ratio = 1.0
-            if not np.isfinite(range_vol_ratio):
-                range_vol_ratio = 1.0
-            signals[s] = pf.InstrumentSignal(
-                symbol=s, trend_forecast=gated_trend, carry_forecast=carry_val,
-                combined_forecast=combined, vol_annual=float(vol_ann),
-                risk_multiplier=risk_multiplier, efficiency_ratio=efficiency_ratio,
-                range_vol_ratio=range_vol_ratio,
-            )
-            adaptive_mult_samples.append(risk_multiplier)
+            signal = signal_policy.signal_at(s, d, t, sys_cfg)
+            if signal is not None:
+                signals[s] = signal
+                adaptive_mult_samples.append(signal.risk_multiplier)
 
-        # ---- 逐仓 mark-to-market + 资金费累计(即使这一步没有新信号，已有仓位也要照常计提) ----
+        # ---- 逐标的 mark-to-market + 资金费累计(即使这一步没有新信号，已有仓位也要照常计提) ----
         for s, pos in positions.items():
             price = price_now.get(s)
             if price is None:
@@ -397,6 +389,8 @@ def run_portfolio_backtest(
                 pos["funding_accum"] += costs.funding_fee(notional, rate_now, pos["side"]) * events
 
         portfolio_equity = _mark_to_market_equity(equity, positions, price_now, prepared)
+        day_start_equity, day_start_ts, circuit_active = daily_risk_state(
+            portfolio_equity, day_start_equity, day_start_ts, circuit_active, t, risk_cfg)
 
         if not signals:
             curve_equity = _mark_to_market_equity(equity, positions, mark_price_now, prepared)
@@ -421,19 +415,41 @@ def run_portfolio_backtest(
             direction = 1 if current_side == "long" else (-1 if current_side == "short" else 0)
             current_notional = current_size * price * d["quanto_multiplier"] * direction
 
-            # ⚠️ 反向执行模式：预测/波动率目标/组合风险分配/约束照常按 target 计算，
-            # 只在这里把最终要执行的名义仓位方向对调，回测和实盘用完全一样的转换逻辑，
-            # 这样才能先用回测验证"反向执行"到底是不是真的有效，再决定要不要用到实盘。
-            exec_target_notional = -target.target_notional if sys_cfg.invert_direction else target.target_notional
-
-            if not pf.should_rebalance(current_notional, exec_target_notional, portfolio_equity,
-                                        signals[s].vol_annual, sys_cfg,
-                                        risk_multiplier=target.risk_multiplier):
+            sig = signals[s]
+            plan = execution.decide_execution(
+                s, target, sig, current_notional, portfolio_equity, sys_cfg, timing, sizing,
+                allow_increase=not circuit_active and len(signals) == len(symbol_inputs),
+                force_risk_reduction=len(signals) != len(symbol_inputs))
+            decision, timing_cfg, model_target = plan.decision, plan.timing_config, plan.model_target
+            bucket = diagnostics[s]
+            bucket["flat_signal_bars" if current_size == 0 else "held_signal_bars"] += 1
+            if current_size == 0 and plan.block_reason:
+                reason = plan.block_reason
+                bucket["entry_blocks"][reason] = bucket["entry_blocks"].get(reason, 0) + 1
+            if not plan.rebalance:
                 continue
-
-            actions = plan_orders(current_side, current_size, exec_target_notional, price,
-                                   d["quanto_multiplier"], d["order_size_min"])
+            budget = None
+            if plan.needs_entry_ticket:
+                entry_equity = _mark_to_market_equity(equity, positions, price_now, prepared)
+                used_margin = sum(p["size"] * price_now.get(sym, p["entry_price"]) * prepared[sym]["quanto_multiplier"]
+                                  / p["leverage"] for sym, p in positions.items())
+                budget = {"equity": entry_equity, "available": entry_equity - used_margin}
+            try:
+                actions, ticket = execution.build_order_plan(
+                    s, plan, current_side, current_size, price, d["entry_contract"], d["taker_fee_rate"],
+                    max(cost_cfg.slippage_bps, sys_cfg.max_entry_slippage_bps),
+                    budget=budget, tiers=d["risk_limit_tiers"])
+            except ValueError as e:
+                reason = "仓位额度检查：" + str(e).split("：", 1)[0]
+                bucket["entry_blocks"][reason] = bucket["entry_blocks"].get(reason, 0) + 1
+                continue
+            if not actions and current_size == 0 and not plan.block_reason:
+                reason = "目标不足最小下单量"
+                bucket["entry_blocks"][reason] = bucket["entry_blocks"].get(reason, 0) + 1
             for action, side, qty in actions:
+                before_size = pos["size"] if pos else 0
+                position_open_time = pos["open_time"] if pos else t
+                event_pnl = None
                 if qty <= 0:
                     continue
                 is_entry = action == "open"
@@ -445,6 +461,9 @@ def run_portfolio_backtest(
                 total_slippage_cost += abs(fill_price - price) * qty * d["quanto_multiplier"]
 
                 if action == "open":
+                    if ticket:
+                        sizing.bind(s, model_target, ticket.notional)
+                    execution.record_fill(timing, s, plan, sig.timing_feature, entry_price=fill_price)
                     if pos:
                         new_size = pos["size"] + qty
                         pos["entry_price"] = (pos["entry_price"] * pos["size"] + fill_price * qty) / max(new_size, 1)
@@ -452,7 +471,8 @@ def run_portfolio_backtest(
                         pos["fees_accum"] += fee
                     else:
                         pos = {"side": side, "size": qty, "entry_price": fill_price,
-                               "fees_accum": fee, "funding_accum": 0.0, "last_ts": t, "open_time": t}
+                               "fees_accum": fee, "funding_accum": 0.0, "last_ts": t, "open_time": t,
+                               "leverage": ticket.leverage if ticket else sys_cfg.max_leverage}
                         positions[s] = pos
                 else:
                     pos_direction = 1 if side == "long" else -1
@@ -462,11 +482,13 @@ def run_portfolio_backtest(
                         total_funding = pos["funding_accum"]
                         net = gross - total_fee - total_funding
                         equity += net
+                        event_pnl = net
                         trades.append({
                             "symbol": s, "side": side, "entry_price": pos["entry_price"], "exit_price": fill_price,
                             "pnl": net, "gross": gross, "fees": total_fee, "funding": total_funding,
-                            "open_time": pos["open_time"], "close_time": t, "reason": "调仓平仓/反向",
+                            "open_time": pos["open_time"], "close_time": t, "reason": decision.reason or "调仓平仓/反向",
                         })
+                        execution.record_fill(timing, s, plan, sig.timing_feature, pnl=net, closed=True, direction=pos_direction)
                         del positions[s]
                         pos = None
                         current_side, current_size = None, 0
@@ -478,13 +500,26 @@ def run_portfolio_backtest(
                         pos["funding_accum"] -= funding_share
                         net = gross - entry_fee_share - fee - funding_share
                         equity += net
+                        event_pnl = net
                         trades.append({
                             "symbol": s, "side": side, "entry_price": pos["entry_price"], "exit_price": fill_price,
                             "pnl": net, "gross": gross, "fees": entry_fee_share + fee, "funding": funding_share,
                             "open_time": pos["open_time"], "close_time": t, "reason": "组合再平衡(减仓)",
                         })
+                        execution.record_fill(timing, s, plan, sig.timing_feature, pnl=net, direction=pos_direction)
                         pos["size"] -= qty
                         current_size = pos["size"]
+                executions.append({
+                    "id": len(executions), "symbol": s, "time": float(t), "bar_time": float(t),
+                    "signal_time": float(sig.timing_feature["bar_ts"]),
+                    "position_id": f"{s}:{position_open_time}", "side": side,
+                    "action": ("add" if before_size else "open") if is_entry else action,
+                    "quantity": qty, "position_before": before_size,
+                    "position_after": pos["size"] if pos else 0,
+                    "price": fill_price, "notional": notional_abs, "fee": fee, "pnl": event_pnl,
+                    "entry_ticket": ticket.to_dict() if ticket else None,
+                    "reason": decision.reason or ("趋势入场" if is_entry and not before_size else "组合再平衡"),
+                })
 
         curve_equity = _mark_to_market_equity(equity, positions, mark_price_now, prepared)
         if curve_equity > 0 and positions:
@@ -494,6 +529,10 @@ def run_portfolio_backtest(
             lev_samples.append(gross_notional / curve_equity)
 
         equity_curve.append({"t": float(t), "e": curve_equity})
+        if fixed_margin and curve_equity <= 0:
+            warnings.append("账户净权益已耗尽，停止后续交易并在本根收盘结算；这不是交易所盘中强平模拟。")
+            all_ts = all_ts[:step + 1]
+            break
 
     # ---- 收尾：按最后价格强平所有剩余持仓 ----
     if all_ts:
@@ -512,6 +551,13 @@ def run_portfolio_backtest(
             total_slippage_cost += abs(last_price - mid_price) * pos["size"] * d["quanto_multiplier"]
             net = gross - pos["fees_accum"] - fee - pos["funding_accum"]
             equity += net
+            executions.append({
+                "id": len(executions), "symbol": s, "time": float(last_t + data_fetcher.INTERVAL_SECONDS.get(sys_cfg.short_trend_interval,3600)),
+                "bar_time": float(last_t), "signal_time": None, "position_id": f"{s}:{pos["open_time"]}",
+                "side": pos["side"], "action": "close", "quantity": pos["size"],
+                "position_before": pos["size"], "position_after": 0, "price": last_price,
+                "notional": close_notional, "fee": fee, "pnl": net, "reason": "回测结束强平",
+            })
             trades.append({
                 "symbol": s, "side": pos["side"], "entry_price": pos["entry_price"], "exit_price": last_price,
                 "pnl": net, "gross": gross, "fees": pos["fees_accum"] + fee, "funding": pos["funding_accum"],
@@ -558,7 +604,16 @@ def run_portfolio_backtest(
         if adaptive_mult_samples else 0.0
     )
 
+    chart_candles = {}
+    for sb in symbol_inputs:
+        if sb.symbol not in prepared:
+            continue
+        frame = sb.df_short[(sb.df_short.timestamp >= all_ts[0]) & (sb.df_short.timestamp <= all_ts[-1])]
+        chart_candles[sb.symbol] = [{"t": float(row.timestamp), "o": float(row.open), "h": float(row.high), "l": float(row.low), "c": float(row.close)} for row in frame.itertuples()]
     return PortfolioBacktestResult(
+        performance=compounded_performance(initial_capital, equity_curve),
+        executions=executions, execution_diagnostics=diagnostics, chart_candles=chart_candles,
+        short_interval=sys_cfg.short_trend_interval,
         symbols=symbols, start_ts=float(all_ts[0]), end_ts=float(all_ts[-1]),
         initial_capital=initial_capital, final_equity=equity, return_pct=ret_pct,
         annualized_return_pct=stats["annualized_return_pct"], annualized_vol_pct=stats["annualized_vol_pct"],
@@ -568,7 +623,7 @@ def run_portfolio_backtest(
         gross_pnl_before_costs=gross_before_costs, total_fees=total_fees_sum,
         total_slippage_cost=total_slippage_cost, total_funding=total_funding_sum,
         total_traded_notional=total_traded_notional,
-        avg_trade_notional=(total_traded_notional / len(trades)) if trades else 0.0,
+        avg_trade_notional=(total_traded_notional / len(executions)) if executions else 0.0,
         avg_gross_leverage=(float(np.mean(lev_samples)) if lev_samples else 0.0),
         max_gross_leverage=(float(np.max(lev_samples)) if lev_samples else 0.0),
         effective_taker_rate=eff_rate,

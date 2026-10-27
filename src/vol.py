@@ -200,17 +200,9 @@ def ewma_covariance_matrix(returns_df: pd.DataFrame, lam: float = DEFAULT_LAMBDA
     缺失值(某标的在早期还没有数据)用0填充参与递推——影响很小，因为早期权重本来就被后续数据快速衰减掉。
     """
     cols = list(returns_df.columns)
-    n = len(cols)
-    r_mat = returns_df.fillna(0.0).values
-    sigma = np.zeros((n, n))
-    warm = min(min_periods, len(r_mat))
-    if warm > 0:
-        sigma = np.cov(r_mat[:warm].T, bias=True) if n > 1 else np.array([[np.var(r_mat[:warm, 0])]])
-        if sigma.shape != (n, n):
-            sigma = np.atleast_2d(sigma)
-    for t in range(warm, len(r_mat)):
-        rt = r_mat[t].reshape(-1, 1)
-        sigma = lam * sigma + (1 - lam) * (rt @ rt.T)
+    sigma = np.zeros((len(cols), len(cols)))
+    for sigma in _ewma_covariance_states(returns_df, lam, min_periods):
+        pass
     return pd.DataFrame(sigma, index=cols, columns=cols)
 
 
@@ -232,20 +224,22 @@ def ewma_covariance_series(returns_df: pd.DataFrame, lam: float = DEFAULT_LAMBDA
     返回: (timestamps: List[float], matrices: List[np.ndarray])，两个列表按时间升序一一对应，
     cols 属性另外返回，供调用方知道矩阵每一行/列对应哪个标的。
     """
-    cols = list(returns_df.columns)
-    n = len(cols)
-    idx = list(returns_df.index)
-    r_mat = returns_df.fillna(0.0).values
+    matrices = list(_ewma_covariance_states(returns_df, lam, min_periods))
+    return list(returns_df.index), matrices, list(returns_df.columns)
+
+
+def _ewma_covariance_states(returns_df, lam, min_periods):
+    """At every prefix use only that prefix, including the initial warm-up bars."""
+    values = returns_df.fillna(0.0).values
+    n = len(returns_df.columns)
     sigma = np.zeros((n, n))
-    warm = min(min_periods, len(r_mat))
-    if warm > 0:
-        sigma = np.atleast_2d(np.cov(r_mat[:warm].T, bias=True)) if n > 1 else np.array([[np.var(r_mat[:warm, 0])]])
-    timestamps: List = []
-    matrices: List[np.ndarray] = []
-    for t in range(len(r_mat)):
-        if t >= warm:
-            rt = r_mat[t].reshape(-1, 1)
-            sigma = lam * sigma + (1 - lam) * (rt @ rt.T)
-        timestamps.append(idx[t])
-        matrices.append(sigma.copy())
-    return timestamps, matrices, cols
+    warm = min(max(0, min_periods), len(values))
+    for index, row in enumerate(values):
+        if index < warm:
+            prefix = values[:index + 1]
+            centered = prefix - prefix.mean(axis=0)
+            sigma = centered.T @ centered / len(prefix)
+        else:
+            vector = row.reshape(-1, 1)
+            sigma = lam * sigma + (1 - lam) * (vector @ vector.T)
+        yield sigma.copy()

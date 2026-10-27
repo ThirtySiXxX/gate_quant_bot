@@ -5,8 +5,8 @@
 启停线程），具体的策略逻辑在 systematic_engine.py 的 SystematicEngine 里
 （多资产 Trend + Carry + 波动率目标系统）。
 
-旧版"15分钟多因子+双向对冲"的策略实现整体移到了 engine_legacy_hedge.py，
-默认不再使用，但代码原样保留、可以随时参考或切回。
+旧版"15分钟多因子+双向对冲"实现已归档，不再随当前源码发布；
+历史实现可从 Git 历史查阅。
 """
 from __future__ import annotations
 

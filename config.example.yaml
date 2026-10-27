@@ -38,10 +38,31 @@ reload_interval_sec: 30        # 配置文件热重载检查间隔
 #       组合协方差矩阵 = 4H 或 1D K线(covariance_interval)
 #       Carry(资金费率) 按各标的实际 funding 结算周期更新
 #   - 这是唯一默认运行的策略引擎(src/systematic_engine.py)；
-#     旧版"15分钟多因子打分+双向持仓对冲"策略代码整体保留在
-#     src/engine_legacy_hedge.py，默认不再使用，仅供参考/需要时切回。
+#     旧版"15分钟多因子打分+双向持仓对冲"策略已归档，历史实现可从 Git 历史查阅。
 # ================================================================
 systematic:
+  position_sizing_mode: fixed_margin # 新开仓5%权益保证金；BTC/ETH/SOL请求200x，其余20x
+  ml_model_path: ""                # 离线研究JSON模型；空值禁用，当前候选未通过交易验证
+  ml_min_entry_probability: 0.45   # 仅ML启用时过滤首次开仓，不改变已有仓位退出
+  # SOL/山寨最高杠杆不足时提高保证金以维持名义仓位；BTC/ETH低于200x时拒绝开仓。
+  # 原波动率/敞口参数只保留模型信号与减仓比例，不再限制固定票据的名义开仓额。
+  # 收盘时机模型：当前仅 ETH 通过本轮筛选；空列表表示对所有标的启用。
+  # 200x/5%保证金的放大风险不属于这组回测参数，仓位仍由下方波动率预算决定。
+  execution_timing:
+    enabled: true
+    symbols: [ETH_USDT]
+    entry_confirm_bars: 2
+    require_trend_agreement: true
+    max_entry_extension_atr: 2.0
+    chase_quality_threshold: 0.7
+    weak_forecast: 2.0
+    weak_quality: 0.35
+    weak_confirm_bars: 3
+    confirm_reversals: true
+    flatten_before_reverse: true
+    partial_rebalance: 0.5
+    trail_atr: 3.0
+    trail_activation_atr: 2.0
   # ---- 资金 ----
   initial_capital_usdt: 10000       # 仅 paper模式/回测 默认初始资金，live模式直接读取账户真实权益
 
@@ -139,10 +160,9 @@ systematic:
   min_depth_fill_ratio: 1.0          # 前N档必须完整覆盖计划张数
 
 # --------------------------------------------------------------
-# 以下 timeframes / risk / strategy / hedge 四段是旧版"15分钟多因子打分
-# + 双向持仓对冲"策略的参数，代码保留在 src/engine_legacy_hedge.py，
-# 默认不再运行；新版 systematic 策略引擎完全不读取这四段，可以整体删除，
-# 留着也不影响新策略——仅供你想临时切回旧策略时参考。
+# 以下保留旧配置结构，兼容现有配置文件；旧版对冲引擎已归档。
+# 注意：risk 仍被新版 systematic 引擎用于止损和风险管理，不能整体删除。
+# timeframes / strategy / hedge 保留用于兼容，本次归档不调整参数。
 # --------------------------------------------------------------
 timeframes:
   entry: "15m"
@@ -156,7 +176,8 @@ risk:
   max_leverage: 15                  # [旧版策略] 单标的杠杆上限；下单前仍强制校验为全仓
   max_concurrent_positions: 6       # 同时最多持仓数
   max_portfolio_heat_pct: 20.0      # 所有持仓"止损前潜在总亏损"占权益上限
-  daily_loss_limit_pct: 8.0         # 当日亏损达到此比例，当天停止开新仓（熔断）
+  daily_loss_limit_enabled: false   # 按用户选择：实盘、模拟盘、回测共同关闭日亏损熔断
+  daily_loss_limit_pct: 8.0         # 仅显式启用时生效：24小时窗口亏损阈值
   max_correlated_positions: 3       # 同向、强相关（如BTC/ETH/SOL）标的最多同时持有数
   atr_stop_multiplier: 1.6          # 止损 = ATR * 该倍数
   atr_trail_multiplier: 2.2         # 移动止盈(Chandelier Exit) ATR倍数

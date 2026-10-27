@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from .backtest import PortfolioBacktestResult, SymbolBacktestInputs, run_portfolio_backtest
-from .config import CostConfig, SystematicConfig
+from .config import RiskConfig, CostConfig, SystematicConfig
 
 
 # ============================================================ 趋势段识别
@@ -165,8 +165,8 @@ def diagnose_trend_capture(result: PortfolioBacktestResult,
                    and t["close_time"] > ep.start_ts and t["open_time"] < ep.end_ts]
         participated = len(overlap) > 0
 
-        entry_lag = np.nan
-        exit_early = np.nan
+        entry_lag = None
+        exit_early = None
         if participated:
             first_in = min(t["open_time"] for t in overlap)
             last_out = max(t["close_time"] for t in overlap)
@@ -176,8 +176,8 @@ def diagnose_trend_capture(result: PortfolioBacktestResult,
         # 捕获率：这段行情价格动了X%，同期账户权益变化Y%，Y/X 就是捕获率
         e0 = _equity_at(result.equity_curve, ep.start_ts)
         e1 = _equity_at(result.equity_curve, ep.end_ts)
-        capture = np.nan
-        if e0 and e1 and e0 > 0 and ep.abs_move_pct > 1e-9:
+        capture = None
+        if e0 is not None and e1 is not None and np.isfinite(e0) and np.isfinite(e1) and e0 > 0 and ep.abs_move_pct > 1e-9:
             equity_ret_pct = (e1 - e0) / e0 * 100.0
             capture = equity_ret_pct / ep.abs_move_pct * 100.0
 
@@ -193,8 +193,9 @@ def diagnose_trend_capture(result: PortfolioBacktestResult,
     part = df[df["participated"]]
 
     def _med(col, src=part):
-        v = src[col].dropna()
-        return float(v.median()) if len(v) else float("nan")
+        v = src[col].dropna().astype(float)
+        v = v[np.isfinite(v)]
+        return float(v.median()) if len(v) else None
 
     return {
         "episode_count": len(df),
@@ -278,7 +279,8 @@ def _slice_inputs(symbol_inputs: List[SymbolBacktestInputs],
 def run_walk_forward(symbol_inputs: List[SymbolBacktestInputs], sys_cfg: SystematicConfig,
                       cost_cfg: CostConfig, initial_capital: float, n_folds: int = 5,
                       mode: str = "expanding",
-                      progress_cb: Optional[Callable[[int, str], None]] = None) -> WalkForwardResult:
+                      progress_cb: Optional[Callable[[int, str], None]] = None,
+                      risk_cfg: Optional[RiskConfig] = None) -> WalkForwardResult:
     """把整段历史切成 n_folds 折，逐折统计表现。
 
     mode='expanding': 每折的测试窗口依次往后推(第k折测第k段)，指标预热用它之前的全部历史；
@@ -322,7 +324,7 @@ def run_walk_forward(symbol_inputs: List[SymbolBacktestInputs], sys_cfg: Systema
             if all(len(s.df_short) < 10 for s in sliced):
                 folds.append(FoldResult(k + 1, f_start, f_end, 0, 0, 0, 0, 0, error="该折数据不足"))
                 continue
-            r = run_portfolio_backtest(sliced, sys_cfg, cost_cfg, initial_capital)
+            r = run_portfolio_backtest(sliced, sys_cfg, cost_cfg, initial_capital, risk_cfg=risk_cfg)
             folds.append(FoldResult(
                 fold_index=k + 1, start_ts=f_start, end_ts=f_end,
                 return_pct=r.return_pct, annualized_return_pct=r.annualized_return_pct,
@@ -362,7 +364,8 @@ def run_walk_forward(symbol_inputs: List[SymbolBacktestInputs], sys_cfg: Systema
 def parameter_sweep(symbol_inputs: List[SymbolBacktestInputs], sys_cfg: SystematicConfig,
                      cost_cfg: CostConfig, initial_capital: float,
                      param_name: str, values: List[float],
-                     progress_cb: Optional[Callable[[int, str], None]] = None) -> List[dict]:
+                     progress_cb: Optional[Callable[[int, str], None]] = None,
+                     risk_cfg: Optional[RiskConfig] = None) -> List[dict]:
     """扫描单个参数，看收益/Sharpe 随它怎么变化。
 
     判读方法：**曲线应该是平滑的小山包，而不是某个值上孤立的尖峰**。
@@ -376,7 +379,7 @@ def parameter_sweep(symbol_inputs: List[SymbolBacktestInputs], sys_cfg: Systemat
         cfg = copy.copy(sys_cfg)
         setattr(cfg, param_name, v)
         try:
-            r = run_portfolio_backtest(symbol_inputs, cfg, cost_cfg, initial_capital)
+            r = run_portfolio_backtest(symbol_inputs, cfg, cost_cfg, initial_capital, risk_cfg=risk_cfg)
             out.append({"value": v, "return_pct": r.return_pct, "sharpe": r.sharpe,
                          "max_drawdown_pct": r.max_drawdown_pct, "trade_count": r.trade_count})
         except Exception as e:

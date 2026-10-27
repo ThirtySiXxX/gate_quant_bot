@@ -20,6 +20,18 @@ CORRELATION_GROUPS: Dict[str, str] = {
 }
 
 
+def daily_risk_state(equity, start_equity, start_ts, active, timestamp, cfg=None):
+    """Track the shared 24-hour window; an optional loss gate defaults to off."""
+    cfg = cfg or RiskConfig()
+    if start_equity <= 0 or timestamp - start_ts >= 86400:
+        start_equity, start_ts, active = equity, timestamp, False
+    if not cfg.daily_loss_limit_enabled:
+        active = False  # Turning the rule off also releases a previously latched gate.
+    else:
+        active = bool(active or RiskManager(cfg).daily_circuit_breaker_hit(equity, start_equity))
+    return start_equity, start_ts, active
+
+
 def correlation_group(symbol: str) -> str:
     base = symbol.split("_")[0].upper()
     return CORRELATION_GROUPS.get(base, base)
@@ -104,15 +116,13 @@ class RiskManager:
         if current_heat + pending_risk_pct > self.cfg.max_portfolio_heat_pct:
             return RiskDecision(False, "组合风险敞口(portfolio heat)将超上限")
 
-        if day_start_equity > 0:
-            day_pnl_pct = (equity - day_start_equity) / day_start_equity * 100.0
-            if day_pnl_pct <= -abs(self.cfg.daily_loss_limit_pct):
-                return RiskDecision(False, "当日亏损触发熔断，停止开新仓")
+        if self.daily_circuit_breaker_hit(equity, day_start_equity):
+            return RiskDecision(False, "当日亏损触发熔断，停止开新仓")
 
         return RiskDecision(True, "OK")
 
     def daily_circuit_breaker_hit(self, equity: float, day_start_equity: float) -> bool:
-        if day_start_equity <= 0:
+        if not self.cfg.daily_loss_limit_enabled or day_start_equity <= 0:
             return False
         day_pnl_pct = (equity - day_start_equity) / day_start_equity * 100.0
         return day_pnl_pct <= -abs(self.cfg.daily_loss_limit_pct)

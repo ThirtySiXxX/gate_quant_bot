@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 from typing import Callable, Optional
@@ -207,6 +208,43 @@ def _fetch_page(exchange, contract: str, interval: str, limit: int,
     return pd.DataFrame(rows, columns=_EMPTY_COLUMNS)
 
 
+def candle_gaps(frame: pd.DataFrame, interval: str):
+    """Internal missing ranges only; do not fabricate history before a listing."""
+    seconds = INTERVAL_SECONDS[interval]
+    timestamps = sorted(set(float(t) for t in frame["timestamp"]))
+    return [(int(a+seconds), int(b-seconds), int((b-a)/seconds)-1)
+            for a, b in zip(timestamps, timestamps[1:]) if b-a > seconds]
+
+
+def _repair_gaps(exchange, contract, interval, frame, earliest_needed, progress_cb=None):
+    seconds = INTERVAL_SECONDS[interval]
+    gaps = [(start + max(0, math.ceil((earliest_needed-start)/seconds))*seconds, end, count)
+            for start, end, count in candle_gaps(frame, interval) if end >= earliest_needed]
+    chunks = [frame]
+    requests = 0
+    for start, end, _ in gaps:
+        cursor = end
+        while cursor >= start:
+            requests += 1
+            if requests > MAX_PAGES:
+                raise ValueError(f"{contract} {interval} 历史缺口过多，停止回测下载")
+            if progress_cb:
+                progress_cb(len(frame), len(frame), f"{contract} {interval} 正在补齐历史K线缺口")
+            page = _fetch_page(exchange, contract, interval,
+                               limit=min(PAGE_LIMIT, int((cursor-start)/seconds)+1), to_ts=cursor)
+            page = page[(page.timestamp >= start) & (page.timestamp <= cursor)]
+            if page.empty:
+                break
+            chunks.append(page)
+            cursor = int(page.timestamp.min()) - seconds
+            time.sleep(REQUEST_SLEEP_SEC)
+    repaired = pd.concat(chunks, ignore_index=True).sort_values("timestamp").drop_duplicates("timestamp", keep="last").reset_index(drop=True)
+    remaining = [g for g in candle_gaps(repaired, interval) if g[1] >= earliest_needed]
+    if remaining:
+        raise ValueError(f"{contract} {interval} 仍缺少{sum(g[2] for g in remaining)}根历史K线，不能将不完整行情当作连续回测")
+    return repaired
+
+
 def fetch_candles(
     exchange,
     contract: str,
@@ -262,6 +300,9 @@ def fetch_candles(
                 cached = cached.sort_values("timestamp").drop_duplicates("timestamp", keep="last").reset_index(drop=True)
                 if use_cache:
                     _save_cache(cache_dir, contract, interval, cached)
+        cached = _repair_gaps(exchange, contract, interval, cached, earliest_needed, progress_cb)
+        if use_cache:
+            _save_cache(cache_dir, contract, interval, cached)
         if progress_cb:
             progress_cb(len(cached), target_bars, f"{contract} {interval} 数据已就绪（来自本地缓存）")
         return cached[cached["timestamp"] >= earliest_needed].sort_values("timestamp").reset_index(drop=True)
@@ -298,6 +339,7 @@ def fetch_candles(
     df = pd.concat(all_chunks, ignore_index=True) if all_chunks else pd.DataFrame(columns=_EMPTY_COLUMNS)
     # 同上：重复时间戳保留最后一条(更晚拉取到的数据)，不要保留可能过时的旧缓存快照
     df = df.sort_values("timestamp").drop_duplicates("timestamp", keep="last").reset_index(drop=True)
+    df = _repair_gaps(exchange, contract, interval, df, earliest_needed, progress_cb)
     if use_cache and len(df) > 0:
         _save_cache(cache_dir, contract, interval, df)
     if progress_cb:

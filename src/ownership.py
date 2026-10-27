@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import threading
+import tempfile
 from typing import Set, Tuple
 
 logger = logging.getLogger("bot.ownership")
@@ -44,15 +45,26 @@ def _load(data_dir: str, mode: str) -> Set[str]:
         return set()
 
 
-def _save(data_dir: str, mode: str, owned: Set[str]) -> None:
+def _save(data_dir: str, mode: str, owned: Set[str], *, strict=False) -> None:
+    temporary = None
     try:
         os.makedirs(data_dir, exist_ok=True)
-        with open(_path(data_dir, mode), "w", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=data_dir,
+                                         prefix=".ownership-", suffix=".tmp", delete=False) as f:
+            temporary = f.name
             json.dump({"owned": sorted(owned)}, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temporary, _path(data_dir, mode))
     except OSError as e:
         # 写不进去只记日志，不能因此中断交易流程；最坏情况是重启后把自己的仓
         # 当成外部仓，届时用户可以在界面上手动"纳入管理"
         logger.warning("保存持仓归属记录失败: %s", e)
+        if strict:
+            raise
+    finally:
+        if temporary and os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def mark_owned(data_dir: str, mode: str, symbol: str, side: str) -> None:
@@ -81,7 +93,10 @@ def list_owned(data_dir: str, mode: str) -> Set[str]:
 
 def adopt(data_dir: str, mode: str, symbol: str, side: str) -> None:
     """用户在界面上明确点了"纳入策略管理"，把外部持仓登记为引擎自己的。"""
-    mark_owned(data_dir, mode, symbol, side)
+    with _LOCK:
+        owned = _load(data_dir, mode)
+        owned.add(_key(symbol, side))
+        _save(data_dir, mode, owned, strict=True)
 
 
 def adopt_all(data_dir: str, mode: str, pairs) -> int:

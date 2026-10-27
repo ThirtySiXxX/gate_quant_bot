@@ -22,9 +22,11 @@ import sqlite3
 import threading
 import time
 from dataclasses import asdict
+from contextlib import closing
 from typing import Dict, List, Optional
 
 from .models import Position, Trade, now_ts
+from .risk import daily_risk_state
 
 
 def _mode_db_path(base_path: str, mode: str) -> str:
@@ -89,7 +91,7 @@ class StateStore:
 
     # ---------------------------------------------------------- DB
     def _init_db(self):
-        with sqlite3.connect(self.db_path) as conn:
+        with closing(sqlite3.connect(self.db_path)) as conn, conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS trades (
                     id TEXT PRIMARY KEY, symbol TEXT, side TEXT, size REAL,
@@ -103,10 +105,21 @@ class StateStore:
                     ts REAL PRIMARY KEY, equity REAL
                 )
             """)
+            conn.execute("CREATE TABLE IF NOT EXISTS strategy_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
             conn.commit()
 
+    def load_strategy_state(self, key: str) -> dict:
+        with self._lock, closing(sqlite3.connect(self.db_path)) as conn, conn:
+            row = conn.execute("SELECT value FROM strategy_state WHERE key=?", (key,)).fetchone()
+            return json.loads(row[0]) if row else {}
+
+    def save_strategy_state(self, key: str, value: dict):
+        payload = json.dumps(value, allow_nan=False)
+        with self._lock, closing(sqlite3.connect(self.db_path)) as conn, conn:
+            conn.execute("INSERT OR REPLACE INTO strategy_state(key,value) VALUES (?,?)", (key, payload))
+
     def _load_trades_from_db(self):
-        with sqlite3.connect(self.db_path) as conn:
+        with closing(sqlite3.connect(self.db_path)) as conn, conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute("SELECT * FROM trades ORDER BY close_time ASC").fetchall()
             for r in rows:
@@ -123,18 +136,20 @@ class StateStore:
             self.equity_curve = [(r["ts"], r["equity"]) for r in eq_rows]
 
     def persist_trade(self, t: Trade):
-        with sqlite3.connect(self.db_path) as conn:
+        with closing(sqlite3.connect(self.db_path)) as conn, conn:
             conn.execute(
                 "INSERT OR REPLACE INTO trades VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (t.id, t.symbol, t.side, t.size, t.entry_price, t.exit_price,
                  t.open_time, t.close_time, t.pnl, t.gross_pnl, t.fees_paid,
                  t.funding_paid, t.exit_reason, t.role),
             )
+            conn.execute("CREATE TABLE IF NOT EXISTS strategy_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
             conn.commit()
 
     def persist_equity_point(self, ts: float, equity: float):
-        with sqlite3.connect(self.db_path) as conn:
+        with closing(sqlite3.connect(self.db_path)) as conn, conn:
             conn.execute("INSERT OR REPLACE INTO equity_curve VALUES (?,?)", (ts, equity))
+            conn.execute("CREATE TABLE IF NOT EXISTS strategy_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
             conn.commit()
 
     # ---------------------------------------------------------- 线程安全操作
@@ -150,7 +165,7 @@ class StateStore:
                 self.errors.append(line)
                 self.errors = self.errors[-50:]
 
-    def update_equity(self, equity: float):
+    def update_equity(self, equity: float, risk_cfg=None):
         with self._lock:
             self.equity = equity
             ts = now_ts()
@@ -158,14 +173,10 @@ class StateStore:
             self.equity_curve = self.equity_curve[-5000:]
         self.persist_equity_point(ts, equity)
 
-        # 日切：过了24h重置当日起始权益
         with self._lock:
-            if now_ts() - self.day_start_ts > 86400:
-                self.day_start_equity = equity
-                self.day_start_ts = now_ts()
-                self.circuit_breaker_active = False
+            self.day_start_equity, self.day_start_ts, self.circuit_breaker_active = daily_risk_state(
+                equity, self.day_start_equity, self.day_start_ts, self.circuit_breaker_active, ts, risk_cfg)
 
-    # ---------------------------------------------------------- 持仓（双向）
     def upsert_position(self, pos: Position):
         with self._lock:
             self.positions[pos.position_key] = pos

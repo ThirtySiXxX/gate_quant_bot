@@ -63,6 +63,26 @@ class PaperExchange:
     def get_contract(self, contract: str) -> dict:
         return self.md.get_contract(contract)
 
+    def get_entry_contract(self, contract: str) -> dict:
+        return self.md.get_entry_contract(contract)
+
+    def get_risk_limit_tiers(self, contract: str) -> List[dict]:
+        return self.md.get_risk_limit_tiers(contract)
+
+    def get_entry_budget(self) -> dict:
+        # Fail closed when a price/contract is missing; skipping its margin would
+        # incorrectly make funds available for another position.
+        equity, used = self.cash, 0.0
+        for (symbol, side), pos in self._positions.items():
+            mark = self.md.get_ticker(symbol)["mark_price"]
+            qm = self.md.get_contract(symbol)["quanto_multiplier"]
+            leverage = self._cross.get(symbol)
+            if not leverage:
+                raise ValueError(f"{symbol} 缺少已确认全仓杠杆")
+            equity += (mark - pos["entry_price"]) * pos["size"] * qm * (1 if side == "long" else -1)
+            used += pos["size"] * mark * qm / leverage
+        return {"equity": equity, "available": equity - used}
+
     def get_account_taker_fee_rate(self, contract: str):
         try:
             return self.md.get_account_taker_fee_rate(contract)
@@ -126,6 +146,7 @@ class PaperExchange:
     def ensure_cross_margin(self, contract: str, leverage_limit: float) -> dict:
         r = self.set_cross_margin(contract, leverage_limit)
         return {"ok": True, "verified": True, "margin_mode": "cross",
+                "cross_leverage_limit": r["leverage_limit"],
                 "message": f"[模拟盘] 已确认全仓（杠杆上限 {int(r['leverage_limit'])}x）"}
 
     def set_leverage(self, contract: str, leverage: float) -> None:

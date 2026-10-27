@@ -12,16 +12,27 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import asdict
 
 from flask import Flask, jsonify, render_template_string, request
+from flask.json.provider import DefaultJSONProvider
+from .json_utils import json_safe
 
 from .backtest_runner import BacktestController
 from .config import ConfigStore
 from .credentials import CredentialStore
 from .engine import EngineController
 from .state import StateStore
+from .universe import UniverseService, tradable_contract, is_crypto, SYMBOL as CONTRACT_SYMBOL
+from .config import SystematicConfig, CostConfig, RiskConfig
 
 logger = logging.getLogger("bot.web")
+
+
+class StrictJSONProvider(DefaultJSONProvider):
+    def dumps(self, obj, **kwargs):
+        kwargs["allow_nan"] = False
+        return super().dumps(json_safe(obj), **kwargs)
 
 
 
@@ -164,6 +175,21 @@ fetch('/api/version').then(r=>r.json()).then(v=>{{
 </script>"""
 
 
+WORKSPACE_NAV = """
+<aside class="workspace-sidebar">
+  <a class="workspace-brand" href="/?view=backtest" aria-label="Quant Desk 首页"><span class="brand-mark">q<span>·</span></span><span>QUANT DESK<small>GATE / RESEARCH</small></span></a>
+  <p class="nav-label">研究工作台</p>
+  <nav class="workspace-nav" aria-label="主导航">
+    <a id="nav-universe" data-view="universe" href="/?view=universe"><span class="nav-symbol" aria-hidden="true">◎</span>五币推荐<span class="nav-note">手动</span></a>
+    <a id="nav-backtest" data-view="backtest" href="/?view=backtest"><span class="nav-symbol" aria-hidden="true">▥</span>回测实验室</a>
+    <a id="nav-charts" data-view="charts" href="/charts"><span class="nav-symbol" aria-hidden="true">⌁</span>K 线分析</a>
+    <a id="nav-dashboard" data-view="dashboard" href="/?view=dashboard"><span class="nav-symbol" aria-hidden="true">◫</span>持仓概览</a>
+  </nav>
+  <div class="sidebar-bottom"><a id="nav-settings" data-view="settings" href="/?view=settings">设置与维护 <span aria-hidden="true">↗</span></a><div class="sidebar-foot">Trend + Carry<small>先验证，再决策。</small></div></div>
+</aside>
+"""
+
+
 PAGE = """
 <!doctype html>
 <html lang="zh-CN">
@@ -171,96 +197,29 @@ PAGE = """
 <meta charset="utf-8">
 <title>Gate.io 量化策略控制台</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e;
-          --accent:#58a6ff; --pos:#3fb950; --neg:#f85149; --warn:#e3b341; }
-  * { box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; margin:0; }
-  header { display:flex; align-items:center; justify-content:space-between; padding:14px 24px;
-           border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:10; }
-  header h1 { font-size:18px; margin:0; color:var(--accent); }
-  nav { display:flex; gap:6px; }
-  nav button { background:transparent; border:1px solid var(--border); color:var(--text); padding:8px 18px;
-               border-radius:6px; cursor:pointer; font-size:14px; }
-  nav button.active { background:var(--accent); color:#04121f; border-color:var(--accent); font-weight:600; }
-  main { padding:20px 24px; max-width:1300px; margin:0 auto; }
-  .tabpage { display:none; } .tabpage.active { display:block; }
-  .grid { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:16px; }
-  .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px 16px; }
-  .card .label { font-size:12px; color:var(--muted); }
-  .card .value { font-size:20px; font-weight:600; margin-top:4px; }
-  .pos { color:var(--pos); } .neg { color:var(--neg); }
-  table { width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px; }
-  th,td { border-bottom:1px solid #21262d; padding:6px 8px; text-align:left; }
-  th { color:var(--muted); font-weight:500; }
-  section { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:16px 18px; margin-bottom:16px; }
-  section h3 { margin-top:0; font-size:15px; color:var(--accent); }
-  .badge { padding:2px 10px; border-radius:10px; font-size:12px; font-weight:600; }
-  .badge.paper { background:#4b3b00; color:var(--warn); }
-  .badge.live { background:#4a0d0d; color:var(--neg); }
-  .badge.on { background:#0d3b1f; color:var(--pos); }
-  .badge.off { background:#3a3a3a; color:var(--muted); }
-  .badge.pending, .badge.fetching, .badge.running { background:#0d2b3b; color:var(--accent); }
-  .badge.done { background:#0d3b1f; color:var(--pos); }
-  .badge.error { background:#3a0d0d; color:var(--neg); }
-  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
-  input,select,button.btn { background:#0d1117; color:var(--text); border:1px solid var(--border);
-        border-radius:6px; padding:8px 12px; font-size:14px; }
-  input[type=number] { width:110px; }
-  input[type=text], input[type=password] { min-width:220px; }
-  button.btn { cursor:pointer; } button.btn:hover { border-color:var(--accent); }
-  button.primary { background:var(--accent); color:#04121f; border-color:var(--accent); font-weight:700; }
-  button.danger { background:#3a0d0d; color:var(--neg); border-color:#5c1a1a; font-weight:700; }
-  button.success { background:#0d3b1f; color:var(--pos); border-color:#1a5c30; font-weight:700; }
-  .field { display:flex; flex-direction:column; gap:4px; }
-  .field label { font-size:12px; color:var(--muted); }
-  .presetbar button { margin-right:8px; }
-  .presetbar button.selected { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-  .hint { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.6; }
-  .chip { display:inline-block; background:#21262d; border:1px solid var(--border); border-radius:14px;
-          padding:3px 10px; margin:2px; font-size:12px; }
-  .chip button { background:none; border:none; color:var(--neg); cursor:pointer; margin-left:6px; font-weight:700; }
-  #logs { white-space:pre-wrap; font-family:monospace; font-size:12px; max-height:260px; overflow-y:auto; }
-  .toast { position:fixed; bottom:20px; right:20px; background:var(--panel); border:1px solid var(--border);
-           padding:12px 18px; border-radius:8px; max-width:420px; z-index:100; }
-  .toast.err { border-color:var(--neg); color:var(--neg); }
-  .toast.ok { border-color:var(--pos); color:var(--pos); }
-  .subgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
-  details summary { cursor:pointer; color:var(--accent); margin:10px 0; }
-  .warnbox { background:#3a2400; border:1px solid var(--warn); color:var(--warn); padding:10px 14px;
-             border-radius:8px; margin-bottom:14px; font-size:13px; line-height:1.6; }
-  .joblist { display:flex; flex-direction:column; gap:6px; }
-  .jobrow { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--border);
-            border-radius:6px; cursor:pointer; font-size:13px; }
-  .jobrow:hover { border-color:var(--accent); }
-  .jobrow.selected { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-  .jobrow .sym { font-weight:600; min-width:160px; }
-  .jobrow .meta { color:var(--muted); flex:1; }
-  .progressbar { background:#21262d; border-radius:6px; height:6px; width:100%; overflow:hidden; margin-top:4px; }
-  .progressbar > div { background:var(--accent); height:100%; }
-  #btEquityCanvas { width:100%; height:220px; display:block; }
-  .symcheckbox { margin-right:16px; font-size:13px; }
-</style>
+<link rel="stylesheet" href="/static/workspace.css">
 </head>
-<body>
-<header>
-  <h1>⚙️ Gate.io 多资产 Trend+Carry+波动率目标 控制台 <span id="mode-badge" class="badge"></span> <span id="engine-badge" class="badge"></span> <span id="invert-badge" class="badge live" style="display:none;">⚠️ 反向执行已开启</span>
-  <span class="ver" id="app-version" style="font-size:11px;color:var(--muted);font-weight:400;"></span>
-  <span class="badge" id="upd-badge" style="display:none;background:#a371f7;color:#0d1117;cursor:pointer;"
-        onclick="location.href='/update'">有新版本</span></h1>
-  <nav>
-    <button id="nav-dashboard" onclick="showTab('dashboard')">仪表盘</button>
-    <button id="nav-backtest" onclick="showTab('backtest')">回测</button>
-    <button id="nav-settings" onclick="showTab('settings')">设置</button>
-    <button onclick="window.location.href='/charts'">📈 K线图</button>
-    <button onclick="window.location.href='/manual'">🧪 手动开单</button>
-    <button onclick="window.location.href='/update'">⬆️ 检查更新</button>
-  </nav>
-</header>
-
+<body class="workspace" data-page="main">
+__WORKSPACE_NAV__
+<div class="workspace-content">
+<header class="workspace-topbar"><span class="workspace-crumb">研究 / <strong id="workspace-current">回测实验室</strong></span><div class="status-cluster"><span id="mode-badge" class="badge"></span><span id="engine-badge" class="badge"></span><span id="invert-badge" class="badge live" style="display:none;">反向执行</span></div></header>
 <main>
 
+<div id="tab-universe" class="tabpage">
+  <div class="page-heading"><div><span class="eyebrow">MARKET DISCOVERY</span><h1>五币推荐</h1><p>从全市场寻找更适合当前趋势的候选，最多五个。</p></div><button class="btn primary" id="universe-refresh">筛选五个候选 <span aria-hidden="true">↗</span></button></div>
+  <section id="universe-panel" class="discovery-panel">
+    <div class="section-heading"><h2>本次候选</h2><span class="subtle-tag">手动触发 · 不自动开仓</span></div>
+    <p id="universe-status" class="hint" role="status">点击“筛选五个候选”后开始扫描公共行情。</p>
+    <div id="universe-empty" class="discovery-empty"><div class="candidate-placeholders" aria-hidden="true"><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span></div><h3 id="universe-empty-title">让机会先通过筛选</h3><p id="universe-empty-note">点击右上方按钮，检查趋势、路径质量与执行成本。<br>打开或刷新页面都不会自动扫描。</p></div>
+    <ol id="universe-cards" class="candidate-grid" aria-label="本次推荐候选"></ol>
+    <div class="discovery-footer"><span class="hint">评分用于本次相对排序，不代表胜率；无合格信号时允许空缺。</span><button class="btn" id="universe-apply" disabled hidden>把候选加入交易池</button></div>
+  </section>
+  <div class="method-strip"><div><span>01</span><strong>全市场初筛</strong><p>检查交易状态、成交额与点差</p></div><div><span>02</span><strong>因子排序</strong><p>趋势强度、路径质量、执行成本</p></div><div><span>03</span><strong>相关性约束</strong><p>避免候选过度集中于同一走势</p></div></div>
+  <details class="panel-details"><summary>筛选明细与方法说明</summary><div class="table-scroll"><table><thead><tr><th>币种</th><th>趋势方向</th><th>相对评分</th><th>1H / 4H 趋势</th><th>路径效率</th><th>往返成本</th><th>24H成交额</th></tr></thead><tbody id="universe-rows"></tbody></table></div><p class="hint" id="universe-rejections"></p><p class="hint">成本含双边手续费、点差、滑点及按当前费率估计的1天不利资金费，不含下单量对应的实际冲击。候选加入交易池后仍须通过策略的全仓与执行检查；不会移除已有手动标的。不要用今天的候选倒推历史选币表现。</p></details>
+</div>
+
 <div id="tab-dashboard" class="tabpage">
+  <div class="page-heading"><div><span class="eyebrow">PORTFOLIO MONITOR</span><h1>持仓概览</h1><p>关注账户、持仓与策略运行状态。</p></div></div>
   <div class="row">
     <button class="btn success" onclick="engineAction('start')">▶ 启动引擎</button>
     <button class="btn danger" onclick="engineAction('stop')">■ 停止引擎</button>
@@ -272,88 +231,54 @@ PAGE = """
 
   <section><h3>当前持仓</h3>
     <div id="ownership-notice" style="display:none;"></div>
-    <table id="positions"><thead><tr>
+    <div class="table-scroll"><table id="positions"><thead><tr>
     <th>币种</th><th>方向</th><th>张数</th><th>开仓价</th><th>现价</th>
-    <th>浮动盈亏</th><th>持仓时长</th><th>归属</th><th>操作</th></tr></thead><tbody></tbody></table></section>
+    <th>浮动盈亏</th><th>持仓时长</th><th>归属</th><th>操作</th></tr></thead><tbody></tbody></table></div></section>
 
-  <section><h3>标的信号（趋势 / Carry / 合成预测）</h3><table id="signals"><thead><tr>
-    <th>币种</th><th>方向</th><th>信号强度</th><th>合成预测(F)</th><th>明细</th></tr></thead><tbody></tbody></table></section>
+  <section><h3>标的信号（趋势 / Carry / 合成预测）</h3><div class="table-scroll"><table id="signals"><thead><tr>
+    <th>币种</th><th>方向</th><th>信号强度</th><th>合成预测(F)</th><th>明细</th></tr></thead><tbody></tbody></table></div></section>
 
-  <section><h3>最近成交</h3><table id="trades"><thead><tr>
-    <th>币种</th><th>方向</th><th>开仓价</th><th>平仓价</th><th>净盈亏</th><th>手续费</th><th>资金费</th><th>持仓时长</th><th>离场原因</th></tr></thead><tbody></tbody></table></section>
+  <section><h3>最近成交</h3><div class="table-scroll"><table id="trades"><thead><tr>
+    <th>币种</th><th>方向</th><th>开仓价</th><th>平仓价</th><th>净盈亏</th><th>手续费</th><th>资金费</th><th>持仓时长</th><th>离场原因</th></tr></thead><tbody></tbody></table></div></section>
 
   <section><h3>运行日志</h3><div id="logs"></div></section>
 </div>
 
 <div id="tab-backtest" class="tabpage">
-  <div class="warnbox">
-    回测和实盘/模拟盘完全独立运行，可以放心地在实盘正在跑的同时随时发起回测，不会互相影响。
-    这是"组合级"回测：一次任务对你选的整组标的同时跑，直接复用当前"设置"页保存的策略参数，
-    得到的是组合层面的权益曲线（不是逐个标的分开测）。下载历史K线需要用到已保存的 API Key（只读查询，不会下单）。
-    第一次测某个标的会下载较多历史数据，之后再测同一标的会命中本地缓存，速度快很多。
+  <div class="page-heading"><div><span class="eyebrow">STRATEGY LAB</span><h1>回测实验室</h1><p>配置一次实验，查看复利表现，再到图上复盘成交。</p></div><a class="text-link" href="/charts">打开 K 线分析 ↗</a></div>
+  <div class="backtest-workspace">
+    <section class="bt-setup">
+      <div class="section-heading"><h2>新建回测</h2><span class="subtle-tag">单币回测</span></div>
+      <div class="field symbol-search" id="bt-symbol-picker"><label for="bt-symbol-search">搜索回测币种</label><input id="bt-symbol-search" type="search" placeholder="例如 BTC、SOL 或 DOGE_USDT" autocomplete="off" spellcheck="false" aria-describedby="bt-symbol-hint" aria-controls="bt-symbol-matches"><div id="bt-symbol-matches" class="symbol-search-results" role="group" aria-label="匹配的回测合约" hidden></div><p class="hint" id="bt-symbol-hint" role="status">正在加载全市场合约目录；每次回测一个币种。</p></div>
+      <div class="form-pair"><div class="field"><label for="bt-days">回测天数</label><input id="bt-days" type="number" min="1" value="90"></div><div class="field"><label for="bt-capital">初始资金 · USDT</label><input id="bt-capital" type="number" min="1" placeholder="策略默认"></div></div>
+      <div class="presetbar" id="bt-preset-bar"><button class="btn" onclick="setBtDays(30)">30 天</button><button class="btn" onclick="setBtDays(90)">90 天</button><button class="btn" onclick="setBtDays(180)">180 天</button><button class="btn" onclick="setBtDays(365)">1 年</button></div>
+      <details class="inline-details"><summary>更多选项</summary><label class="check-line"><input type="checkbox" id="bt-walkforward"> 同时做跨时间窗口验证</label><div class="field"><label for="bt-wf-folds">验证折数</label><input id="bt-wf-folds" type="number" min="2" max="10" value="5"></div><p class="hint">仅查询历史行情，不影响运行中的引擎；首次下载需要更长时间，使用设置中保存的 API Key。</p></details>
+      <button class="btn primary full-width" id="bt-run" onclick="startBacktest()">开始回测 <span aria-hidden="true">→</span></button><p id="bt-start-msg" class="hint" role="status"></p>
+    </section>
+    <section class="bt-history"><div class="section-heading"><h2>实验记录</h2><span class="hint" id="bt-job-count"></span></div><div class="joblist" id="bt-joblist"></div></section>
+    <div class="bt-result-area">
+      <section id="bt-empty" class="result-empty"><span class="empty-chart" aria-hidden="true">▁ ▂ ▂ ▄ ▃ ▆</span><h2>从一次回测开始</h2><p>选择左侧历史记录，或运行一个新实验。<br>结果和权益曲线会显示在这里。</p></section>
+      <section id="bt-detail-section" style="display:none;">
+        <div class="section-heading"><div><span class="eyebrow">EXPERIMENT RESULT</span><h2>回测结果</h2></div><a id="bt-chart-link" class="btn" href="/charts" hidden>查看成交 K 线 ↗</a></div>
+        <p id="bt-result-caption" class="hint"></p>
+        <div class="grid result-metrics" id="bt-summary-grid"></div>
+        <div class="equity-heading"><h3>账户权益</h3><span>USDT · 含成本 · 复利</span></div><canvas id="btEquityCanvas" aria-label="组合账户权益曲线"></canvas>
+        <details class="result-notes"><summary>数据与模型限制 <span id="bt-warning-count"></span></summary><div id="bt-warnings"></div></details>
+        <p class="hint">本回测尚未覆盖完整全仓盘中强平，收益不能证明高杠杆账户的真实存活率。</p>
+        <details class="panel-details"><summary>月度复利与详细统计</summary><div id="bt-compound"></div><div class="grid" id="bt-secondary-grid"></div></details>
+        <details class="panel-details"><summary>交易成本与分标的贡献</summary><div id="bt-costs"></div><div class="table-scroll"><table id="bt-per-symbol"><thead><tr><th>标的</th><th>交易数</th><th>净盈亏</th><th>手续费</th><th>资金费</th><th>趋势</th><th>Carry</th><th>风险乘数</th></tr></thead><tbody></tbody></table></div></details>
+        <details class="panel-details"><summary>趋势捕获与跨时间验证</summary><div id="bt-diagnosis"></div><div id="bt-walkforward-box"></div></details>
+        <details class="panel-details"><summary>逐笔成交记录</summary><div class="table-scroll"><table id="bt-trades"><thead><tr><th>标的</th><th>方向</th><th>开仓价</th><th>平仓价</th><th>净盈亏</th><th>手续费</th><th>资金费</th><th>持仓时长</th><th>原因</th></tr></thead><tbody></tbody></table></div></details>
+      </section>
+    </div>
   </div>
-  <section>
-    <h3>发起新回测</h3>
-    <div class="row">
-      <div class="field" style="flex:1; min-width:280px;">
-        <label>参与回测的标的（默认=当前配置的全部标的，可取消勾选）</label>
-        <div id="bt-symbol-checks"></div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="field"><label>额外标的（逗号分隔，不在上面列表里也可以临时测）</label>
-        <input id="bt-symbol-extra" placeholder="如 DOGE_USDT, LTC_USDT" style="min-width:240px;"></div>
-      <div class="field"><label>回测天数</label><input id="bt-days" type="number" min="1" value="90" style="width:100px;"></div>
-      <div class="field"><label>初始资金(USDT，留空=用当前策略参数里的值)</label><input id="bt-capital" type="number" min="0" placeholder="默认" style="width:180px;"></div>
-    </div>
-    <div class="row">
-      <label class="hint"><input type="checkbox" id="bt-walkforward"> 同时做「滚动样本外验证」（把窗口切成多折分别统计，看表现是否稳定，会明显增加耗时）</label>
-      <div class="field"><label>折数</label><input id="bt-wf-folds" type="number" min="2" max="10" value="5" style="width:70px;"></div>
-    </div>
-    <div class="row presetbar" id="bt-preset-bar">
-      <button class="btn" onclick="setBtDays(30)">近30天</button>
-      <button class="btn" onclick="setBtDays(90)">近90天</button>
-      <button class="btn" onclick="setBtDays(180)">近180天</button>
-      <button class="btn" onclick="setBtDays(365)">近1年</button>
-    </div>
-    <div class="row">
-      <button class="btn primary" onclick="startBacktest()">▶ 开始回测</button>
-      <span id="bt-start-msg" class="hint"></span>
-    </div>
-  </section>
-
-  <section>
-    <h3>回测任务</h3>
-    <div class="joblist" id="bt-joblist"></div>
-  </section>
-
-  <section id="bt-detail-section" style="display:none;">
-    <h3>回测结果（组合层面）</h3>
-    <div id="bt-warnings"></div>
-    <div class="grid" id="bt-summary-grid"></div>
-    <canvas id="btEquityCanvas"></canvas>
-    <div class="hint" style="margin:8px 0 16px;">权益曲线（横轴=时间，纵轴=组合账户权益 USDT）</div>
-
-    <div id="bt-costs"></div>
-    <div id="bt-diagnosis"></div>
-    <div id="bt-walkforward-box"></div>
-
-    <h3 style="font-size:14px; color:var(--accent);">分标的贡献</h3>
-    <table id="bt-per-symbol"><thead><tr>
-      <th>标的</th><th>交易数</th><th>净盈亏</th><th>手续费</th><th>资金费</th>
-      <th>最新趋势预测</th><th>最新Carry预测</th><th>自适应风险</th></tr></thead><tbody></tbody></table>
-
-    <h3 style="font-size:14px; color:var(--accent);">逐笔成交</h3>
-    <table id="bt-trades"><thead><tr>
-      <th>标的</th><th>方向</th><th>开仓价</th><th>平仓价</th><th>净盈亏</th><th>手续费</th><th>资金费</th>
-      <th>持仓时长</th><th>原因</th></tr></thead><tbody></tbody></table>
-  </section>
 </div>
 
 <div id="tab-settings" class="tabpage">
+<div class="page-heading"><div><span class="eyebrow">WORKSPACE SETTINGS</span><h1>设置与维护</h1><p>账户连接、交易池与运行配置。</p></div></div>
 
   <section>
-    <h3>① Gate.io API Key</h3>
+    <h3>账户连接</h3>
     <div class="warnbox">申请API Key时请只勾选"合约交易+读取"权限，不要开启"提现"权限，并绑定IP白名单。模拟盘也建议填真实Key（只读行情，不会下单）。</div>
     <div class="row">
       <div class="field"><label>API Key</label><input id="api-key" type="text" placeholder="你的API Key"></div>
@@ -368,7 +293,7 @@ PAGE = """
   </section>
 
   <section>
-    <h3>② 运行模式</h3>
+    <h3>运行模式</h3>
     <div class="row presetbar" id="mode-bar">
       <button class="btn" data-mode="paper" onclick="setMode('paper')">模拟盘 PAPER（推荐先用这个）</button>
       <button class="btn" data-mode="live" onclick="setMode('live')">实盘 LIVE（真实资金，请谨慎）</button>
@@ -377,107 +302,48 @@ PAGE = """
   </section>
 
   <section>
-    <h3>③ 交易标的（含黄金 XAU_USDT）</h3>
+    <h3>手动交易池</h3>
     <div class="row">
-      <input id="symbol-input" placeholder="输入合约代码，如 SOL_USDT / XAU_USDT" size="24">
-      <button class="btn primary" onclick="addSymbol()">添加</button>
+      <input id="symbol-input" list="market-symbols" placeholder="搜索合约，如 BTC_USDT" size="28">
+      <datalist id="market-symbols"></datalist>
+      <button class="btn primary" onclick="addSymbol()">添加到交易池</button>
     </div>
     <div id="symbols-chips"></div>
+    <div class="hint">可添加交易所当前开放的合约。自动筛选只评估加密货币；手动选择的贵金属等合约仍可保留。</div>
   </section>
-
   <section>
-    <h3>④ 策略核心参数</h3>
-    <div class="hint">趋势/Carry信号权重、组合目标年化波动率、杠杆与敞口约束、调仓缓冲区——这些是最常调的参数。</div>
+    <h3>资金与仓位规则</h3>
+    <div class="hint" id="sizing-policy">每次新开仓按当前权益的 5% 作为初始保证金，全仓模式。BTC/ETH 请求 200x；SOL 请求 200x，最高 100x 时用 10% 保证金；其余加密货币请求 20x，最高 10x 时用 10% 保证金。等价换算保持名义仓位，手续费另计；同一持仓不重复追加额度。全仓亏损可超过初始保证金。</div>
     <div class="subgrid" id="sys-core-fields" style="margin-top:10px;"></div>
-    <div class="row" style="margin-top:12px;"><button class="btn primary" onclick="saveSysCore()">保存策略核心参数</button></div>
+    <div class="row" style="margin-top:12px;"><button class="btn primary" onclick="saveSysCore()">保存资金与风险边界</button></div>
   </section>
-
-  <section>
-    <h3>⑤ ⚠️ 反向执行（人工干预开关，谨慎使用）</h3>
-    <div class="warnbox">
-      开启后：预测计算、波动率归一化、组合风险分配、杠杆/敞口约束和调仓缓冲——全部照常按原逻辑计算，
-      <b>只在最后真正下单这一步，把方向对调</b>：算出来该开多，实际执行开空；算出来该开空，实际执行开多。
-      这不代表模型认为反过来更对，纯粹是人工干预开关。<b>务必先在"回测"页用相同标的池验证过"反向执行"确实
-      表现更好，再考虑在模拟盘/实盘打开它</b>，否则很可能只是把亏损方向从"做多"换成"做空"而已。
-      仪表盘和K线图页面在此模式开启时都会有醒目提示，运行日志里每次调仓也会标注"计算方向"和"实际执行方向"。
-    </div>
-    <div id="invert-direction-field"></div>
-    <div class="row" style="margin-top:12px;"><button class="btn danger" onclick="saveInvertDirection()">保存反向执行开关</button></div>
-  </section>
-
-  <section>
-    <h3>⑥ 大周期 Regime 过滤（1D）</h3>
-    <div class="hint">日线EMA+ADX判定趋势/震荡市场状态，用来给趋势预测做门控：逆势时衰减，震荡市整体衰减。</div>
-    <div class="subgrid" id="sys-regime-fields" style="margin-top:10px;"></div>
-    <div class="row" style="margin-top:12px;"><button class="btn primary" onclick="saveSysRegime()">保存Regime参数</button></div>
-  </section>
-
   <details>
-    <summary>高级参数：EWMAC/协方差/执行节奏 / 成本模型（一般无需修改）</summary>
+    <summary>研究参数与运行维护</summary>
+    <div class="row"><a class="btn" href="/manual">手动开单测试 ↗</a><a class="btn" href="/update">版本与更新 ↗</a><span id="app-version" class="hint"></span><a id="upd-badge" class="text-link" href="/update" style="display:none;">有新版本</a></div>
+    <p class="hint">预测权重、周期与过滤阈值属于版本化模型参数。改动前先提出假设并做独立检验，不按历史收益反复调参。</p>
+    <section><h3>模型参数 · 只读</h3><pre id="model-settings" style="white-space:pre-wrap;"></pre></section>
     <section>
-      <h3>EWMAC / 协方差 / 执行节奏</h3>
-      <div class="subgrid" id="sys-adv-fields"></div>
-      <div class="row" style="margin-top:12px;"><button class="btn primary" onclick="saveSysAdv()">保存高级参数</button></div>
-    </section>
-    <section>
-      <h3>成本模型参数</h3>
-      <div class="subgrid" id="costs-fields"></div>
-      <div class="row" style="margin-top:12px;"><button class="btn primary" onclick="saveCosts()">保存成本参数</button></div>
+      <h3>实际交易成本</h3><div class="subgrid" id="costs-fields"></div>
+      <button class="btn" onclick="saveCosts()">保存实际成本</button>
     </section>
   </details>
 
 </div>
 
 </main>
+</div>
 <div id="toast" class="toast" style="display:none;"></div>
 
+<script src="/static/universe.js"></script>
+<script src="/static/backtest_symbol_search.js"></script>
 <script>
-let ACTIVE_TAB = 'dashboard';
+let ACTIVE_TAB = 'backtest';
 let CUR_MODE = 'paper';
 let CUR_CONFIG = {};
 let BT_VIEW_JOB_ID = null;
 
 const SYS_CORE_LABELS = {
   initial_capital_usdt: "模拟盘/回测初始资金(USDT)",
-  trend_weight: "趋势信号权重", carry_weight: "Carry信号权重",
-  short_trend_weight: "短趋势(1H)权重", main_trend_weight: "主趋势(4H)权重",
-  target_annual_vol_pct: "组合目标年化波动率(%)", max_leverage: "组合总杠杆上限(倍)",
-  max_instrument_exposure_pct: "单标的敞口上限(%权益)", max_correlated_group_exposure_pct: "相关分组敞口上限(%权益)",
-  no_trade_buffer_pct: "调仓缓冲区(%，越大换手越少)",
-  exit_buffer_multiplier: "减仓/平仓缓冲区倍数(越大越能让趋势走满，减仓更迟钝)",
-};
-const SYS_REGIME_LABELS = {
-  regime_ema_fast: "Regime快线EMA周期", regime_ema_slow: "Regime慢线EMA周期", regime_ema_long: "Regime趋势EMA周期",
-  regime_adx_period: "Regime ADX周期", regime_adx_trend_threshold: "Regime ADX趋势阈值",
-  regime_oppose_dampen: "逆势衰减系数(0-1)", regime_range_dampen: "震荡市衰减系数(0-1)",
-};
-const SYS_ADV_LABELS = {
-  ewma_lambda: "EWMA衰减因子λ(波动率/协方差)", forecast_scale_lookback: "预测缩放回看窗口(根K线)",
-  forecast_scale_min_periods: "预测缩放最小样本数", fdm_max: "分散化乘数(FDM)上限",
-  fdm_lookback: "FDM回看窗口(根K线)", fdm_min_periods: "FDM最小样本数",
-  carry_scale_lookback: "Carry缩放回看窗口(根K线)", min_bars_short: "短趋势最少K线数(不足则跳过该标的)",
-  min_bars_main: "主趋势最少K线数", min_bars_regime: "Regime最少K线数",
-  tick_interval_sec: "主循环复核间隔(秒，默认900=15分钟)",
-  short_trend_interval: "短趋势周期", main_trend_interval: "主趋势周期",
-  regime_interval: "Regime周期", covariance_interval: "组合协方差周期",
-  adaptive_risk_enabled: "启用高波动震荡自适应缩仓",
-  adaptive_er_lookback: "方向效率ER回看(1H根数)", adaptive_er_full_risk: "保留完整风险的ER门槛",
-  adaptive_vol_fast_lambda: "影线波动快EWMA λ", adaptive_vol_slow_lambda: "影线波动慢EWMA λ",
-  adaptive_vol_ratio_start: "快/慢波动比缩仓起点", adaptive_vol_ratio_full: "快/慢波动比完整压力点",
-  adaptive_max_risk_reduction: "最大风险削减比例(0.65=65%)",
-  adaptive_multiplier_smoothing_span: "风险乘数平滑跨度(1H根数)",
-  adaptive_fast_reduce_threshold: "已有持仓极端风险快速减仓门槛",
-  depth_guard_enabled: "启用开/加仓盘口保护", depth_levels: "盘口估算档数",
-  max_entry_spread_bps: "开/加仓最大点差(bps)", max_entry_slippage_bps: "开/加仓最大预估冲击(bps)",
-  min_depth_fill_ratio: "盘口最小覆盖率(1=完整覆盖)",
-  manage_existing_positions: "⚠️ 接管非本程序开的已有持仓(默认关闭)",
-  auto_close_removed_symbols: "⚠️ 标的移出标的池后自动平掉遗留持仓(默认关闭)",
-};
-const SYS_ADV_TYPES = {
-  short_trend_interval: 'text', main_trend_interval: 'text',
-  regime_interval: 'text', covariance_interval: 'text',
-  adaptive_risk_enabled: 'bool', depth_guard_enabled: 'bool',
-  manage_existing_positions: 'bool', auto_close_removed_symbols: 'bool',
 };
 const COST_LABELS = {
   taker_fee_rate: "吃单费率(填你账户真实值，0.0005=0.05%)",
@@ -489,11 +355,19 @@ const COST_LABELS = {
 const COST_TYPES = { use_account_fee_rate: 'bool', use_contract_fee_rate: 'bool' };
 
 function showTab(name){
+  if(!['dashboard','universe','backtest','settings'].includes(name))name='backtest';
   ACTIVE_TAB = name;
-  ['dashboard','backtest','settings'].forEach(n => {
-    document.getElementById('tab-'+n).classList.toggle('active', name===n);
-    document.getElementById('nav-'+n).classList.toggle('active', name===n);
+  const titles={dashboard:'持仓概览',universe:'五币推荐',backtest:'回测实验室',settings:'设置与维护'};
+  ['dashboard','universe','backtest','settings'].forEach(n => {
+    document.getElementById('tab-'+n).classList.toggle('active', n===name);
+    document.getElementById('nav-'+n).classList.toggle('active', n===name);
+    if(n===name)document.getElementById('nav-'+n).setAttribute('aria-current','page');
+    else document.getElementById('nav-'+n).removeAttribute('aria-current');
   });
+  document.getElementById('workspace-current').textContent=titles[name];
+  const url=new URL(window.location.href);url.searchParams.set('view',name);
+  history.replaceState(null,'',url);
+  if(name==='backtest' && BT_EQUITY_POINTS.length)requestAnimationFrame(()=>drawEquityCurve(BT_EQUITY_POINTS));
 }
 
 function toast(msg, ok){
@@ -503,13 +377,24 @@ function toast(msg, ok){
   setTimeout(()=>{ el.style.display='none'; }, 4500);
 }
 
-async function adoptPos(symbol, side){
+let STATE_REFRESH_TOKEN=0;
+const ADOPT_PENDING=new Set();
+async function adoptPos(symbol, side, button){
+  const key=symbol+'|'+side;
+  if(ADOPT_PENDING.has(key))return;
   const d = side==='long'?'多':'空';
   if(!confirm(`确认让策略接管 ${symbol} 的${d}仓？\n\n接管后这笔仓位会按策略目标被调整、减仓甚至反向平掉，\n不再由你手动控制。`)) return;
-  const r = await (await fetch('/api/positions/adopt',{method:'POST',
-    headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol,side})})).json();
-  toast(r.message, r.ok);
-  refresh();
+  ADOPT_PENDING.add(key);++STATE_REFRESH_TOKEN;
+  if(button){button.disabled=true;button.textContent='正在登记…';}
+  try{
+    const r=await api('/api/positions/adopt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol,side})});
+    if(r.ok)toast(r.message,true);
+  }catch(error){toast('归属登记失败：'+error.message,false);}
+  finally{
+    ADOPT_PENDING.delete(key);
+    if(button){button.disabled=false;button.textContent='纳入策略管理';}
+    try{await refresh();}catch(error){toast('持仓刷新失败，将自动重试：'+error.message,false);}
+  }
 }
 
 async function confirmClosePos(symbol, side){
@@ -582,32 +467,10 @@ async function saveSysCore(){
   const r = await api('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(patch)});
   if(r.ok !== false) toast('策略核心参数已保存', true);
 }
-async function saveInvertDirection(){
-  const fields = readFields('invert-direction-field');
-  if(fields.invert_direction){
-    if(!confirm('确定要开启"反向执行"吗？开启后所有标的的实际下单方向都会和策略计算结果相反。\\n\\n请确认你已经在"回测"页用相同参数验证过这样确实表现更好，否则不建议开启。')) return;
-  }
-  const patch = { systematic: fields };
-  const r = await api('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(patch)});
-  if(r.ok !== false){
-    toast(fields.invert_direction ? '⚠️ 反向执行已开启' : '反向执行已关闭', true);
-    updateInvertBadge(fields.invert_direction);
-  }
-}
 function updateInvertBadge(on){
   const el = document.getElementById('invert-badge');
   if(!el) return;
   el.style.display = on ? 'inline-block' : 'none';
-}
-async function saveSysRegime(){
-  const patch = { systematic: readFields('sys-regime-fields') };
-  const r = await api('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(patch)});
-  if(r.ok !== false) toast('Regime参数已保存', true);
-}
-async function saveSysAdv(){
-  const patch = { systematic: readFields('sys-adv-fields') };
-  const r = await api('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(patch)});
-  if(r.ok !== false) toast('高级参数已保存', true);
 }
 async function saveCosts(){
   const patch = { costs: readFields('costs-fields') };
@@ -618,7 +481,8 @@ async function saveCosts(){
 async function addSymbol(){
   const v = document.getElementById('symbol-input').value.trim().toUpperCase();
   if(!v) return;
-  await api('/api/symbols', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({symbol:v})});
+  const result = await api('/api/symbols', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({symbol:v})});
+  if(!result.ok){ toast(result.message || '添加失败', false); return; }
   document.getElementById('symbol-input').value = '';
   refreshBootstrap();
 }
@@ -643,98 +507,191 @@ function fmtNum(v, digits){ return (typeof v === 'number' && isFinite(v)) ? v.to
 // ---------------------------------------------------------------- 回测页
 function setBtDays(n){ document.getElementById('bt-days').value = n; }
 
+function rememberBacktest(jobId){
+  BT_VIEW_JOB_ID=jobId;
+  const url=new URL(window.location.href);url.searchParams.set('job',jobId);
+  history.replaceState(null,'',url);
+}
+
+function normalizeBacktestSymbol(value){
+  let symbol=value.trim().toUpperCase().replace(/[-/]/g,'_');
+  if(!symbol)return '';
+  if(!symbol.endsWith('_USDT'))symbol=symbol.endsWith('USDT')?symbol.slice(0,-4)+'_USDT':symbol+'_USDT';
+  return /^[A-Z0-9][A-Z0-9_]{0,59}_USDT$/.test(symbol)?symbol:'';
+}
+
 async function startBacktest(){
-  const checked = Array.from(document.querySelectorAll('.bt-sym-cb:checked')).map(cb=>cb.value);
-  const extraRaw = document.getElementById('bt-symbol-extra').value.trim();
-  const extra = extraRaw ? extraRaw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean) : [];
-  const symbols = Array.from(new Set([...checked, ...extra]));
+  const button=document.getElementById('bt-run');
+  if(button.disabled)return;
+  const input=document.getElementById('bt-symbol-search');
+  const symbol=normalizeBacktestSymbol(input.value);
   const days = parseFloat(document.getElementById('bt-days').value);
   const capitalRaw = document.getElementById('bt-capital').value;
-  if(symbols.length === 0){ toast('请至少选择/填写一个标的', false); return; }
-  const body = {symbols, days_back: days};
+  if(!symbol){ toast('请输入一个回测币种，例如 BTC 或 SOL_USDT；每次只能回测一个币种', false); input.focus(); return; }
+  input.value=symbol;
+  const body = {symbols:[symbol], days_back: days};
   if(capitalRaw) body.initial_capital = parseFloat(capitalRaw);
   if(document.getElementById('bt-walkforward').checked){
     body.walkforward = true;
     body.wf_folds = parseInt(document.getElementById('bt-wf-folds').value) || 5;
   }
-  const r = await api('/api/backtest/start', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-  if(r.ok){
-    toast('回测任务已提交，正在后台下载数据并运行', true);
-    document.getElementById('bt-start-msg').textContent = '任务ID: ' + r.job_id;
-    BT_VIEW_JOB_ID = r.job_id;
-    refreshBacktestList();
-  }
+  button.disabled=true;button.textContent='正在提交…';
+  try {
+    const r = await api('/api/backtest/start', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    if(r.ok){
+      toast('回测已提交，结果将在右侧自动更新', true);
+      document.getElementById('bt-start-msg').textContent = '实验 ' + r.job_id;
+      rememberBacktest(r.job_id);
+      await refreshBacktestList();
+    }
+  }catch(error){toast('回测提交失败：'+error.message,false);}
+  finally{button.disabled=false;button.textContent='开始回测 →';}
 }
 
 function jobStatusLabel(s){
   return {pending:'排队中', fetching:'下载数据中', running:'回测运行中', done:'已完成', error:'失败'}[s] || s;
 }
 
+let BT_LIST_RENDER_KEY='';
 async function refreshBacktestList(){
-  const list = await (await fetch('/api/backtest/list')).json();
   const el = document.getElementById('bt-joblist');
+  let list;
+  try {
+    const response = await fetch('/api/backtest/list');
+    if(!response.ok) throw new Error('HTTP ' + response.status);
+    list = await response.json();
+  } catch(error) {
+    BT_LIST_RENDER_KEY='';
+    el.textContent = '回测列表加载失败：' + error.message + '；稍后自动重试。';
+    return;
+  }
+  document.getElementById('bt-job-count').textContent=(list.jobs||[]).length+' 次实验';
+  if(!BT_VIEW_JOB_ID)BT_VIEW_JOB_ID=(list.jobs||[]).find(j=>j.status==='done')?.id||null;
+  const renderKey=JSON.stringify([BT_VIEW_JOB_ID,list.jobs]);
+  if(renderKey!==BT_LIST_RENDER_KEY){
+  BT_LIST_RENDER_KEY=renderKey;
   if(!list.jobs || list.jobs.length === 0){
-    el.innerHTML = '<div class="hint">还没有回测任务，在上方勾选标的后点击"开始回测"。</div>';
+    el.innerHTML = '<div class="hint">还没有实验记录。运行一次回测后，结果会保存在这里。</div>';
   } else {
     el.innerHTML = list.jobs.map(j => {
       const active = ['pending','fetching','running'].includes(j.status);
       const symTxt = (j.symbols||[]).join(', ');
-      const sumTxt = j.summary ? `年化收益 ${fmtNum(j.summary.annualized_return_pct)}%　Sharpe ${fmtNum(j.summary.sharpe)}　交易${j.summary.trade_count}笔` : (j.error || j.message || '');
-      return `<div class="jobrow ${j.id===BT_VIEW_JOB_ID?'selected':''}" onclick="viewBacktest('${j.id}')">
-        <span class="sym" title="${symTxt}">${symTxt.length>28 ? symTxt.slice(0,28)+'…' : symTxt}</span>
-        <span class="badge ${j.status}">${jobStatusLabel(j.status)}</span>
-        <span class="meta">${sumTxt}
-          ${active ? `<div class="progressbar"><div style="width:${j.progress_pct||0}%"></div></div><div>${j.message||''}</div>` : ''}
-        </span>
-        <span class="hint">${fmtTs(j.created_at)}</span>
-      </div>`;
+      const value=j.summary?.return_pct;
+      const sumTxt=j.summary?`累计 ${fmtNum(value)}% · ${j.summary.position_summary?.position_count??j.summary.trade_count} 个持仓`:(j.error||j.message||'等待执行');
+      return `<button type="button" class="jobrow ${j.id===BT_VIEW_JOB_ID?'selected':''}" aria-pressed="${j.id===BT_VIEW_JOB_ID}" onclick="viewBacktest('${j.id}')">
+        <span class="job-top"><span class="sym" title="${symTxt}">${symTxt}</span><span class="badge ${j.status}">${jobStatusLabel(j.status)}</span></span>
+        <span class="meta">${sumTxt}</span>
+        ${active?`<div class="progressbar"><div style="width:${j.progress_pct||0}%"></div></div>`:''}
+        <span class="job-bottom"><span>${new Date(j.created_at*1000).toLocaleDateString()}</span><span>${j.days_back} 天</span></span>
+      </button>`;
     }).join('');
+  }
   }
   if(BT_VIEW_JOB_ID){
     const cur = (list.jobs||[]).find(j => j.id === BT_VIEW_JOB_ID);
-    if(cur && ['pending','fetching','running'].includes(cur.status)){
-      loadBacktestDetail(BT_VIEW_JOB_ID);
+    if(cur && (['pending','fetching','running'].includes(cur.status) || BT_DETAIL_VERSION !== [cur.id,cur.status,cur.finished_at].join('|'))){
+      await loadBacktestDetail(BT_VIEW_JOB_ID);
     }
   }
 }
 
 function viewBacktest(jobId){
-  BT_VIEW_JOB_ID = jobId;
+  rememberBacktest(jobId);
   loadBacktestDetail(jobId);
   refreshBacktestList();
 }
 
+let BT_DETAIL_TOKEN=0, BT_DETAIL_VERSION='';
 async function loadBacktestDetail(jobId){
-  const job = await (await fetch('/api/backtest/job/' + jobId)).json();
+  const token=++BT_DETAIL_TOKEN;
+  let job;
+  try {
+    const response=await fetch('/api/backtest/job/' + encodeURIComponent(jobId));
+    if(!response.ok) throw new Error('HTTP ' + response.status);
+    job=await response.json();
+  } catch(error) {
+    if(token===BT_DETAIL_TOKEN){
+      document.getElementById('bt-detail-section').style.display='block';
+      document.getElementById('bt-empty').hidden=true;
+      document.getElementById('bt-chart-link').hidden=true;
+      document.getElementById('bt-result-caption').textContent='实验 '+jobId+' · 详情暂不可用';
+      ['bt-summary-grid','bt-secondary-grid','bt-compound','bt-costs','bt-diagnosis','bt-walkforward-box'].forEach(id=>document.getElementById(id).replaceChildren());
+      document.querySelector('#bt-trades tbody').replaceChildren();
+      document.querySelector('#bt-per-symbol tbody').replaceChildren();
+      document.querySelector('.result-notes').open=true;
+      drawEquityCurve([]);
+      document.getElementById('bt-warnings').textContent='回测详情加载失败：'+error.message;
+    }
+    return;
+  }
+  if(token!==BT_DETAIL_TOKEN)return;
+  BT_DETAIL_VERSION=[job.id,job.status,job.finished_at].join('|');
   const sec = document.getElementById('bt-detail-section');
+  document.getElementById('bt-empty').hidden=true;
   if(job.status !== 'done'){
     sec.style.display = 'block';
+    document.getElementById('bt-chart-link').hidden=true;
+    document.getElementById('bt-result-caption').textContent=job.message||'';
+    document.getElementById('bt-secondary-grid').replaceChildren();
+    document.getElementById('bt-warning-count').textContent=job.error?'· 错误':'';
+    document.querySelector('.result-notes').open=!!job.error;
     document.getElementById('bt-summary-grid').innerHTML = `<div class="card"><div class="label">状态</div><div class="value">${jobStatusLabel(job.status)}（${job.progress_pct||0}%）</div></div>`;
     document.getElementById('bt-warnings').innerHTML = job.error ? `<div class="warnbox">${job.error}</div>` : '';
     document.querySelector('#bt-trades tbody').innerHTML = '';
     document.querySelector('#bt-per-symbol tbody').innerHTML = '';
+    ['bt-costs','bt-diagnosis','bt-walkforward-box','bt-compound'].forEach(id=>{const el=document.getElementById(id);if(el)el.replaceChildren();});
+    drawEquityCurve([]);
     return;
   }
   sec.style.display = 'block';
   const s = job.summary;
+  const performance = s.performance;
+  const cagr = performance ? performance.cagr_pct : s.annualized_return_pct;
+  const compoundBox = document.getElementById('bt-compound');
+  compoundBox.replaceChildren();
+  if(performance){
+    const note = document.createElement('p'); note.className='hint'; note.textContent=performance.note; compoundBox.appendChild(note);
+    const table = document.createElement('table');
+    const heading = document.createElement('tr');
+    for(const title of ['月份(UTC，首尾可不完整)','期初净权益','期末净权益','区间复利收益']){const th=document.createElement('th');th.textContent=title;heading.appendChild(th);} table.appendChild(heading);
+    for(const month of performance.calendar_months || []){
+      const tr=document.createElement('tr');
+      for(const value of [month.month,fmtNum(month.start_equity),fmtNum(month.end_equity),month.return_pct == null ? '不可计算' : fmtNum(month.return_pct)+'%']){const td=document.createElement('td');td.textContent=value;tr.appendChild(td);} table.appendChild(tr);
+    }
+    compoundBox.appendChild(table);
+  }
   document.getElementById('bt-warnings').innerHTML = (s.warnings||[]).map(w => `<div class="warnbox">${w}</div>`).join('');
-  document.getElementById('bt-summary-grid').innerHTML = `
+  document.getElementById('bt-secondary-grid').innerHTML = `
     <div class="card"><div class="label">回测标的</div><div class="value" style="font-size:13px;">${(s.symbols||[]).join(', ')}</div></div>
     <div class="card"><div class="label">数据窗口</div><div class="value" style="font-size:13px;">${fmtTs(s.start_ts)} ~ ${fmtTs(s.end_ts)}</div></div>
     <div class="card"><div class="label">初始资金 → 结束资金</div><div class="value" style="font-size:15px;">${fmtNum(s.initial_capital,0)} → ${fmtNum(s.final_equity)}</div></div>
-    <div class="card"><div class="label">总收益率</div><div class="value ${cls(s.return_pct)}">${fmtNum(s.return_pct)}%</div></div>
-    <div class="card"><div class="label">年化收益率(CAGR)</div><div class="value ${cls(s.annualized_return_pct)}">${fmtNum(s.annualized_return_pct)}%</div></div>
+    <div class="card"><div class="label">累计复利收益</div><div class="value ${cls(s.return_pct)}">${fmtNum(s.return_pct)}%</div></div>
+    <div class="card"><div class="label">复利年化收益(CAGR)</div><div class="value ${cls(cagr)}">${fmtNum(cagr)}%</div></div>
     <div class="card"><div class="label">年化波动率</div><div class="value">${fmtNum(s.annualized_vol_pct)}%</div></div>
     <div class="card"><div class="label">Sharpe</div><div class="value ${cls(s.sharpe)}">${fmtNum(s.sharpe)}</div></div>
     <div class="card"><div class="label">Sortino</div><div class="value ${cls(s.sortino)}">${fmtNum(s.sortino)}</div></div>
     <div class="card"><div class="label">最大回撤</div><div class="value neg">${fmtNum(s.max_drawdown_pct)}%</div></div>
     <div class="card"><div class="label">Calmar</div><div class="value ${cls(s.calmar)}">${fmtNum(s.calmar)}</div></div>
     <div class="card"><div class="label">年化换手率(倍)</div><div class="value">${fmtNum(s.turnover_annualized)}</div></div>
-    <div class="card"><div class="label">交易数</div><div class="value">${s.trade_count}</div></div>
-    <div class="card"><div class="label">平均自适应风险乘数</div><div class="value">${fmtNum((s.avg_adaptive_risk_multiplier||1)*100,1)}%</div></div>
-    <div class="card"><div class="label">最低自适应风险乘数</div><div class="value">${fmtNum((s.min_adaptive_risk_multiplier||1)*100,1)}%</div></div>
+    <div class="card"><div class="label">完整持仓 / 减平仓记录</div><div class="value">${s.position_summary?.position_count??'未知'} / ${s.trade_count}</div></div>
+    <div class="card"><div class="label">完整持仓胜率 / 最长连亏</div><div class="value">${fmtNum(s.position_summary?.win_rate_pct)}% / ${s.position_summary?.max_loss_streak??'未知'}</div></div>
+    <div class="card"><div class="label">平均自适应风险乘数</div><div class="value">${fmtNum((s.avg_adaptive_risk_multiplier??1)*100,1)}%</div></div>
+    <div class="card"><div class="label">最低自适应风险乘数</div><div class="value">${fmtNum((s.min_adaptive_risk_multiplier??1)*100,1)}%</div></div>
     <div class="card"><div class="label">自适应缩仓触发占比</div><div class="value">${fmtNum(s.adaptive_risk_active_pct||0,1)}%</div></div>
   `;
+  document.getElementById('bt-summary-grid').innerHTML = [
+    ['累计复利收益',fmtNum(s.return_pct)+'%',cls(s.return_pct)],
+    ['最大回撤',fmtNum(s.max_drawdown_pct)+'%','neg'],
+    ['期末权益',fmtNum(s.final_equity),''],
+    ['完整持仓',s.position_summary?.position_count??'未知',''],
+    ['完整持仓胜率',fmtNum(s.position_summary?.win_rate_pct)+'%',''],
+    ['最长连续亏损',s.position_summary?.max_loss_streak??'未知',''],
+  ].map(([label,value,tone])=>`<div class="card"><div class="label">${label}</div><div class="value ${tone}">${value}</div></div>`).join('');
+  const chartLink=document.getElementById('bt-chart-link');chartLink.hidden=false;
+  chartLink.href='/charts?job='+encodeURIComponent(jobId);
+  document.getElementById('bt-result-caption').textContent=(s.symbols||[]).join(' · ')+'  /  '+fmtTs(s.start_ts)+' — '+fmtTs(s.end_ts);
+  document.getElementById('bt-warning-count').textContent=(s.warnings||[]).length?'· '+s.warnings.length+' 项说明':'';
+
   renderCostBreakdown(s);
   drawEquityCurve(job.equity_curve || []);
   renderTrendDiagnosis(job.trend_diagnosis || (s.trend_diagnosis));
@@ -747,7 +704,7 @@ async function loadBacktestDetail(jobId){
     return `<tr><td>${sym}</td><td>${p.trade_count}</td>
       <td class="${cls(p.net_pnl)}">${fmtNum(p.net_pnl)}</td><td>${fmtNum(p.fees)}</td><td>${fmtNum(p.funding)}</td>
       <td>${fmtNum(p.last_trend_forecast,1)}</td><td>${fmtNum(p.last_carry_forecast,1)}</td>
-      <td>${fmtNum((p.last_adaptive_risk_multiplier||1)*100,1)}%</td></tr>`;
+      <td>${fmtNum((p.last_adaptive_risk_multiplier??1)*100,1)}%</td></tr>`;
   }).join('');
 
   const trBody = document.querySelector('#bt-trades tbody');
@@ -856,7 +813,9 @@ function renderWalkForward(wf){
       <tbody>${rows}</tbody></table>`;
 }
 
+let BT_EQUITY_POINTS=[];
 function drawEquityCurve(points){
+  BT_EQUITY_POINTS=points||[];
   const canvas = document.getElementById('btEquityCanvas');
   const dpr = window.devicePixelRatio || 1;
   const cssW = canvas.clientWidth || 800, cssH = 220;
@@ -872,9 +831,9 @@ function drawEquityCurve(points){
   const minV = Math.min(...vals), maxV = Math.max(...vals);
   const pad = 24;
   const range = (maxV - minV) || 1;
-  ctx.strokeStyle = '#58a6ff'; ctx.lineWidth = 1.5; ctx.beginPath();
+  ctx.strokeStyle = '#8de0c1'; ctx.lineWidth = 1.75; ctx.beginPath();
   points.forEach((p, i) => {
-    const x = pad + (i/(points.length-1)) * (cssW - pad*2);
+    const x = pad + ((p.t-points[0].t)/Math.max(points[points.length-1].t-points[0].t,1)) * (cssW - pad*2);
     const y = pad + (1 - (p.e - minV)/range) * (cssH - pad*2);
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   });
@@ -882,6 +841,8 @@ function drawEquityCurve(points){
   ctx.fillStyle = '#8b949e'; ctx.font = '11px monospace';
   ctx.fillText(maxV.toFixed(1), 2, pad);
   ctx.fillText(minV.toFixed(1), 2, cssH - 6);
+  ctx.fillText(new Date(points[0].t*1000).toLocaleDateString(),pad+40,cssH-6);
+  ctx.fillText(new Date(points[points.length-1].t*1000).toLocaleDateString(),Math.max(cssW-110,pad),cssH-6);
 }
 
 // ---------------------------------------------------------------- 引导与轮询
@@ -894,25 +855,24 @@ async function refreshBootstrap(){
   document.querySelectorAll('#mode-bar button').forEach(b => b.classList.toggle('selected', b.dataset.mode===CUR_MODE));
 
   buildFields('sys-core-fields', data.systematic || {}, SYS_CORE_LABELS);
-  buildFields('invert-direction-field', data.systematic || {},
-              {invert_direction: '反向执行(开多↔开空对调)'}, {invert_direction: 'bool'});
-  buildFields('sys-regime-fields', data.systematic || {}, SYS_REGIME_LABELS);
-  buildFields('sys-adv-fields', data.systematic || {}, SYS_ADV_LABELS, SYS_ADV_TYPES);
+  if ((data.systematic || {}).position_sizing_mode === 'volatility') {
+    document.getElementById('sizing-policy').textContent = '当前显式使用旧版波动率分配研究模式，固定 5% 保证金票据未启用。';
+  }
+  document.getElementById('model-settings').textContent = JSON.stringify(data.systematic || {}, null, 2);
   buildFields('costs-fields', data.costs || {}, COST_LABELS, COST_TYPES);
   updateInvertBadge((data.systematic || {}).invert_direction);
 
   document.getElementById('symbols-chips').innerHTML = (data.symbols||[]).map(s =>
     `<span class="chip">${s}<button onclick="removeSymbol('${s}')">×</button></span>`).join('');
-  document.getElementById('bt-symbol-checks').innerHTML = (data.symbols||[]).map(s =>
-    `<label class="symcheckbox"><input type="checkbox" class="bt-sym-cb" value="${s}" checked> ${s}</label>`).join('');
-
-  if(!(data._creds && data._creds.is_set)){
-    showTab('settings');
-  }
+  // Public candidate screening is available before connecting an account.
 }
 
 async function refresh(){
-  const res = await fetch('/api/state'); const data = await res.json();
+  const token=++STATE_REFRESH_TOKEN;
+  const res = await fetch('/api/state');
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const data = await res.json();
+  if(token!==STATE_REFRESH_TOKEN)return;
   const s = data.summary;
   document.getElementById('mode-badge').className = 'badge ' + s.mode;
   document.getElementById('mode-badge').innerText = s.mode === 'paper' ? 'PAPER 模拟盘' : 'LIVE 实盘';
@@ -925,21 +885,21 @@ async function refresh(){
     <div class="card"><div class="label">当日盈亏</div><div class="value ${cls(s.day_pnl_pct)}">${fmtNum(s.day_pnl_pct)}%</div></div>
     <div class="card"><div class="label">最大回撤</div><div class="value neg">${fmtNum(s.max_drawdown_pct)}%</div></div>
     <div class="card"><div class="label">胜率 / 交易数</div><div class="value">${fmtNum(s.win_rate,1)}% (${s.trade_count})</div></div>
-    <div class="card"><div class="label">盈亏比 PF</div><div class="value">${isFinite(s.profit_factor)?s.profit_factor.toFixed(2):'∞'}</div></div>
+    <div class="card"><div class="label">盈亏比 PF</div><div class="value">${s.profit_factor===null?'不适用（无亏损分母）':fmtNum(s.profit_factor)}</div></div>
     <div class="card"><div class="label">累计手续费/资金费</div><div class="value neg">${fmtNum(s.total_fees_paid)} / ${fmtNum(s.total_funding_paid)}</div></div>
     <div class="card"><div class="label">当前持仓数</div><div class="value">${s.open_position_count}</div></div>
-    <div class="card"><div class="label">熔断状态</div><div class="value ${s.day_pnl_pct<0?'neg':'pos'}">${data.circuit_breaker ? '熔断中':'正常'}</div></div>
+    <div class="card"><div class="label">日亏损熔断</div><div class="value ${data.circuit_breaker?'neg':''}">${data.daily_loss_limit_enabled === false ? '已关闭' : (data.circuit_breaker ? '熔断中':'正常')}</div></div>
     <div class="card"><div class="label">运行时长</div><div class="value">${fmtSecs(s.uptime_seconds)}</div></div>
   `;
 
   const p = data.portfolio || {};
   document.getElementById('portfolio-grid').innerHTML = `
-    <div class="card"><div class="label">目标年化波动率</div><div class="value">${fmtNum(p.target_vol_pct,1)}%</div></div>
+    <div class="card"><div class="label">开仓额度模式</div><div class="value">${p.position_sizing_mode==='fixed_margin'?'固定保证金 5%':'波动率分配'}</div></div>
     <div class="card"><div class="label">当前组合信号置信度</div><div class="value">${fmtNum((p.portfolio_conviction||0)*100,1)}%</div></div>
     <div class="card"><div class="label">当前自适应风险乘数</div><div class="value">${fmtNum((p.average_risk_multiplier||1)*100,1)}%</div></div>
     <div class="card"><div class="label">缩放前组合波动率</div><div class="value">${fmtNum(p.portfolio_vol_before_scale_pct,1)}%</div></div>
     <div class="card"><div class="label">组合缩放系数</div><div class="value">${fmtNum(p.scale_factor,2)}</div></div>
-    <div class="card"><div class="label">组合总杠杆</div><div class="value">${fmtNum(p.gross_leverage,2)}</div></div>
+    <div class="card"><div class="label">实际名义敞口 / 权益</div><div class="value">${fmtNum(p.actual_gross_leverage,2)}x</div></div>
     <div class="card"><div class="label">分散化收益</div><div class="value pos">${fmtNum(p.diversification_benefit_pct,1)}%</div></div>
     <div class="card"><div class="label">上次组合计算时间</div><div class="value" style="font-size:13px;">${fmtTs(p.ts)}</div></div>
   `;
@@ -967,7 +927,7 @@ async function refresh(){
     const own = ext ? '<span class="neg">外部持仓</span>'
               : (p.pending_close ? '<span class="neg">待确认平仓</span>' : '策略管理中');
     let act = '—';
-    if(ext) act = `<button class="btn" onclick="adoptPos('${p.symbol}','${p.side}')">纳入策略管理</button>`;
+    if(ext) act = `<button class="btn" ${ADOPT_PENDING.has(p.symbol+'|'+p.side)?'disabled':''} onclick="adoptPos('${p.symbol}','${p.side}',this)">${ADOPT_PENDING.has(p.symbol+'|'+p.side)?'正在登记…':'纳入策略管理'}</button>`;
     else if(p.pending_close) act = `<button class="btn danger" onclick="confirmClosePos('${p.symbol}','${p.side}')">确认平仓</button>`;
     return `<tr>
     <td>${p.symbol}</td><td>${p.side==='long'?'多':'空'}</td><td>${p.size}</td>
@@ -998,7 +958,16 @@ fetch('/api/version').then(r=>r.json()).then(v=>{
   if(v.update_available) document.getElementById('upd-badge').style.display='inline-block';
 }).catch(()=>{});
 
-refreshBootstrap().then(() => showTab(ACTIVE_TAB));
+const requestedView=new URLSearchParams(window.location.search).get('view');
+BT_VIEW_JOB_ID=new URLSearchParams(window.location.search).get('job');
+showTab(requestedView||'backtest');
+document.querySelectorAll('.workspace-sidebar [data-view]').forEach(link=>{
+  if(link.dataset.view!=='charts')link.addEventListener('click',event=>{event.preventDefault();showTab(link.dataset.view);});
+});
+new ResizeObserver(()=>{if(ACTIVE_TAB==='backtest'&&BT_EQUITY_POINTS.length)drawEquityCurve(BT_EQUITY_POINTS);}).observe(document.getElementById('btEquityCanvas'));
+refreshBootstrap().catch(error=>toast('配置加载失败：'+error.message,false));
+BacktestSymbolSearch.init();
+UniverseUI.init(BacktestSymbolSearch.setContracts);
 refresh();
 refreshBacktestList();
 setInterval(refresh, 3000);
@@ -1016,130 +985,43 @@ CHARTS_PAGE = """
 <meta charset="utf-8">
 <title>K线图 · Gate.io 量化策略控制台</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-<style>
-  :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e;
-          --accent:#58a6ff; --pos:#3fb950; --neg:#f85149; --warn:#e3b341; }
-  * { box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; margin:0; }
-  header { display:flex; align-items:center; justify-content:space-between; padding:14px 24px;
-           border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:10; }
-  header h1 { font-size:18px; margin:0; color:var(--accent); }
-  header a { color:var(--text); text-decoration:none; border:1px solid var(--border); border-radius:6px;
-             padding:8px 16px; font-size:14px; }
-  header a:hover { border-color:var(--accent); }
-  main { padding:20px 24px; max-width:1300px; margin:0 auto; }
-  nav { display:flex; gap:6px; margin-bottom:16px; }
-  nav button { background:transparent; border:1px solid var(--border); color:var(--text); padding:8px 18px;
-               border-radius:6px; cursor:pointer; font-size:14px; }
-  nav button.active { background:var(--accent); color:#04121f; border-color:var(--accent); font-weight:600; }
-  .subpage { display:none; } .subpage.active { display:block; }
-  section { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:16px 18px; margin-bottom:16px; }
-  section h3 { margin-top:0; font-size:15px; color:var(--accent); }
-  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
-  input,select,button.btn { background:#0d1117; color:var(--text); border:1px solid var(--border);
-        border-radius:6px; padding:8px 12px; font-size:14px; }
-  button.btn { cursor:pointer; } button.btn:hover { border-color:var(--accent); }
-  button.primary { background:var(--accent); color:#04121f; border-color:var(--accent); font-weight:700; }
-  .field { display:flex; flex-direction:column; gap:4px; }
-  .field label { font-size:12px; color:var(--muted); }
-  #live-chart, #bt-chart { width:100%; height:480px; border:1px solid var(--border); border-radius:6px; }
-  .hint { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.6; }
-  .legend { display:flex; gap:18px; flex-wrap:wrap; margin:10px 0; font-size:12px; color:var(--muted); }
-  .legend span.dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; }
-  table { width:100%; border-collapse:collapse; margin-top:14px; font-size:13px; }
-  th,td { border-bottom:1px solid #21262d; padding:6px 8px; text-align:left; }
-  th { color:var(--muted); font-weight:500; }
-  .pos { color:var(--pos); } .neg { color:var(--neg); }
-  .cards { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:14px; }
-  .card { background:#0d1117; border:1px solid var(--border); border-radius:8px; padding:10px 14px; }
-  .card .label { font-size:12px; color:var(--muted); }
-  .card .value { font-size:17px; font-weight:600; margin-top:4px; }
-  .warnbox { background:#3a2400; border:1px solid var(--warn); color:var(--warn); padding:10px 14px;
-             border-radius:8px; margin-bottom:14px; font-size:13px; line-height:1.6; }
-</style>
+<script src="/static/vendor/lightweight-charts-4.1.3.js"></script>
+<script src="/static/chart_utils.js"></script>
+<script src="/static/backtest_chart.js"></script>
+<link rel="stylesheet" href="/static/workspace.css">
 </head>
-<body>
-<header>
-  <h1>📈 K线图 —— 买卖点可视化</h1>
-  <div style="display:flex;gap:6px;align-items:center">
-    <a href="/manual" style="color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:14px;">🧪 手动开单</a>
-    <a href="/update" style="color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:14px;">⬆️ 检查更新</a>
-    <a href="/">← 返回控制台</a>
-  </div>
-</header>
+<body class="workspace" data-page="charts">
+__WORKSPACE_NAV__
+<div class="workspace-content">
+<header class="workspace-topbar"><span class="workspace-crumb">研究 / <strong>K 线分析</strong></span><a id="chart-backtest-link" class="text-link" href="/?view=backtest">返回回测 ↗</a></header>
 <main>
-  <nav>
-    <button id="nav-live" onclick="showSub('live')">实时 / 模拟盘</button>
-    <button id="nav-bt" onclick="showSub('bt')">回测</button>
-  </nav>
-
-  <div id="invert-warn" class="warnbox" style="display:none;">
-    ⚠️ 反向执行模式已开启：下面图表上标注的开多/开空标记是"实际执行方向"（已经和策略原始计算方向对调过）。
-  </div>
-
-  <div id="sub-live" class="subpage">
-    <section>
-      <div class="row">
-        <div class="field"><label>标的</label><select id="live-symbol"></select></div>
-        <div class="field"><label>K线周期</label>
-          <select id="live-interval">
-            <option value="1h">1H（短趋势）</option>
-            <option value="4h">4H（主趋势）</option>
-            <option value="1d">1D（Regime）</option>
-          </select>
-        </div>
-        <div class="field"><label>根数</label><input id="live-limit" type="number" value="300" min="50" max="2000" style="width:100px;"></div>
-        <button class="btn primary" onclick="loadLiveChart()">刷新</button>
-        <label class="hint"><input type="checkbox" id="live-auto" checked> 每30秒自动刷新</label>
-        <label class="hint"><input type="checkbox" id="live-marker-text" checked onchange="loadLiveChart()"> 显示标记文字</label>
-      </div>
-      <div class="hint" id="live-msg"></div>
-      <div class="hint">提示：图表支持鼠标滚轮缩放、拖拽平移；成交较密集时标记文字会互相遮挡，
-        可以放大到具体时间段查看，或取消勾选上面的"显示标记文字"只看颜色/形状。</div>
-      <div id="live-chart"></div>
-      <div class="legend">
-        <span><span class="dot" style="background:#3fb950;"></span>开多/平空盈利</span>
-        <span><span class="dot" style="background:#f85149;"></span>开空/平多亏损</span>
-        <span><span class="dot" style="background:#58a6ff;"></span>当前持仓开仓价(虚线)</span>
-      </div>
-      <table id="live-trades"><thead><tr>
-        <th>方向</th><th>开仓价</th><th>平仓价</th><th>净盈亏</th><th>开仓时间</th><th>平仓时间</th><th>原因</th>
-      </tr></thead><tbody></tbody></table>
-    </section>
-  </div>
-
-  <div id="sub-bt" class="subpage">
-    <section>
-      <div class="row">
-        <div class="field" style="min-width:320px;"><label>回测任务</label><select id="bt-job"></select></div>
-        <div class="field"><label>标的</label><select id="bt-symbol"></select></div>
-        <div class="field"><label>K线周期</label>
-          <select id="bt-interval">
-            <option value="1h">1H（短趋势）</option>
-            <option value="4h">4H（主趋势）</option>
-            <option value="1d">1D（Regime）</option>
-          </select>
-        </div>
-        <button class="btn primary" onclick="loadBtChart()">加载</button>
-        <label class="hint"><input type="checkbox" id="bt-marker-text" checked onchange="loadBtChart()"> 显示标记文字</label>
-      </div>
-      <div class="hint" id="bt-msg"></div>
-      <div class="hint">提示：图表支持鼠标滚轮缩放、拖拽平移；回测时间跨度较长、成交较密集时标记文字会
-        互相遮挡看不清，可以放大到具体时间段查看，或取消勾选上面的"显示标记文字"只看颜色/形状，
-        详细数值以下方"逐笔成交"表格为准。</div>
-      <div class="cards" id="bt-cards"></div>
-      <div id="bt-chart"></div>
-      <div class="legend">
-        <span><span class="dot" style="background:#3fb950;"></span>开多 / 盈利平仓</span>
-        <span><span class="dot" style="background:#f85149;"></span>开空 / 亏损平仓</span>
-      </div>
-      <table id="bt-chart-trades"><thead><tr>
-        <th>方向</th><th>开仓价</th><th>平仓价</th><th>净盈亏</th><th>持仓时长</th><th>原因</th>
-      </tr></thead><tbody></tbody></table>
-    </section>
-  </div>
+<div class="page-heading chart-page-heading"><div><h1>K 线分析</h1><p>价格走势与真实成交，一起复盘。</p></div><nav class="segmented-nav" aria-label="图表数据来源"><button id="nav-bt" onclick="showSub('bt')">回测成交</button><button id="nav-live" onclick="showSub('live')">实时 / 模拟盘</button></nav></div>
+<div id="invert-warn" class="warnbox" style="display:none;">反向执行已开启：标记显示实际执行方向。</div>
+<div id="sub-bt" class="subpage">
+  <section class="chart-panel">
+    <div class="chart-controls"><div class="field job-selector"><label for="bt-job">回测任务</label><select id="bt-job"></select></div><div class="field"><label for="bt-symbol">标的</label><select id="bt-symbol"></select></div><div class="field"><label for="bt-interval">K 线周期</label><select id="bt-interval"><option value="15m">15 分钟</option><option value="1h" selected>1 小时</option><option value="4h">4 小时</option><option value="1d">1 天</option></select></div><button class="btn" onclick="loadBtChart()">刷新</button></div>
+    <p class="hint" id="bt-msg" role="status"></p>
+    <div class="cards" id="bt-cards"></div>
+    <div class="chart-toolbar"><button class="btn" onclick="BacktestChart.all()">全部区间</button><button class="btn" onclick="BacktestChart.latest()">最近成交</button><select id="bt-event-filter" aria-label="成交动作筛选" onchange="BacktestChart.draw()"><option value="all">全部动作</option><option value="open">首次开仓</option><option value="add">加仓</option><option value="reduce">减仓</option><option value="close">完全平仓</option></select><details class="chart-options"><summary>显示选项</summary><label><input type="checkbox" id="bt-marker-text" onchange="BacktestChart.draw()">显示标记文字</label></details></div>
+    <div id="bt-chart" aria-label="回测行情与成交图"></div>
+    <div class="chart-caption"><div class="legend"><span><span class="dot" style="background:#7edbb4"></span>开多 / 盈利平仓</span><span><span class="dot" style="background:#ef8c93"></span>开空 / 亏损平仓</span><span><span class="dot" style="background:#58a6ff"></span>加仓</span><span><span class="dot" style="background:#d29922"></span>减仓</span></div><span class="hint">滚轮缩放 · 拖拽平移</span></div>
+    <div class="hint" id="bt-selected"></div>
+    <div class="section-heading" style="margin:24px 0 8px"><h2>成交明细</h2><span class="hint">点击记录定位成交</span></div>
+    <div class="table-scroll chart-table"><table id="bt-chart-trades"><thead><tr><th>成交时间</th><th>动作</th><th>方向</th><th>实际成交价</th><th>数量</th><th>已实现净盈亏</th><th>原因</th></tr></thead><tbody></tbody></table></div>
+    <details class="panel-details"><summary>未入场原因与图表说明</summary><div class="hint" id="bt-blocks"></div><p class="hint">成交过密时可关闭标记文字，或使用动作筛选。“最近成交”定位当前筛选中的最后一笔；详细价格以下方记录为准。</p></details>
+    <div class="chart-caption"><span class="hint"><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a> · © 2023 TradingView, Inc. · <a href="/static/vendor/LICENSE-lightweight-charts">Apache 2.0</a></span></div>
+  </section>
+</div>
+<div id="sub-live" class="subpage">
+  <section class="chart-panel">
+    <div class="chart-controls"><div class="field"><label for="live-symbol">标的</label><select id="live-symbol"></select></div><div class="field"><label for="live-interval">K 线周期</label><select id="live-interval"><option value="1h">1 小时</option><option value="4h">4 小时</option><option value="1d">1 天</option></select></div><button class="btn" onclick="loadLiveChart()">刷新行情</button><details class="chart-options"><summary>显示选项</summary><div class="field"><label for="live-limit">K 线根数</label><input id="live-limit" type="number" value="300" min="50" max="2000"></div><label><input type="checkbox" id="live-auto" checked>每30秒自动刷新</label><label><input type="checkbox" id="live-marker-text" checked onchange="loadLiveChart()">显示标记文字</label></details></div>
+    <p class="hint" id="live-msg" role="status"></p><div id="live-chart" aria-label="实时行情与成交图"></div>
+    <div class="chart-caption"><div class="legend"><span><span class="dot" style="background:#7edbb4"></span>开多 / 盈利平仓</span><span><span class="dot" style="background:#ef8c93"></span>开空 / 亏损平仓</span><span><span class="dot" style="background:#58a6ff"></span>持仓成本</span></div><span class="hint">滚轮缩放 · 拖拽平移</span></div>
+    <div class="section-heading" style="margin:24px 0 8px"><h2>最近成交</h2></div><div class="table-scroll chart-table"><table id="live-trades"><thead><tr><th>方向</th><th>开仓价</th><th>平仓价</th><th>净盈亏</th><th>开仓时间</th><th>平仓时间</th><th>原因</th></tr></thead><tbody></tbody></table></div>
+  </section>
+</div>
 </main>
+</div>
 
 <script>
 let ACTIVE_SUB = 'live';
@@ -1156,6 +1038,12 @@ function showSub(name){
     document.getElementById('sub-'+n).classList.toggle('active', n===name);
     document.getElementById('nav-'+n).classList.toggle('active', n===name);
   });
+  if(name==='bt')loadBtChart();
+  else if(ALL_SYMBOLS.length)loadLiveChart();
+  requestAnimationFrame(()=>{
+    if(btChart && name==='bt')btChart.resize(document.getElementById('bt-chart').clientWidth,document.getElementById('bt-chart').clientHeight);
+    if(liveChart && name==='live')liveChart.resize(document.getElementById('live-chart').clientWidth,document.getElementById('live-chart').clientHeight);
+  });
 }
 
 function fmtNum(v, d){ return (typeof v === 'number' && isFinite(v)) ? v.toFixed(d==null?2:d) : '-'; }
@@ -1166,18 +1054,18 @@ function fmtSecs(s){ s=Math.floor(s||0); const h=Math.floor(s/3600), m=Math.floo
 function makeChart(containerId){
   const el = document.getElementById(containerId);
   const chart = LightweightCharts.createChart(el, {
-    width: el.clientWidth, height: 480,
-    layout: { background: { color: '#0d1117' }, textColor: '#c9d1d9' },
+    width: el.clientWidth, height: el.clientHeight || 480,
+    layout: { background: { color: '#101922' }, textColor: '#8fa5b4' },
     grid: { vertLines: { color: '#21262d' }, horzLines: { color: '#21262d' } },
     timeScale: { timeVisible: true, secondsVisible: false, borderColor: '#30363d' },
     rightPriceScale: { borderColor: '#30363d' },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
   });
   const series = chart.addCandlestickSeries({
-    upColor: '#3fb950', downColor: '#f85149', borderVisible: false,
-    wickUpColor: '#3fb950', wickDownColor: '#f85149',
+    upColor: '#7edbb4', downColor: '#ef8c93', borderVisible: false,
+    wickUpColor: '#7edbb4', wickDownColor: '#ef8c93',
   });
-  window.addEventListener('resize', () => chart.applyOptions({ width: el.clientWidth }));
+  new ResizeObserver(()=>{if(el.clientWidth>0)chart.applyOptions({width:el.clientWidth,height:el.clientHeight});}).observe(el);
   return { chart, series };
 }
 
@@ -1207,70 +1095,86 @@ async function loadJobsIntoSelect(){
 function onBtJobChange(){
   const jobId = document.getElementById('bt-job').value;
   const job = ALL_JOBS.find(j => j.id === jobId);
+  const back=document.getElementById('chart-backtest-link');back.href='/?view=backtest'+(jobId?'&job='+encodeURIComponent(jobId):'');
   const symSel = document.getElementById('bt-symbol');
   const prev = symSel.value;
   const syms = (job && job.symbols) || [];
   symSel.innerHTML = syms.map(s => `<option value="${s}">${s}</option>`).join('');
   if(prev && syms.includes(prev)) symSel.value = prev;
+  const intervalSelect=document.getElementById('bt-interval');
+  const source=job?.summary?.short_interval;
+  for(const option of intervalSelect.options){
+    option.disabled=!!source && (ChartUtils.seconds[option.value]<ChartUtils.seconds[source] || ChartUtils.seconds[option.value]%ChartUtils.seconds[source]!==0);
+  }
+  if(intervalSelect.selectedOptions[0]?.disabled){
+    intervalSelect.value=[...intervalSelect.options].find(option=>!option.disabled)?.value||'1h';
+  }
+  if(ACTIVE_SUB==='bt')loadBtChart();
 }
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('bt-job').addEventListener('change', onBtJobChange);
+  for(const id of ['bt-symbol','bt-interval'])document.getElementById(id).addEventListener('change',loadBtChart);
+  for(const id of ['live-symbol','live-interval'])document.getElementById(id).addEventListener('change',loadLiveChart);
 });
 
 // ---------------------------------------------------------- 实时/模拟盘图表
+let LIVE_SEQUENCE=0, LIVE_KEY='';
 async function loadLiveChart(){
+  const token=++LIVE_SEQUENCE;
   const symbol = document.getElementById('live-symbol').value;
   const interval = document.getElementById('live-interval').value;
   const limit = document.getElementById('live-limit').value;
-  if(!symbol){ document.getElementById('live-msg').textContent = '请先在设置页添加交易标的'; return; }
-  document.getElementById('live-msg').textContent = '加载中...';
-
-  if(!liveChart){ const r = makeChart('live-chart'); liveChart = r.chart; liveSeries = r.series; }
-
-  const klineRes = await (await fetch(`/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`)).json();
-  if(!klineRes.ok){ document.getElementById('live-msg').textContent = 'K线加载失败: ' + klineRes.message; return; }
-  const candles = klineRes.candles.map(c => ({ time: c.t, open: c.o, high: c.h, low: c.l, close: c.c }));
-  liveSeries.setData(candles);
-
-  const stateRes = await (await fetch('/api/state')).json();
-  const trades = (stateRes.trades||[]).filter(t => t.symbol === symbol);
-  const positions = (stateRes.positions||[]).filter(p => p.symbol === symbol);
-
-  const showText = document.getElementById('live-marker-text').checked;
-  const markers = [];
-  trades.forEach(t => {
-    const isLong = t.side === 'long';
-    markers.push({
-      time: Math.floor(t.open_time), position: isLong ? 'belowBar' : 'aboveBar',
-      color: isLong ? '#3fb950' : '#f85149', shape: isLong ? 'arrowUp' : 'arrowDown',
-      text: showText ? (isLong ? '开多' : '开空') : '',
-    });
-    markers.push({
-      time: Math.floor(t.close_time), position: isLong ? 'aboveBar' : 'belowBar',
-      color: t.pnl >= 0 ? '#3fb950' : '#f85149', shape: isLong ? 'arrowDown' : 'arrowUp',
-      text: showText ? `平${isLong?'多':'空'}(${t.pnl>=0?'+':''}${fmtNum(t.pnl,1)})` : '',
-    });
-  });
-  markers.sort((a,b) => a.time - b.time);
-  liveSeries.setMarkers(markers);
-
-  livePriceLines.forEach(pl => liveSeries.removePriceLine(pl));
-  livePriceLines = positions.map(p => liveSeries.createPriceLine({
-    price: p.entry_price, color: '#58a6ff', lineWidth: 1,
-    lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true,
-    title: `${p.side==='long'?'多':'空'}仓开仓价`,
-  }));
-
-  document.getElementById('live-msg').textContent =
-    `${symbol} ${interval} 共${candles.length}根K线，标注${trades.length}笔历史成交` +
-    (positions.length ? `，当前持仓${positions.length}笔` : '，当前无持仓');
-
-  const tbody = document.querySelector('#live-trades tbody');
-  tbody.innerHTML = trades.map(t => `<tr>
-    <td>${t.side==='long'?'多':'空'}</td><td>${fmtNum(t.entry_price,4)}</td><td>${fmtNum(t.exit_price,4)}</td>
-    <td class="${t.pnl>=0?'pos':'neg'}">${fmtNum(t.pnl)}</td>
-    <td>${fmtTs(t.open_time)}</td><td>${fmtTs(t.close_time)}</td><td>${t.exit_reason||''}</td>
-  </tr>`).join('');
+  const key=[symbol,interval,limit].join('|');
+  const msg=document.getElementById('live-msg');
+  if(!symbol){msg.textContent='请先在设置页添加交易标的';return;}
+  msg.textContent='加载中…';
+  try {
+    const response=await fetch(`/api/klines?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&limit=${encodeURIComponent(limit)}`);
+    const data=await response.json();
+    if(token!==LIVE_SEQUENCE)return;
+    if(!response.ok||!data.ok)throw new Error(data.message||'行情请求失败');
+    const candles=ChartUtils.candles(data.candles);
+    if(typeof LightweightCharts==='undefined')throw new Error('图表库未加载，请刷新页面');
+    if(!liveChart){const r=makeChart('live-chart');liveChart=r.chart;liveSeries=r.series;}
+    liveSeries.setMarkers([]);
+    livePriceLines.forEach(line=>liveSeries.removePriceLine(line));livePriceLines=[];
+    liveSeries.applyOptions({priceFormat:ChartUtils.priceFormat(candles)});
+    liveSeries.setData(candles);
+    if(key!==LIVE_KEY)liveChart.timeScale().fitContent();
+    LIVE_KEY=key;
+    document.querySelector('#live-trades tbody').replaceChildren();
+    msg.textContent=`${symbol} ${interval} 共${candles.length}根K线`;
+    // A failed account-state request must not hide successfully loaded candles.
+    try {
+      const stateResponse=await fetch('/api/state');
+      if(!stateResponse.ok)throw new Error('账户状态请求失败');
+      const stateRes=await stateResponse.json();
+      if(token!==LIVE_SEQUENCE)return;
+      const trades=(stateRes.trades||[]).filter(t=>t.symbol===symbol);
+      const positions=(stateRes.positions||[]).filter(p=>p.symbol===symbol);
+      const markers=ChartUtils.liveMarkers(trades,candles,interval,document.getElementById('live-marker-text').checked);
+      liveSeries.setMarkers(markers);
+      livePriceLines=positions.filter(p=>Number.isFinite(p.entry_price)&&p.entry_price>0).map(p=>liveSeries.createPriceLine({
+        price:p.entry_price,color:'#58a6ff',lineWidth:1,
+        lineStyle:LightweightCharts.LineStyle.Dashed,axisLabelVisible:true,title:`${p.side==='long'?'多':'空'}仓开仓价`,
+      }));
+      msg.textContent+=`，当前区间${markers.length}个成交标记，持仓${positions.length}笔`;
+      const tbody=document.querySelector('#live-trades tbody');
+      tbody.innerHTML=trades.map(t=>`<tr>
+        <td>${t.side==='long'?'多':'空'}</td><td>${fmtNum(t.entry_price,6)}</td><td>${fmtNum(t.exit_price,6)}</td>
+        <td class="${t.pnl>=0?'pos':'neg'}">${fmtNum(t.pnl)}</td>
+        <td>${fmtTs(t.open_time)}</td><td>${fmtTs(t.close_time)}</td><td>${t.exit_reason||''}</td>
+      </tr>`).join('');
+    } catch(error){if(token===LIVE_SEQUENCE)msg.textContent+='；成交标记暂不可用：'+error.message;}
+  } catch(error){
+    if(token!==LIVE_SEQUENCE)return;
+    if(liveSeries){
+      liveSeries.setMarkers([]);liveSeries.setData([]);
+      livePriceLines.forEach(line=>liveSeries.removePriceLine(line));livePriceLines=[];
+    }
+    LIVE_KEY='';document.querySelector('#live-trades tbody').replaceChildren();
+    msg.textContent='K线加载失败：'+error.message;
+  }
 }
 
 function scheduleLiveAuto(){
@@ -1283,69 +1187,18 @@ function scheduleLiveAuto(){
 }
 
 // ---------------------------------------------------------- 回测图表
-async function loadBtChart(){
-  const jobId = document.getElementById('bt-job').value;
-  const symbol = document.getElementById('bt-symbol').value;
-  const interval = document.getElementById('bt-interval').value;
-  if(!jobId || !symbol){ document.getElementById('bt-msg').textContent = '请先选择回测任务和标的'; return; }
-  document.getElementById('bt-msg').textContent = '加载中...';
-
-  if(!btChart){ const r = makeChart('bt-chart'); btChart = r.chart; btSeries = r.series; }
-
-  const job = await (await fetch('/api/backtest/job/' + jobId)).json();
-  const s = job.summary || {};
-
-  const klineRes = await (await fetch(
-    `/api/klines/cache?symbol=${symbol}&interval=${interval}&start_ts=${s.start_ts||0}&end_ts=${s.end_ts||9999999999}`
-  )).json();
-  if(!klineRes.ok){ document.getElementById('bt-msg').textContent = 'K线加载失败: ' + klineRes.message; return; }
-  const candles = klineRes.candles.map(c => ({ time: c.t, open: c.o, high: c.h, low: c.l, close: c.c }));
-  btSeries.setData(candles);
-
-  const symTrades = (job.trades||[]).filter(t => t.symbol === symbol);
-  const showText = document.getElementById('bt-marker-text').checked;
-  const markers = [];
-  symTrades.forEach(t => {
-    const isLong = t.side === 'long';
-    markers.push({
-      time: Math.floor(t.open_time), position: isLong ? 'belowBar' : 'aboveBar',
-      color: isLong ? '#3fb950' : '#f85149', shape: isLong ? 'arrowUp' : 'arrowDown',
-      text: showText ? (isLong ? '开多' : '开空') : '',
-    });
-    markers.push({
-      time: Math.floor(t.close_time), position: isLong ? 'aboveBar' : 'belowBar',
-      color: t.pnl >= 0 ? '#3fb950' : '#f85149', shape: isLong ? 'arrowDown' : 'arrowUp',
-      text: showText ? `平${isLong?'多':'空'}(${t.pnl>=0?'+':''}${fmtNum(t.pnl,1)})` : '',
-    });
-  });
-  markers.sort((a,b) => a.time - b.time);
-  btSeries.setMarkers(markers);
-
-  document.getElementById('bt-msg').textContent =
-    candles.length === 0
-      ? `本地没有 ${symbol} ${interval} 的缓存K线，可能该回测没有用到这个周期，换个周期试试`
-      : `${symbol} ${interval} 共${candles.length}根K线，标注${symTrades.length}笔交易`;
-
-  const perSym = (s.per_symbol || {})[symbol] || {};
-  document.getElementById('bt-cards').innerHTML = `
-    <div class="card"><div class="label">交易数</div><div class="value">${perSym.trade_count||0}</div></div>
-    <div class="card"><div class="label">净盈亏</div><div class="value ${(perSym.net_pnl||0)>=0?'pos':'neg'}">${fmtNum(perSym.net_pnl)}</div></div>
-    <div class="card"><div class="label">手续费/资金费</div><div class="value">${fmtNum(perSym.fees)} / ${fmtNum(perSym.funding)}</div></div>
-  `;
-
-  const tbody = document.querySelector('#bt-chart-trades tbody');
-  tbody.innerHTML = symTrades.map(t => `<tr>
-    <td>${t.side==='long'?'多':'空'}</td><td>${fmtNum(t.entry_price,4)}</td><td>${fmtNum(t.exit_price,4)}</td>
-    <td class="${t.pnl>=0?'pos':'neg'}">${fmtNum(t.pnl)}</td>
-    <td>${fmtSecs(t.close_time-t.open_time)}</td><td>${t.reason||''}</td>
-  </tr>`).join('');
-}
+async function loadBtChart(){ return BacktestChart.load(); }
 
 (async function init(){
-  await loadSymbolsIntoSelects();
-  await loadJobsIntoSelect();
-  showSub('live');
-  if(ALL_SYMBOLS.length) loadLiveChart();
+  try {await loadSymbolsIntoSelects();}
+  catch(error){document.getElementById('live-msg').textContent='标的加载失败：'+error.message;}
+  try {await loadJobsIntoSelect();}
+  catch(error){document.getElementById('bt-msg').textContent='回测列表加载失败：'+error.message;}
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('job')){
+    document.getElementById('bt-job').value=params.get('job');onBtJobChange();showSub('bt');
+  }else{showSub(ALL_JOBS.length?'bt':'live');}
+  document.getElementById('nav-charts').setAttribute('aria-current','page');
   scheduleLiveAuto();
 })();
 </script>
@@ -1418,8 +1271,7 @@ MANUAL_PAGE = """
     这个页面用来验证 API 连通性和下单参数换算，<b>完全独立于策略引擎</b>——它不会写入策略持仓账本，
     这里开出来的仓位会被策略引擎标记为<b>外部持仓</b>：引擎不会平掉、也不会调整它，
     并且会跳过该标的的全部交易，直到你在「控制台」里点“纳入策略管理”。测试完请记得手动平掉。
-    <br>「仓位价值」填的是<b>不含杠杆的名义价值</b>：填 1000 就是开 1000 USDT 的仓，
-    杠杆只决定占用多少保证金（1000÷杠杆），不改变仓位大小。
+    <br>加密货币按固定保证金规则计算；预览会显示杠杆、名义价值和初始保证金。非加密合约可自填名义价值与杠杆。
   </div>
 
   <div class="panels">
@@ -1471,8 +1323,9 @@ function formHtml(p){
         <select id="${p.id}-side"><option value="long">做多</option><option value="short">做空</option></select>
       </div>
     </div>
-    <div class="row">
-      <div class="field"><label>仓位价值(USDT，不含杠杆)</label><input id="${p.id}-notional" type="number" min="0" step="any" value="100"></div>
+    <div class="hint">加密货币按账户权益 5% × 币种杠杆生成全仓票据，预览显示实际额度；下列自定义额度仅适用于非加密合约。</div>
+    <div class="row" ${p.id==='crypto'?'style="display:none"':''}>
+      <div class="field"><label>非加密合约名义价值(USDT)</label><input id="${p.id}-notional" type="number" min="0" step="any" value="100"></div>
       <div class="field" style="max-width:100px;"><label>杠杆(倍)</label><input id="${p.id}-lev" type="number" min="1" step="1" value="${p.defLev}"></div>
     </div>
     <div class="row">
@@ -1508,7 +1361,7 @@ async function preview(id){
   el.innerHTML = `<div class="preview">
     当前标记价：<b>${r.mark_price}</b><br>
     换算张数：<b>${r.contracts}</b> 张（每张 ${r.quanto_multiplier} ${r.base}）<br>
-    实际名义价值：<b>${r.actual_notional.toFixed(2)}</b> USDT（你填的是 ${r.requested_notional.toFixed(2)}）<br>
+    实际名义价值：<b>${r.actual_notional.toFixed(2)}</b> USDT（目标 ${r.requested_notional.toFixed(2)}）<br>
     占用保证金：<b>${r.margin.toFixed(2)}</b> USDT （= 名义价值 ÷ ${r.leverage}x）<br>
     预估开仓手续费：${r.est_fee.toFixed(4)} USDT<br>
     ${r.tp?`止盈 ${r.tp}（距现价 ${r.tp_pct}%）<br>`:''}
@@ -1518,10 +1371,12 @@ async function preview(id){
 
 async function submitOrder(id){
   const body = readForm(id);
-  if(!body.symbol || !(body.notional>0)){ alert('请填写合约代码和仓位价值'); return; }
+  if(!body.symbol){ alert('请填写合约代码'); return; }
+  const quote = await (await fetch('/api/manual/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+  if(!quote.ok){ alert(quote.message); return; }
   const modeTxt = CUR_MODE==='live' ? '【实盘 LIVE·真实资金】' : '【模拟盘 PAPER】';
   const msg = `${modeTxt}\\n\\n${body.symbol} ${body.side==='long'?'做多':'做空'}\\n`
-            + `仓位价值 ${body.notional} USDT，杠杆 ${body.leverage}x\\n`
+            + `全仓名义价值约 ${quote.actual_notional.toFixed(2)} USDT，${quote.leverage}x，保证金约 ${quote.margin.toFixed(2)} USDT\\n`
             + `止盈 ${body.tp??'不挂'}　止损 ${body.sl??'不挂'}\\n\\n确认下单？`;
   if(!confirm(msg)) return;
   const el = document.getElementById('result');
@@ -1813,18 +1668,24 @@ loadInit();
 
 
 def create_app(state: StateStore, config_store: ConfigStore, cred_store: CredentialStore,
-               controller: EngineController, backtest_controller: BacktestController) -> Flask:
+               controller: EngineController, backtest_controller: BacktestController,
+               universe_service=None) -> Flask:
     app = Flask(__name__)
+    app.json = StrictJSONProvider(app)
+    from pathlib import Path
+    universe = universe_service or UniverseService(
+        snapshot_dir=Path(getattr(backtest_controller, "result_dir", "./data/backtests")).parent / "universe")
+    app.extensions["universe"] = universe
     log = logging.getLogger("werkzeug")
     log.setLevel(logging.WARNING)
 
     @app.route("/")
     def index():
-        return render_template_string(PAGE)
+        return render_template_string(PAGE.replace("__WORKSPACE_NAV__", WORKSPACE_NAV))
 
     @app.route("/charts")
     def charts_page():
-        return render_template_string(CHARTS_PAGE)
+        return render_template_string(CHARTS_PAGE.replace("__WORKSPACE_NAV__", WORKSPACE_NAV))
 
     @app.route("/manual")
     def manual_page():
@@ -1953,20 +1814,34 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
         leverage = float(data.get("leverage") or 1)
         if not symbol:
             raise RuntimeError("请填写合约代码")
-        if notional <= 0:
-            raise RuntimeError("仓位价值必须大于0")
         if side not in ("long", "short"):
             raise RuntimeError("方向只能是 long / short")
 
-        info = ex.get_contract(symbol)
+        info = ex.get_entry_contract(symbol)
         mark = float(ex.get_ticker(symbol)["mark_price"])
+        ticket = None
+        if info.get("contract_type", "") in ("", "crypto"):
+            from .position_sizing import entry_ticket
+            if any(p["contract"] == symbol for p in ex.get_dual_positions()):
+                raise RuntimeError("该合约已有持仓；固定保证金规则不重复追加额度")
+            cfg = config_store.snapshot()
+            costs_cfg = CostConfig.build(cfg.get("costs", {}))
+            sys_cfg = SystematicConfig.build(cfg.get("systematic", {}))
+            funds = ex.get_entry_budget()
+            fee_rate = costs_cfg.effective_taker_rate(info.get("taker_fee_rate"), ex.get_account_taker_fee_rate(symbol))
+            ticket = entry_ticket(symbol, funds["equity"], mark, info, ex.get_risk_limit_tiers(symbol),
+                                  funds["available"], fee_rate,
+                                  max(costs_cfg.slippage_bps, sys_cfg.max_entry_slippage_bps))
+            notional, leverage = ticket.desired_notional, ticket.leverage
+        if notional <= 0:
+            raise RuntimeError("仓位价值必须大于0")
         qm = float(info["quanto_multiplier"])
         step = max(1, int(info.get("order_size_min", 1)))
         if mark <= 0 or qm <= 0:
             raise RuntimeError(f"{symbol} 行情或合约参数异常(标记价={mark}, 面值={qm})")
 
         raw_contracts = notional / (mark * qm)
-        contracts = int(raw_contracts // step) * step        # 向下取整到最小下单单位
+        contracts = ticket.quantity if ticket else int(raw_contracts // step) * step
         warnings = []
         if contracts < step:
             raise RuntimeError(
@@ -1999,8 +1874,9 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
 
         direction = 1 if side == "long" else -1
         sl_loss = abs(sl - mark) * contracts * qm if sl is not None else 0.0
-        taker = float(info.get("taker_fee_rate") or 0.0005)
+        taker = fee_rate if ticket else float(info.get("taker_fee_rate") or 0.0005)
         return {
+            "entry_ticket": ticket.to_dict() if ticket else None,
             "symbol": symbol, "side": side, "contracts": contracts,
             "mark_price": mark, "quanto_multiplier": qm,
             "base": symbol.split("_")[0],
@@ -2037,10 +1913,10 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
 
         r = ex.set_leverage_checked(symbol, calc["leverage"])
         steps.append({"name": "设为全仓并校验", "ok": r["ok"], "message": r["message"]})
-        if r.get("margin_mode") == "isolated":
-            state.add_log(f"[手动测试] {symbol} 仍是逐仓，已拒绝开仓", "ERROR")
+        if r.get("margin_mode") != "cross" or r.get("verified") is not True or r.get("cross_leverage_limit") != calc["leverage"]:
+            state.add_log(f"[手动测试] {symbol} 未确认全仓及计划杠杆，已拒绝开仓", "ERROR")
             return jsonify({"ok": False, "steps": steps,
-                             "message": "保证金模式仍是逐仓，已中止下单（不会在逐仓下开单）"})
+                             "message": "未回读确认全仓及计划杠杆，已中止下单"})
 
         r = ex.open_market(symbol, side, contracts, text="t-manual")
         steps.append({"name": f"市价开仓 {contracts}张", "ok": r["ok"], "message": r["message"]})
@@ -2086,20 +1962,27 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
 
     @app.route("/api/state")
     def api_state():
+        config_snapshot = config_store.snapshot()
+        sizing_mode = SystematicConfig.build(config_snapshot.get("systematic", {})).position_sizing_mode
+        risk_cfg = RiskConfig.build(config_snapshot.get("risk", {}))
         with state.with_lock():
             signals = [{"symbol": k, **v} for k, v in state.last_signals.items()]
             logs = list(state.logs[-150:])
             portfolio = dict(state.portfolio_snapshot)
-        summary = state.summary()
-        return jsonify({
-            "summary": summary,
-            "positions": state.positions_view(),
-            "signals": signals,
-            "trades": state.recent_trades_view(40),
-            "logs": logs,
-            "circuit_breaker": state.circuit_breaker_active,
-            "portfolio": portfolio,
-        })
+            portfolio["position_sizing_mode"] = sizing_mode
+            portfolio["actual_gross_leverage"] = (sum(abs(p.size * p.mark_price * p.quanto_multiplier)
+                for p in state.positions.values()) / state.equity if state.equity > 0 else 0.0)
+            payload = {
+                "summary": state.summary(),
+                "positions": state.positions_view(),
+                "signals": signals,
+                "trades": state.recent_trades_view(40),
+                "logs": logs,
+                "daily_loss_limit_enabled": risk_cfg.daily_loss_limit_enabled,
+                "circuit_breaker": risk_cfg.daily_loss_limit_enabled and state.circuit_breaker_active,
+                "portfolio": portfolio,
+            }
+        return jsonify(payload)
 
     def _position_action(handler_name: str, ok_msg: str):
         """/api/positions/* 两个动作的公共部分：校验参数、确认这笔仓位确实存在、
@@ -2115,7 +1998,11 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
             return jsonify({"ok": False, "message": "引擎未运行，请先启动引擎再执行该操作"})
         if not state.get_position(symbol, side):
             return jsonify({"ok": False, "message": f"未找到 {symbol} 的{side}仓，请刷新后重试"})
-        getattr(engine, handler_name)(symbol, side)
+        try:
+            getattr(engine, handler_name)(symbol, side)
+        except Exception as exc:
+            state.add_log(f"{symbol}[{side}] 持仓操作失败：{exc}", "ERROR")
+            return jsonify({"ok": False, "message": f"持仓操作未完成：{exc}，请刷新后重试"}), 409
         return jsonify({"ok": True, "message": ok_msg.format(symbol=symbol,
                                                              side="多" if side == "long" else "空")})
 
@@ -2129,9 +2016,50 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
         return _position_action(
             "request_close", "{symbol} {side}仓已排入平仓队列，下一轮执行")
 
+    @app.route("/api/universe", methods=["GET"])
+    def universe_status():
+        return jsonify(universe.status())
+
+    @app.route("/api/universe/scan", methods=["POST"])
+    def universe_scan():
+        cfg = config_store.snapshot()
+        result = universe.start(SystematicConfig.build(cfg.get("systematic", {})),
+                                CostConfig.build(cfg.get("costs", {})),
+                                force=bool((request.get_json(silent=True) or {}).get("force")))
+        return jsonify(result)
+
+    @app.route("/api/universe/catalogue", methods=["GET"])
+    def universe_catalogue():
+        try:
+            return jsonify({"ok": True, "contracts": [
+                {"symbol": c["name"], "crypto": is_crypto(c)}
+                for c in universe.catalogue() if tradable_contract(c)]})
+        except Exception:
+            return jsonify({"ok": False, "message": "公共合约目录获取失败，请稍后重试"}), 503
+
+    @app.route("/api/universe/apply", methods=["POST"])
+    def universe_apply():
+        data = request.get_json(silent=True) or {}
+        # Altering a running live pool has immediate order consequences. Queue no
+        # implicit trade: the operator can stop, review the pool, then start it.
+        if controller.is_running():
+            return jsonify({"ok": False, "message": "请先停止引擎，再更新候选交易池"}), 409
+        try:
+            cfg = config_store.snapshot()
+            symbols = universe.selection(data.get("scan_id"),
+                SystematicConfig.build(cfg.get("systematic", {})), CostConfig.build(cfg.get("costs", {})))
+            config_store.add_symbols(symbols)
+        except ValueError as exc:
+            return jsonify({"ok": False, "message": str(exc)}), 400
+        except Exception:
+            return jsonify({"ok": False, "message": "候选校验或保存失败，请重新筛选"}), 503
+        state.add_log("加入候选交易池: " + ", ".join(symbols))
+        return jsonify({"ok": True, "symbols": config_store.snapshot()["symbols"]})
+
     @app.route("/api/config", methods=["GET"])
     def api_config_get():
         cfg = config_store.snapshot()
+        cfg["systematic"] = asdict(SystematicConfig.build(cfg.get("systematic", {})))
         cfg["_creds"] = cred_store.load().masked()
         return jsonify(cfg)
 
@@ -2146,9 +2074,14 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
     def add_symbol():
         data = request.get_json(force=True) or {}
         symbol = (data.get("symbol") or "").strip().upper()
-        if symbol:
+        try:
+            universe.validate_symbol(symbol)
             config_store.add_symbol(symbol)
-            state.add_log(f"添加交易标的: {symbol}")
+        except ValueError as exc:
+            return jsonify({"ok": False, "message": str(exc)}), 400
+        except Exception:
+            return jsonify({"ok": False, "message": "公共合约目录验证失败，请稍后重试"}), 503
+        state.add_log(f"添加交易标的: {symbol}")
         return jsonify({"ok": True})
 
     @app.route("/api/symbols", methods=["DELETE"])
@@ -2224,11 +2157,21 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
     def engine_status():
         return jsonify(controller.status())
 
-    # ---------------------------------------------------------- 回测（组合级）
+    # ---------------------------------------------------------- 网页回测（单币；旧组合结果仍可查看）
     @app.route("/api/backtest/start", methods=["POST"])
     def backtest_start():
-        data = request.get_json(force=True) or {}
-        symbols = data.get("symbols") or ([data["symbol"]] if data.get("symbol") else None)
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify({"ok": False, "message": "请提交一个回测币种"}), 400
+        symbols = data.get("symbols") if "symbols" in data else [data.get("symbol")]
+        if not isinstance(symbols, list) or len(symbols) != 1 or not isinstance(symbols[0], str):
+            return jsonify({"ok": False, "message": "每次只能回测一个币种，请搜索并选择一个合约"}), 400
+        symbol = symbols[0].strip().upper().replace("/", "_").replace("-", "_")
+        if not symbol.endswith("_USDT"):
+            symbol = (symbol[:-4] if symbol.endswith("USDT") else symbol) + "_USDT"
+        if not CONTRACT_SYMBOL.fullmatch(symbol):
+            return jsonify({"ok": False, "message": "请输入一个有效的 USDT 合约，例如 BTC 或 SOL_USDT"}), 400
+        symbols = [symbol]
         days_back = data.get("days_back", 90)
         initial_capital = data.get("initial_capital")
         try:
@@ -2242,7 +2185,7 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
                 wf_folds=int(data.get("wf_folds", 5) or 5))
         except Exception as e:
             return jsonify({"ok": False, "message": str(e)})
-        state.add_log(f"发起组合回测任务: {', '.join(job.symbols)} 最近{job.days_back}天"
+        state.add_log(f"发起单币回测任务: {', '.join(job.symbols)} 最近{job.days_back}天"
                        + ("（含滚动样本外验证）" if job.walkforward else "") + f" (job={job.id})")
         return jsonify({"ok": True, "job_id": job.id})
 
@@ -2292,6 +2235,30 @@ def create_app(state: StateStore, config_store: ConfigStore, cred_store: Credent
             return jsonify({"ok": True, "candles": candles})
         except Exception as e:
             return jsonify({"ok": False, "message": f"获取K线失败: {e}"})
+
+    @app.route("/api/backtest/job/<job_id>/chart")
+    def backtest_chart(job_id):
+        from .backtest_reporting import chart_payload
+        from . import data_fetcher
+        job = backtest_controller.get_job(job_id)
+        if job is None or job.result is None:
+            return jsonify({"ok": False, "message": "回测任务不存在或尚未完成"}), 404
+        symbol = (request.args.get("symbol") or "").strip().upper()
+        interval = request.args.get("interval", "1h")
+        if symbol not in job.symbols:
+            return jsonify({"ok": False, "message": "标的不属于该回测任务"}), 400
+        if interval not in data_fetcher.INTERVAL_SECONDS:
+            return jsonify({"ok": False, "message": "不支持的周期"}), 400
+        try:
+            cached = None
+            if symbol not in job.result.get("chart_candles", {}):
+                seconds = data_fetcher.INTERVAL_SECONDS[interval]
+                df = data_fetcher.read_cached_candles(backtest_controller.cache_dir, symbol, interval,
+                    job.result.get("start_ts", 0)-seconds, job.result.get("end_ts"))
+                cached = [{"t": float(r.timestamp), "o": float(r.open), "h": float(r.high), "l": float(r.low), "c": float(r.close)} for r in df.itertuples()]
+            return jsonify(chart_payload(job.result, symbol, interval, cached))
+        except (ValueError, TypeError, KeyError) as e:
+            return jsonify({"ok": False, "message": str(e)}), 400
 
     @app.route("/api/klines/cache")
     def api_klines_cache():

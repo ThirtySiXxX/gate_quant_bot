@@ -10,6 +10,7 @@ ensure_dual_mode() 会在启动时尝试自动切换，如果已有持仓会切�
 from __future__ import annotations
 
 import logging
+import math
 import time
 from typing import Dict, List, Optional
 
@@ -225,13 +226,15 @@ class GateExchange:
             return self._contract_cache[contract]
         c = self.api.get_futures_contract(self.settle, contract)
         info = {
+            "contract_type": getattr(c, "contract_type", "") or "",
             "quanto_multiplier": float(c.quanto_multiplier or 1),
             "leverage_min": float(c.leverage_min or 1),
-            "leverage_max": float(c.leverage_max or 20),
+            "leverage_max": float(c.leverage_max or 0),
             "taker_fee_rate": float(c.taker_fee_rate or 0.0005),
             "maker_fee_rate": float(c.maker_fee_rate or 0.00015),
             "order_size_min": _safe_int(c.order_size_min, default=1, min_value=1),
-            "order_size_max": _safe_int(c.order_size_max, default=1_000_000, min_value=1),
+            "order_size_max": _safe_int(c.order_size_max, default=0, min_value=0),
+            "market_order_size_max": float(getattr(c, "market_order_size_max", 0) or 0),
             "funding_rate": float(c.funding_rate or 0.0),
             "funding_interval": _safe_int(c.funding_interval, default=28800, min_value=60),
             "funding_next_apply": float(c.funding_next_apply or 0),
@@ -241,6 +244,31 @@ class GateExchange:
         self._contract_cache[contract] = info
         self._contract_cache_ts[contract] = now
         return info
+
+    def get_entry_contract(self, contract: str) -> dict:
+        return self.get_contract(contract, ttl=0)
+
+    def get_risk_limit_tiers(self, contract: str) -> List[dict]:
+        rows = self.api.list_futures_risk_limit_tiers(self.settle, contract=contract)
+        return [r.to_dict() for r in rows]
+
+    def get_entry_budget(self) -> dict:
+        """One account snapshot; never substitute equity for spendable margin."""
+        if self.settle != "usdt":
+            raise ValueError("固定保证金票据仅支持 USDT 结算")
+        acc = self.api.list_futures_accounts(self.settle)
+        if int(getattr(acc, "margin_mode", 0) or 0) not in (0, 3):
+            raise ValueError("统一跨币种/组合保证金账户需要独立净权益核算，暂不生成固定保证金票据")
+        total = float(acc.total or 0)
+        cross_balance = getattr(acc, "cross_margin_balance", None)
+        equity = (float(cross_balance) if total == 0 and cross_balance is not None
+                  else total + float(acc.unrealised_pnl or 0))
+        available = getattr(acc, "cross_available", None)
+        if available is None:
+            available = getattr(acc, "available", None)
+        if available is None or not all(math.isfinite(x) for x in (equity, float(available))):
+            raise ValueError("账户权益或可用全仓保证金无效")
+        return {"equity": equity, "available": min(equity, float(available))}
 
     # ---------------------------------------------------------- 账户/持仓
     def get_account_equity(self) -> float:
@@ -334,14 +362,16 @@ class GateExchange:
             raw = self.api.list_positions(self.settle, holding=False)
         except (ApiException, GateApiException) as e:
             return {"ok": False, "margin_mode": "unknown", "message": f"查询保证金模式失败: {_err_text(e)}"}
-        for p in raw:
-            if p.contract != contract:
-                continue
-            lev = float(p.leverage or 0)
-            mode = "cross" if lev == 0 else "isolated"
-            return {"ok": True, "margin_mode": mode, "leverage": lev,
-                    "cross_leverage_limit": float(getattr(p, "cross_leverage_limit", 0) or 0),
-                    "message": f"当前为{'全仓' if mode == 'cross' else '逐仓'}"}
+        matching = [p for p in raw if p.contract == contract]
+        if matching:
+            # Check both hedge legs, not whichever row happens to be first.
+            leverages = [float(p.leverage) if p.leverage is not None else float("nan") for p in matching]
+            limits = {float(getattr(p, "cross_leverage_limit", 0) or 0) for p in matching}
+            cross = all(v == 0 for v in leverages)
+            limit = next(iter(limits)) if len(limits) == 1 else 0.0
+            return {"ok": cross and limit > 0, "margin_mode": "cross" if cross else "unknown",
+                    "leverage": 0.0 if cross else None, "cross_leverage_limit": limit,
+                    "message": "双向仓位全仓/杠杆回读"}
         return {"ok": True, "margin_mode": "unknown",
                 "message": "交易所没有返回该合约的仓位记录（通常是从未交易过）"}
 
@@ -351,8 +381,11 @@ class GateExchange:
         setr = self.set_cross_margin(contract, leverage_limit)
         chk = self.get_margin_mode(contract)
         if chk.get("margin_mode") == "cross":
-            return {"ok": True, "verified": True, "margin_mode": "cross",
-                    "message": f"已确认全仓（杠杆上限 {int(chk.get('cross_leverage_limit') or leverage_limit)}x）"}
+            actual = chk.get("cross_leverage_limit", 0)
+            verified = bool(chk.get("ok") and actual == float(leverage_limit))
+            return {"ok": verified, "verified": verified, "margin_mode": "cross",
+                    "cross_leverage_limit": actual,
+                    "message": f"全仓回读 {actual:g}x，要求 {leverage_limit:g}x"}
         if chk.get("margin_mode") == "isolated":
             return {"ok": False, "verified": True, "margin_mode": "isolated",
                     "message": ("仍然是逐仓！" + setr["message"]

@@ -1,0 +1,2 @@
+# Optional offline ML training. Runtime JSON inference uses existing numpy/pandas.
+scikit-learn>=1.5,<2
