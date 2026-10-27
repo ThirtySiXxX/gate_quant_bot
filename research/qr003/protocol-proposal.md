@@ -1,10 +1,18 @@
 # QR-003 Phase A：BTC + ETH 入场事件与退出标签审计
 
 Task-ID: QF-QR-003-PHASE-A
-State: APPROVED_PHASE_A_IN_PROGRESS
+State: PHASE_A_COMPLETE_AWAITING_D2
 Revision: r2
 Date: 2026-10-28 (Australia/Melbourne)
 Base: `7650d59cc2983394c38ea8fa5bd102ca90288017`
+
+## 完成记录
+
+八条预定 BTC/ETH 轨迹已完成；工程完整性通过（保留数据限制），训练仍待 D2。
+两币基线合计 65 笔持仓、63 个自然标签、2 个终止删失，旧折起点成熟标签合计
+0/16/36。八条路径的 260 条持仓记录只有 71 个不同市场起源；不得当独立样本。
+完整结果见 `docs/agent-reports/qr/QF-QR-003-feasibility.md` 和 `results/summary.json`。
+当前不训练；下一步先决定研究精度和数据范围，或另行批准明确为探索性的小型线性基线。
 
 ## r2 范围及决策记录（优先于下方保留的 r1）
 
