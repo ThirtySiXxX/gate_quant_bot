@@ -1,19 +1,19 @@
 # QF-QD-006-REVIEW: execution, fees and labels preflight
 
 Date: 2026-10-28 Australia/Melbourne.
-Status: **PREFLIGHT_COMPLETE_AWAITING_EXACT_QR_SPEC**.
+Status: **REVISE_AWAITING_QR_CORRECTIONS** (exact-draft review below).
 Dispatch: `QF-DISPATCH-20261028-QD006-PREFLIGHT-1`.
 Worktree: `/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot`;
 branch `codex/qd-cache-safety`; base:
 `ba1a507d8b265f29f355a015d5f189178361e611` (clean before work).
 
-## Scope and deliverable
+## Scope and original preflight deliverable
 
 Current exclusive claims: Markdown/JSON design in `research/qd006/` and this
 report. Added `research/qd006/implementation-constraints.md`, covering twelve
 numbered constraints, accounting examples, ownership, future path allowlists,
 bounded implementation stages and compatibility/rollback. No QR specification
-has been approved: its exact committed draft is still pending.
+was approved at preflight; the subsequent exact-draft disposition is recorded below.
 Design SHA256:
 `306c1f81d77dd25dcd8a210ab99c3fbc929f12ea85ad8a3ccf578fac361bd505`.
 
@@ -98,3 +98,86 @@ bounded implementation consequence. This preflight makes no overall protocol
 acceptance finding. Historical economic-label readiness remains unresolved.
 The final protocol/plan review ends with a report; implementation, data acquisition,
 actual replay/labels and training require their respective later authorizations.
+
+## Exact QR draft review: REVISE
+
+Continuation dispatch: `QF-DISPATCH-20261028-QD006-EXACT-REVIEW-1`, with schema
+clarifications requested by `QF-CONTROL-20261028-QD006-SCHEMA-POINTS-1`.
+QD review parent: `01bc6e798edd200e9553c17702739279f34f0384`.
+Reviewed QR commit: `2c3846c53443307b410a647ba0efbed078884d8b` relative to
+`96be10c19a7cece6f4e8ba3fb91a8b65d2a90608`. All five committed bytes matched
+the read-only QR working files and the coordinator's exact hashes:
+
+| QR file | SHA256 |
+| --- | --- |
+| `research/qr006/protocol.md` | `f4434a259ce9974e36fedc32e34aaa910b84553e496c7840b112276baf76cbe8` |
+| `research/qr006/acceptance.json` | `8c3038dbd613d1d84c9e6c01873fbfee5a125ce2c5a044d4d188ab59897ad510` |
+| `research/qr006/evidence.json` | `afd3468133ab45eb83fc727d959054389e1d31bdbeb49d2fa27f040f594aa00a` |
+| `docs/interface-requests/qr-qf006-execution-cost-label.md` | `231f97a5a796eceaa6ddcf18d4f770d0f5ebbf842ff5ece1ad384e9b30282bbc` |
+| `docs/agent-reports/qr/QF-QR-006-protocol.md` | `68b6ec921c3d6a69f80db72bf4ae207a3525096944ba9674ce10c93de9776d00` |
+
+Added `research/qd006/implementation-plan.md` and `research/qd006/review.json`.
+Exact SHA256 identities:
+
+- Implementation plan: `ed84ef1276b78a0aebe2fb465942fba46cf77676dae9c55d7745f5f9f6111337`.
+- Review JSON: `9a0a29dc95b1706c0ea037f16c9903bc1ee4c7081467360674be79ca52cf8695`.
+
+The JSON gives every QD6-C01..C12 and QF006-A01..A34 an explicit ACCEPT/REVISE
+disposition: **30 acceptance criteria ACCEPT, 4 REVISE** (A02, A13, A14, A21).
+An ACCEPT means the specified future criterion is suitable; none of the 34
+contract tests has been implemented or executed in this review. Overall protocol
+freeze remains **REVISE**, not approved implementation.
+
+| Required correction | Concrete reason / smallest next change |
+| --- | --- |
+| QD006-R1 | Separate cumulative obligation revisions from independently identified postings. A14's -0.05 correction cannot debit cash merely when a rate revision is learned. Extend A13/A14 with two revisions before posting, posting redelivery/conflict, credit and fee-correction variants. |
+| QD006-R2 | Strict interface enums conflict with A02 `role_basis=synthetic` and A21 `immature`. Use the permitted role basis and an explicitly represented maturity state, keeping both stable IDs. |
+| QD006-R3 | Completeness coverage time and its availability are not explicitly distinct. Add a typed scope/rule/revision/known-time assertion so a later watermark cannot mature an earlier label; extend A21, keep A22's strict microsecond inequalities. |
+
+Counterexample for R1: booked -0.05 leaves C=999.95. Learning total=-0.10 makes
+L=0.05 without changing C; learning total=-0.08 before another posting leaves
+L=0.03, C unchanged. Posting -0.03 then leaves C=999.92, L=0. Revision discovery
+must not masquerade as a booking or repeatedly charge the whole revised total.
+The plan contains explicit counterexamples and acceptance consequences for all
+three requests; no wider research or additional data is needed to resolve them.
+
+Accepted design directions: snapshot-based eligibility, mark/units separation,
+late obligations surviving close, FIFO lots, gross-entry denominator including
+adds, causal fresh-loss-aware synthetic budget, strict 24h maturity in microseconds,
+cross-asset purge, stateful counterfactual replay and native version isolation.
+As-known cash/budget must remain separate from restated economic attribution.
+The budget is a new synthetic scenario state policy, not unchanged native replay
+or actual available exchange margin. Deferred data/run parameters remain explicit.
+
+Ownership proposal resolves the QR wording ambiguity: QD alone implements the
+future EpisodeLabel producer/exporter (`research/qd009/episode_export.py`);
+QR alone owns label-policy specification and independent validator under
+`research/qr009/`. QR's "target construction" describes semantic responsibility,
+not a concurrent edit to QD's exporter. QR must confirm the proposed allocation.
+The plan lists exact future editor/reviewer/test/report paths and the bounded
+order: synthetic ledger -> evidence coverage -> separately approved full-state
+replay -> separately approved target construction. These are proposals, not
+current file claims or permission to start those stages.
+
+Verified the two additional official funding-rule announcements: S06 states
+2025-08-29 10:00 UTC effectiveness but displays later 11:30 publication; S07
+states 2026-04-13 01:00 UTC effectiveness despite an earlier illustrative date.
+These support QR's distinction between effective rules and public knowledge;
+neither establishes actual BTC/ETH transitions or a complete historical calendar.
+[S06](https://www.gate.com/announcements/article/46849),
+[S07](https://www.gate.com/announcements/article/50645).
+Earlier preflight checks cover the fee/funding/API sources. Statistical-method
+references remain QR's methodology responsibility; QD has not computed DSR/PBO
+or independently revalidated those papers in this continuation.
+
+Verification in this continuation is document-only: exact committed/file hashes,
+JSON ID/reference/ownership consistency, **58 independent literal Decimal
+assertions**, strict microsecond boundary/finality-clock examples, enum
+counterexamples, and Git whitespace/preservation checks. All passed, using only
+the existing interpreter and standard library, without importing application
+modules. The original preflight design hash remains unchanged. Source main HEAD,
+staged-diff SHA and index-byte SHA again match the preservation values above.
+No new implementation/tests, model/scaler fitting, market labels, replay, data
+download, runtime/shared-schema edit or source-main operation occurred.
+Next action: QR corrects the three specific issues and returns exact new draft
+identities for re-review. Stop here; no automatic freeze, implementation or run.
