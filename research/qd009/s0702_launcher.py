@@ -36,15 +36,19 @@ POLL = 0.010
 ARTIFACT_BYTES = 31 * MIB
 LOG_BYTES = MIB // 2
 RECEIPT_BYTES = MIB // 2
+FINAL_RESERVE = 128 * 1024  # Part of RECEIPT_BYTES, not an extra allocation.
+PROGRESS_INTERVAL = 0.1
 
 # Run unchanged fixture code once. -I -B prevents environment path injection and
 # bytecode files; the candidate's existing VFS/application budget guards artifacts.
 CHILD = r'''
 from pathlib import Path
-import hashlib, importlib.util, json, os, resource, sys, traceback
+import datetime, hashlib, importlib.util, json, os, resource, sys, traceback
 root, out = Path(sys.argv[1]), Path(sys.argv[2])
 pins = json.loads(sys.argv[3])
 resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+print(json.dumps(dict(launcher_event='CHILD_CODE_ENTERED', pid=os.getpid(),
+                     entered_at=datetime.datetime.now(datetime.timezone.utc).isoformat())), flush=True)
 for name, expected in pins.items():
     if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
         print(json.dumps(dict(status='FAIL', reason='IDENTITY_MISMATCH', file=name)))
@@ -142,18 +146,60 @@ def main():
                 output_limit_bytes=32 * MIB, artifact_limit_bytes=ARTIFACT_BYTES,
                 log_limit_bytes=LOG_BYTES, receipt_reservation_bytes=RECEIPT_BYTES)
     remaining = receipt("started.json", dict(base, started_at=utc(), status="PRELAUNCH"), RECEIPT_BYTES)
-    state = dict(pid=None, reason=None)
-    lock = threading.Lock()
+    state = dict(pid=None, child_pid=None, reason=None, stop_attempted=False,
+                 termination=None, child_exit_confirmed=False, errors=[], finalized=False)
+    lock = threading.RLock()
+    with (OUT / "lifecycle.jsonl").open("xb"):
+        pass
+
+    def remember_error(where, exc):
+        if len(state["errors"]) < 8:
+            state["errors"].append(dict(where=where, error=type(exc).__name__,
+                                        message=str(exc)[:1024]))
+
+    def record(event, **fields):
+        nonlocal remaining
+        with lock:
+            try:
+                raw = encode(dict(event=event, at=utc(), **fields))
+                if len(raw) > remaining - FINAL_RESERVE:
+                    raise RuntimeError("lifecycle quota exhausted; final reservation retained")
+                remaining -= len(raw)  # Conservative debit even after a partial I/O failure.
+                with (OUT / "lifecycle.jsonl").open("ab") as dest:
+                    dest.write(raw)
+                    dest.flush()
+                    os.fsync(dest.fileno())
+                return True
+            except BaseException as exc:
+                remember_error("lifecycle_write", exc)
+                return False
 
     def stop(reason):
         with lock:
+            if state["finalized"]:
+                return
             if state["reason"] is None:
                 state["reason"] = reason
-            if state["pid"] is not None:
-                try:
-                    os.killpg(state["pid"], signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
+            if state["pid"] is None or state["stop_attempted"]:
+                return
+            # One signal request only. No permission escalation or fallback channel.
+            state["stop_attempted"] = True
+            request = dict(pid=state["pid"], signal=int(signal.SIGKILL),
+                           reason=state["reason"], requested_at=utc(),
+                           submission="UNKNOWN", error=None, errno=None)
+            state["termination"] = request
+            try:
+                os.killpg(state["pid"], signal.SIGKILL)
+                request["submission"] = "ACCEPTED_NOT_EXIT_CONFIRMED"
+            except ProcessLookupError as exc:
+                request.update(submission="NO_SUCH_PROCESS_NOT_EXIT_CONFIRMED",
+                               error=type(exc).__name__, errno=exc.errno)
+            except BaseException as exc:
+                request.update(submission="ERROR", error=type(exc).__name__,
+                               errno=getattr(exc, "errno", None))
+                remember_error("killpg", exc)
+            request["returned_at"] = utc()
+            record("TERMINATION_REQUEST", **request)
 
     child = None
     usage = None
@@ -161,8 +207,36 @@ def main():
     peak = samples = written = 0
     max_gap = 0.0
     last_sample = None
-    error = None
+    next_progress = 0.0
+    reaped_at = None
+    popen_returned_at = None
     selector = selectors.DefaultSelector()
+
+    def reap_once():
+        nonlocal code, usage, reaped_at
+        if child is None or code is not None:
+            return
+        with lock:
+            pid, status, observed_usage = os.wait4(child.pid, os.WNOHANG)
+            if not pid:
+                return
+            state["pid"] = None
+            state["child_exit_confirmed"] = True
+            code = os.waitstatus_to_exitcode(status)
+            child.returncode = code
+            usage = observed_usage
+            reaped_at = utc()
+            record("CHILD_REAPED", pid=child.pid, exit_code=code,
+                   signal=-code if code < 0 else None,
+                   post_exit_peak_rss_bytes=usage.ru_maxrss,
+                   cpu_user_seconds=usage.ru_utime, cpu_system_seconds=usage.ru_stime)
+
+    def progress(event):
+        return record(event, pid=state["child_pid"], elapsed_seconds=time.monotonic() - start,
+                      sampled_peak_rss_bytes=peak if samples else None, rss_samples=samples,
+                      max_sample_gap_seconds=max_gap if samples > 1 else None,
+                      log_bytes=written, child_exit_confirmed=state["child_exit_confirmed"])
+
     # Start before Popen: interpreter startup, imports and fixture setup count.
     started_at = utc()
     start = time.monotonic()
@@ -180,25 +254,30 @@ def main():
                 start_new_session=True)
             with lock:
                 state["pid"] = child.pid
+                state["child_pid"] = child.pid
+                popen_returned_at = utc()
+                saved = record("CHILD_LAUNCHED", pid=child.pid, launch_started_at=started_at,
+                               popen_returned_at=popen_returned_at,
+                               exact_os_child_start_at=None,
+                               null_reason="OS_START_TIME_NOT_MEASURED")
+            if not saved:
+                stop("PID_RECEIPT_FAILED")
             if state["reason"] is not None:
                 stop(state["reason"])
             os.set_blocking(child.stdout.fileno(), False)
             selector.register(child.stdout, selectors.EVENT_READ)
             while code is None or selector.get_map():
+                if state["stop_attempted"]:
+                    break  # Preserve receipt; do not wait indefinitely after a denied kill.
                 if code is None:
-                    with lock:
-                        pid, status, observed_usage = os.wait4(child.pid, os.WNOHANG)
-                        if pid:
-                            state["pid"] = None
-                    if pid:
-                        code = os.waitstatus_to_exitcode(status)
-                        child.returncode = code
-                        usage = observed_usage
+                    reap_once()
+                    if code is not None:
                         watchdog.cancel()
                     else:
                         now = time.monotonic()
                         if now >= deadline:
                             stop("WALL_DEADLINE")
+                            break
                         try:
                             value = read_rss(child.pid)
                             peak = max(peak, value)
@@ -212,6 +291,13 @@ def main():
                             # Includes the exit/sample race: conservative stop,
                             # never reinterpret unavailable telemetry as zero RSS.
                             stop("RSS_SAMPLE_UNAVAILABLE")
+                        if state["stop_attempted"]:
+                            break
+                        if now >= next_progress:
+                            if not progress("MEASUREMENTS"):
+                                stop("PROGRESS_RECEIPT_FAILED")
+                                break
+                            next_progress = now + PROGRESS_INTERVAL
                 for key, _ in selector.select(max(0, min(POLL, deadline - time.monotonic())) if code is None else 0):
                     data = os.read(key.fileobj.fileno(), 8192)
                     if not data:
@@ -219,25 +305,36 @@ def main():
                         continue
                     allowed = min(len(data), LOG_BYTES - written)
                     if allowed:
+                        written += allowed  # Upper-bound debit survives partial write/fsync failure.
                         log.write(data[:allowed])  # Pre-write accounting, not size polling.
-                        written += allowed
+                        log.flush()
+                        os.fsync(log.fileno())  # Includes the child's own code-entry timestamp.
                     if allowed != len(data):
                         stop("LOG_OUTPUT_EXCEEDED")
     except BaseException as exc:
-        error = type(exc).__name__ + ": " + str(exc)[:1024]
+        with lock:
+            remember_error("supervisor", exc)
+        record("SUPERVISOR_ERROR", errors=state["errors"])
         stop("SUPERVISOR_ERROR")
     finally:
-        if child is not None and code is None:
-            stop("SUPERVISOR_CLEANUP")
-            with lock:
-                _, status, usage = os.wait4(child.pid, 0)
-                state["pid"] = None
-            code = os.waitstatus_to_exitcode(status)
-            child.returncode = code
         watchdog.cancel()
-        selector.close()
-        if child is not None and child.stdout is not None:
-            child.stdout.close()
+        if child is not None and code is None:
+            stop("SUPERVISOR_CLEANUP")  # Idempotent, including after PermissionError.
+            try:
+                reap_once()  # WNOHANG only; never block receipt writing on child exit.
+            except BaseException as exc:
+                with lock:
+                    remember_error("wait4", exc)
+        for name, close in (("selector_close", selector.close),
+                            ("stdout_close", child.stdout.close if child is not None else lambda: None)):
+            try:
+                close()
+            except BaseException as exc:
+                with lock:
+                    remember_error(name, exc)
+        progress("SUPERVISION_ENDED")
+        with lock:
+            state["finalized"] = True  # No late watchdog signal or receipt mutation.
     elapsed = time.monotonic() - start
     if elapsed > WALL and state["reason"] is None:
         state["reason"] = "WALL_EXCEEDED"
@@ -247,34 +344,65 @@ def main():
     try:
         last_line = (OUT / "child-output.log").read_bytes().splitlines()[-1]
         if len(last_line) <= 32768:
-            result = json.loads(last_line)
+            decoded = json.loads(last_line)
+            encode(decoded)  # Reject non-finite JSON before building the final receipt.
+            result = decoded
     except (OSError, ValueError, IndexError):
         pass
     status = "CAP" if state["reason"] or code == 3 else "FAIL"
+    if state["errors"] or (child is not None and not state["child_exit_confirmed"]):
+        status = "FAIL"
     if (code == 0 and not state["reason"] and isinstance(result, dict)
+            and not state["errors"]
             and result.get("status") == "PASS" and result.get("fixtures") == 1
+            and isinstance(result.get("metrics"), dict)
             and result.get("metrics", {}).get("bodies") == 512):
         status = "PASS"
-    evidence_bytes = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file())
+    try:
+        evidence_bytes = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file())
+    except BaseException as exc:
+        remember_error("evidence_stat", exc)
+        evidence_bytes = None
+        status = "FAIL"
     final = dict(base, status=status, test_processes_started=int(child is not None),
-                 started_at=started_at, ended_at=utc(), wall_seconds=elapsed,
+                 child_pid=state["child_pid"], started_at=started_at,
+                 popen_returned_at=popen_returned_at, child_reaped_at=reaped_at,
+                 supervision_ended_at=utc(), supervision_wall_seconds=elapsed,
+                 child_exit_confirmed=state["child_exit_confirmed"],
+                 child_wall_seconds=None, exact_child_start_at=None, exact_child_end_at=None,
                  exit_code=code, signal=-code if code is not None and code < 0 else None,
-                 stop_reason=state["reason"], supervisor_error=error,
-                 sampled_peak_rss_bytes=peak, rss_samples=samples, max_sample_gap_seconds=max_gap,
+                 stop_reason=state["reason"], termination_request=state["termination"],
+                 supervisor_errors=state["errors"],
+                 sampled_peak_rss_bytes=peak if samples else None, rss_samples=samples,
+                 max_sample_gap_seconds=max_gap if samples > 1 else None,
                  post_exit_peak_rss_bytes=usage.ru_maxrss if usage else None,
                  cpu_user_seconds=usage.ru_utime if usage else None,
                  cpu_system_seconds=usage.ru_stime if usage else None,
-                 log_bytes=written, evidence_bytes_before_final=evidence_bytes,
-                 child_result=result, retries=0)
+                 log_bytes_issued_upper=written, evidence_bytes_before_final=evidence_bytes,
+                 child_result=result, retries=0,
+                 unknown_reasons=dict(exact_child_times="NOT_MEASURED; supervision times are separate",
+                                      exit_and_cpu="UNKNOWN_UNLESS_WAIT4_REAPED",
+                                      child_liveness="MAY_STILL_BE_RUNNING_UNLESS_REAPED",
+                                      unsampled_rss="SAMPLING_CANNOT_ESTABLISH_A_HARD_CAP"))
     raw = encode(final)
-    if evidence_bytes + len(raw) > 32 * MIB:
+    if evidence_bytes is not None and evidence_bytes + len(raw) > 32 * MIB:
         # No overwrite/delete to disguise an overrun; retain explicit failure.
         final.update(status="CAP", stop_reason="ARTIFACT_ACCOUNTING_OVERRUN")
-    summary = encode(dict(status=final["status"], receipt=str(OUT / "result.json")))
-    if len(summary) > remaining:
-        raise RuntimeError("console reservation exhausted before write")
-    receipt("result.json", final, remaining - len(summary))
-    sys.stdout.write(summary.decode())
+    try:
+        receipt("result.json", final, remaining - 4096)  # Console space is prepaid too.
+        summary = dict(status=final["status"], receipt=str(OUT / "result.json"),
+                       child_exit_confirmed=state["child_exit_confirmed"])
+    except BaseException as exc:
+        # A partial result file is retained; no overwrite or second write attempt.
+        final["status"] = "FAIL"
+        summary = dict(status="FAIL", reason="FINAL_RECEIPT_WRITE_FAILED",
+                       error=type(exc).__name__, message=str(exc)[:512],
+                       child_pid=state["child_pid"], child_exit_confirmed=state["child_exit_confirmed"])
+    try:
+        sys.stdout.write(encode(summary).decode())
+        sys.stdout.flush()
+    except OSError:
+        pass  # Storage/stdout/host failure cannot be made durable by this launcher.
     return 0 if final["status"] == "PASS" else 1
 
 
