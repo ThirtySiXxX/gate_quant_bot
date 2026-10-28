@@ -1,0 +1,897 @@
+{
+  "namespace": "qr009.replay-proposal",
+  "schema_version": 1,
+  "revision": "qr009-r3-proposal-1",
+  "task_id": "QF-QR-009-R3-DESIGN",
+  "dispatch_id": "QF-DISPATCH-20261028-QR009-R3-DESIGN-1",
+  "status": "DESIGN_ONLY_PENDING_QD_REVIEW_AND_USER_CHOICES",
+  "base_commit": "0a90b2555db8e16934053abff31db29bac4296a2",
+  "semantic_owner": "QR",
+  "implementation_owner": "QD_FUTURE_ALLOCATION",
+  "counterpart_review": "PENDING",
+  "authorization": {
+    "implementation": false,
+    "market_query_evaluation": false,
+    "market_replay": false,
+    "label_export": false,
+    "fit": false,
+    "training_requires_fresh_human_confirmation": true,
+    "native_changes": false,
+    "integration": false
+  },
+  "evidence": {
+    "qd_preflight": {
+      "commit": "d90e3684dbfcb54ead9bbfd933b209e71fb42ce5",
+      "path": "docs/agent-reports/qd/QF-QD-008-replay-preflight.md",
+      "sha256": "b156f6fc7bcdda0a93af3e2ad0d9476815b4186ffdcf29b8ec1fd484e8b395a5",
+      "read_scope": "FULL_DOCUMENT"
+    },
+    "qr006_protocol": {
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "path": "research/qr006/protocol.md",
+      "sha256": "4957875f25168ea33d630fb63be00a712d86ac049b932bdc11f731e8b980e270"
+    },
+    "qr006_acceptance": {
+      "path": "research/qr006/acceptance.json",
+      "sha256": "d75fb7d7274ab2da41c71cd097f27982a3d2a7d103b5c1146d84da2429f9058c",
+      "criteria_count": 34,
+      "preserve_all": true
+    },
+    "qr007": {
+      "commit": "e2211a20bb0919b77506328e68867ff9357ec6c3",
+      "status": "PASS_SYNTHETIC_ONLY",
+      "reference_implementation_commit": "0ea2d51901689a351068bb9d33906c3240832afa",
+      "reference_profile": "qd007-synthetic-r3",
+      "maximum_records": 4096
+    },
+    "qr008": {
+      "commit": "0a90b2555db8e16934053abff31db29bac4296a2",
+      "path": "research/qr008/exact-data-review.json",
+      "sha256": "f79b29dbd0bd47080bb296f033fafe8c61799fed9e6ebff1608f7cdeee325c60",
+      "ohlcv_status": "PASS_WITH_DISCLOSED_RETROSPECTIVE_SOURCE_LIMITATIONS",
+      "mark_raw_status": "PASS_WITH_GAPS",
+      "mark_queries": "NOT_EVALUATED",
+      "VR08": "OPEN"
+    },
+    "requirement_audit": {
+      "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/training-readiness-requirement-audit-r1.json",
+      "sha256": "dddf57c3891a79f8fe933fe41a12e3cc0d549abe31be0ba035e487ee5cf4c8a1",
+      "authority": "SCHEDULING_INDEX_ONLY_R2_STATUS_PREDATES_FINAL_ACCEPTANCE"
+    },
+    "funding_lineage": {
+      "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/funding-raw-lineage-through-september-r1.json",
+      "sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+      "source_objects": 90,
+      "rows_per_asset": 4107,
+      "legacy_available_at_forbidden": true,
+      "historical_arrival": "UNKNOWN"
+    },
+    "public_fixture": {
+      "path": "research/qr001/replay_fixture.json",
+      "sha256": "e7ab2cfabfe09ec233ed64a809b1584255265254b572dce0427a74fac751879b",
+      "authority": "FROZEN_NATIVE_POLICY_REFERENCE_NOT_NEW_CAPITAL_OR_COST_APPROVAL"
+    },
+    "qd009_contract": {
+      "status": "EXACT_TARGET_HANDED_OFF_REVIEW_ACTIVE_NOT_ACCEPTED",
+      "commit": "19cd4c7e461799b9b9a13fef2028902e8dfcd48c",
+      "path": "docs/interface-requests/qd-qf009-streaming-ledger.md",
+      "sha256": "36a7b157cdba45692b6737ba465d7b2bf4e29b9d2a012a52b67d454fb1c02ac7"
+    }
+  },
+  "approved_inputs": {
+    "status": "APPROVED_INPUT",
+    "instruments": [
+      "BTC_USDT",
+      "ETH_USDT"
+    ],
+    "venue": "Gate",
+    "product": "USDT_linear_perpetual",
+    "evidence_mode": "SCENARIO",
+    "unit_money": "USDT",
+    "unit_price": "USDT_per_base_asset",
+    "unit_quantity": "integer_contracts",
+    "unit_volume": "exact_decimal_contracts",
+    "clock": "integer_UTC_unix_microseconds",
+    "start_us": 1672531200000000,
+    "end_exclusive_us": 1790812800000000,
+    "time_window_utc": [
+      "2023-01-01T00:00:00Z",
+      "2026-10-01T00:00:00Z"
+    ],
+    "ohlcv_source_policy": "ARCHIVE_PREFIX_REST_COMPLETE_ROWS_FROM_20251201_R1",
+    "ohlcv_dataset_revision": 3,
+    "ohlcv_dataset_id": "gate-btc-eth-exact-ohlcv-v3-candidate",
+    "ohlcv_aggregation": "UTC_EXACT_HOURLY_PARENTS_R1",
+    "ohlcv_manifest_sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+    "ohlcv_catalog_sha256": "05b91231c6ff6214ec50b9dddd595f7fd1fa4184571f0518fe0f2752db150aa9",
+    "fee_fractions": {
+      "primary": "0.00075",
+      "stress": "0.0015",
+      "reference": "0.0005"
+    },
+    "multipliers_base_per_contract": {
+      "BTC_USDT": "0.0001",
+      "ETH_USDT": "0.01"
+    },
+    "mark_clocks": {
+      "primary": {
+        "lag_us": 60000000,
+        "max_source_age_us": 120000000,
+        "max_available_age_us": 60000000
+      },
+      "stress": {
+        "lag_us": 120000000,
+        "max_source_age_us": 180000000,
+        "max_available_age_us": 60000000
+      }
+    },
+    "funding": {
+      "snapshot": "source_seconds * 1000000",
+      "rate_available": "(snapshot_us // 3600000000 + 1) * 3600000000",
+      "amount_known": "max(rate_available_us, qualified_snapshot_MARK_available_us); null if required MARK unknown",
+      "posting": "amount_known_us + 60000000",
+      "scoped_finality": "max(scope_evidence_complete_us, scope_cash_settled_us) + 3600000000",
+      "historical_snapshot_truth": false,
+      "floor_to_8h": false
+    }
+  },
+  "user_assumption_groups": {
+    "U1": {
+      "status": "PROPOSED_USER_ASSUMPTION",
+      "subject": "Execution-only open proxy, hourly schedule, latency, adverse slippage, capacity and cancel rules",
+      "recommended": "ACCEPT_CANDIDATE_RULES",
+      "alternative": "REVISE_BEFORE_FREEZE_NO_RUN"
+    },
+    "U2": {
+      "status": "PROPOSED_USER_ASSUMPTION",
+      "subject": "Independent capital, cash equity binding, scenario tiers, reserves, unknown gate and delayed final feedback",
+      "recommended": "ACCEPT_CANDIDATE_RULES",
+      "alternative": "REVISE_BEFORE_FREEZE_NO_RUN"
+    },
+    "U3": {
+      "status": "PROPOSED_USER_ASSUMPTION",
+      "subject": "Warmup/account start, conservative native carry sampling, 8h-equivalent annualization, evidence tail and fixed sensitivity matrix",
+      "recommended": "ACCEPT_CANDIDATE_RULES",
+      "alternative": "REVISE_BEFORE_FREEZE_NO_RUN"
+    }
+  },
+  "account": {
+    "decision_group": "U2",
+    "initial_cash_usdt": "10000",
+    "scope": [
+      "scenario_id",
+      "instrument_id",
+      "trajectory_id"
+    ],
+    "pooled_capital": false,
+    "initial_positions": 0,
+    "initial_pending_orders": 0,
+    "initial_claims": 0,
+    "account_start_us": 1704067200000000,
+    "warmup_end_exclusive_us": 1704067200000000,
+    "warmup_exposure": false,
+    "warmup_calendar_zero_eligibility_explicit": true,
+    "reset_at_fold": false,
+    "native_allocation_and_ticket_equity": "as_known_booked_C",
+    "report_equity": "E=C+A-L+U",
+    "native_current_notional": "signed_contracts * multiplier * latest_closed_1h_trade_close",
+    "bankruptcy_stop": "C <= 0 or known E <= 0",
+    "bankruptcy_status": "INSOLVENT_SCENARIO_INCOMPLETE",
+    "liquidation_claim": false
+  },
+  "strategy_binding": {
+    "status": "ENGINEERING_REVIEW_REQUIRED",
+    "native_source_sha256": {
+      "src/strategy_signals.py": "aa3b9e71512008ff43f49639d8d2cf113e81def7ab031e41676453def86e78dc",
+      "src/strategy_execution.py": "e1eaa17ea1292c7e906d4634b274fe72f2a415dfa409054674a33c22b9b1f5bb",
+      "src/position_sizing.py": "e80773ec1bf0ec88fdf8128f368649cf123d3ad92b615b46d3ce3e754c20efad",
+      "src/execution_timing.py": "41d4593eaf345cdc8d26759605651e3e7bcfcb679604416b29fef80b821d9344",
+      "src/portfolio.py": "1837e2601c2255515644394b6934f45a933d11c758f93aafae926d9bb120397d",
+      "src/backtest.py": "9183091e85c4354720118c53f0d97b72022f018afa03d9e9479f4929f5a8540c",
+      "src/costs.py": "356d3f5a29df9a64caeb40948fe4408dad81982fa5255cba051deb578b70621e",
+      "src/carry.py": "81b370e9b84384be578db2163f7f4397b3edf41ebf78ffc56567522ead5e016f",
+      "src/trend.py": "5234e1d35b7da34b8dd3429a6811b5ea5036d1e20a3af51fe70e34e56063a361",
+      "src/vol.py": "8ed00ac4df7b86ffd2abcf80bcf55c201a631f7ac31d1e786f8e7cf95713ed3a",
+      "src/indicators.py": "232a22a778a94eb0a101991474788a637078bea3f9832d8383683056878ef828",
+      "src/config.py": "29eed6a35c7ecb8b079b21616754c49774fa0bb9034dbba3fc2112734c968709",
+      "src/models.py": "01c28b7c42e00fcd6b5fcc6415246a5c73af5348fd5301d11b116f1064a8c20e",
+      "src/risk.py": "95410f4adf88f25e1030d108c43f3a4069c162523ba91bdff91e7462966826ad"
+    },
+    "strategy_config_reference": {
+      "execution_timing": {
+        "symbols": [
+          "ETH_USDT"
+        ],
+        "require_trend_agreement": true,
+        "trail_atr": 3.0
+      },
+      "initial_capital_usdt": 10000,
+      "position_sizing_mode": "fixed_margin",
+      "ml_model_path": "",
+      "ml_min_entry_probability": 0.45,
+      "trend_weight": 0.8,
+      "carry_weight": 0.2,
+      "short_trend_weight": 0.6,
+      "main_trend_weight": 0.4,
+      "ewmac_horizons": [
+        [
+          8,
+          32
+        ],
+        [
+          16,
+          64
+        ],
+        [
+          32,
+          128
+        ],
+        [
+          64,
+          256
+        ]
+      ],
+      "ewma_lambda": 0.94,
+      "forecast_scale_lookback": 1500,
+      "forecast_scale_min_periods": 100,
+      "fdm_max": 2.5,
+      "fdm_lookback": 500,
+      "fdm_min_periods": 60,
+      "regime_ema_fast": 21,
+      "regime_ema_slow": 55,
+      "regime_ema_long": 200,
+      "regime_adx_period": 14,
+      "regime_adx_trend_threshold": 15,
+      "regime_oppose_dampen": 0.5,
+      "regime_range_dampen": 0.8,
+      "carry_scale_lookback": 1000,
+      "target_annual_vol_pct": 10,
+      "covariance_interval": "4h",
+      "max_leverage": 4,
+      "max_instrument_exposure_pct": 55,
+      "max_correlated_group_exposure_pct": 60,
+      "no_trade_buffer_pct": 25,
+      "exit_buffer_multiplier": 3,
+      "invert_direction": false,
+      "manage_existing_positions": false,
+      "auto_close_removed_symbols": false,
+      "tick_interval_sec": 900,
+      "short_trend_interval": "1h",
+      "main_trend_interval": "4h",
+      "regime_interval": "1d",
+      "min_bars_short": 300,
+      "min_bars_main": 300,
+      "min_bars_regime": 220,
+      "adaptive_risk_enabled": true,
+      "adaptive_er_lookback": 24,
+      "adaptive_er_full_risk": 0.35,
+      "adaptive_vol_fast_lambda": 0.75,
+      "adaptive_vol_slow_lambda": 0.995,
+      "adaptive_vol_ratio_start": 1.1,
+      "adaptive_vol_ratio_full": 1.6,
+      "adaptive_max_risk_reduction": 0.65,
+      "adaptive_multiplier_smoothing_span": 4,
+      "adaptive_fast_reduce_threshold": 0.45,
+      "depth_guard_enabled": true,
+      "depth_levels": 20,
+      "max_entry_spread_bps": 5,
+      "max_entry_slippage_bps": 8,
+      "min_depth_fill_ratio": 1
+    },
+    "ignored_reference_fields": [
+      "initial_capital_usdt is superseded by U2 proposal; not inherited approval",
+      "depth/spread settings are retained metadata, cannot be claimed enforced by OHLCV fill proxy",
+      "tick_interval_sec is runtime metadata; research hourly scheduling is U1"
+    ],
+    "ml_model_path": "",
+    "daily_loss_limit_enabled": false,
+    "scope_timing": "PRESERVE_ETH_ONLY_PUBLIC_POLICY",
+    "model_feature_schema_change": false,
+    "native_modules_edited": false
+  },
+  "scenario_contract": {
+    "decision_group": "U2",
+    "basis": "SYNTHETIC_NOT_HISTORICAL_EXCHANGE_TIERS",
+    "contract_type": "crypto",
+    "order_size_min": 1,
+    "order_size_max": 1000000000,
+    "market_order_size_max": 1000000000,
+    "leverage_min": "1",
+    "leverage_max": "200",
+    "risk_tiers": [
+      {
+        "risk_limit": "1000000",
+        "leverage_max": "200"
+      }
+    ],
+    "multiplier": "approved_inputs.multipliers_base_per_contract",
+    "on_native_tier_or_quantity_rejection": "RECORD_REJECTED_NO_RESIZE"
+  },
+  "execution": {
+    "decision_group": "U1",
+    "decision_grid": {
+      "start_us": 1704067200000000,
+      "end_exclusive_us": 1790812800000000,
+      "step_us": 3600000000,
+      "opportunities_per_asset_path": 24096
+    },
+    "latency_us": 1000000,
+    "stress_latency_us": 3601000000,
+    "fill_time": "min(hourly_boundary >= decision_us + latency_us), strictly before cutoff",
+    "open_view": {
+      "name": "RETROSPECTIVE_EXECUTION_ONLY_OPEN_PROXY",
+      "fields": [
+        "instrument_id",
+        "open_us",
+        "open_price"
+      ],
+      "available_us": "open_us (new simulation assumption)",
+      "full_row_available_us": "bar_close_us unchanged",
+      "historical_first_tick_proved": false
+    },
+    "slippage_bps": "5",
+    "stress_slippage_bps": "10",
+    "price_rule": {
+      "buy": "exact_open * (1 + slippage_bps/10000)",
+      "sell": "exact_open * (1 - slippage_bps/10000)"
+    },
+    "extra_slippage_expense": false,
+    "tick_rounding": "NONE_NOT_A_VENUE_RULE",
+    "role": "TAKER_SCENARIO",
+    "depth_spread_evidence": "UNAVAILABLE_NOT_ASSERTED_PASS",
+    "reserve_slippage_fraction": "max(slippage_bps/10000,0.0008)",
+    "reserve_floor_approval": "U1_NEW_ASSUMPTION_NOT_INHERITED",
+    "capacity": {
+      "name": "PREVIOUS_CLOSED_HOUR_CONTRACTS",
+      "participation_fraction": "0.001",
+      "stress_participation_fraction": "0.0001",
+      "quantity": "floor(participation * exact_volume_of_hour_ending_at_fill)",
+      "per_asset_boundary_shared": true,
+      "order_priority": "REDUCTIONS_FIRST",
+      "is_executable_depth": false
+    },
+    "quantity_rule": "native_integer_at_submission_frozen; min(requested,capacity) only after full-ticket exact affordability check",
+    "max_pending_orders_per_asset": 1,
+    "cancel_policy": "ONE_ELIGIBLE_OPEN_THEN_CANCEL_REMAINDER_SAME_US_LATER_PHASE",
+    "opposing_new_decision": "CANCEL_OLD_PENDING_BEFORE_NEW_SUBMISSION",
+    "same_direction_pending": "LOG_NO_RESUBMISSION",
+    "partial_entry": "NO_PYRAMID_NO_TOPUP",
+    "reversal": "CLOSE_THEN_LATER_DECISION_AFTER_FEEDBACK_GATE",
+    "cutoff_orders": "CANCEL_NO_FILL"
+  },
+  "reservations": {
+    "decision_group": "U2",
+    "N0": "requested_contracts * multiplier * submission_reference_close",
+    "g": "max(slippage_bps/10000,0.0008)",
+    "Ng": "N0*(1+g)",
+    "M_pending": "Ng/200",
+    "F_pending": "2*fee_fraction*Ng",
+    "S_pending": "N0*g",
+    "M_held": "sum(remaining_lot_contracts*multiplier*entry_fill_price)/200",
+    "F_held": "abs(held_contracts)*multiplier*qualified_current_MARK*(1+slippage_bps/10000)*fee_fraction",
+    "S_held": "0",
+    "pending_reductions_extra_reserve": "0; already in held reserves",
+    "budget": "C-L+min(U,0)-M_held-M_pending-F_held-F_pending-S_pending",
+    "qf006_reserved_margin": "M_held+M_pending+S_pending",
+    "qf006_reserved_fees": "F_held+F_pending",
+    "future_receivables_spendable": false,
+    "positive_U_spendable": false,
+    "posted_fees_reserved_again": false,
+    "unknown_required_component": "NULL_BUDGET_BLOCK_INCREASE",
+    "fill_revalidation": "remove own pending reservation for comparison; full requested quantity at exact fill-open with g/r; reject rather than resize",
+    "post_fill": "atomic fills/postings/cancel/recompute before another decision"
+  },
+  "scheduler": {
+    "status": "ENGINEERING_REVIEW_REQUIRED",
+    "same_us_primary": [
+      "ADMIT_AVAILABLE_INFORMATION",
+      "SNAPSHOT_PRE_FILL_ELIGIBILITY",
+      "RECOGNIZE_TOTALS_AND_APPLY_DUE_FUNDING_POSTINGS",
+      "OLD_ORDER_FILL_REALIZED_PRICE_FEE_POSTINGS_AND_CANCEL",
+      "SCOPED_FINALITY_FEEDBACK_REFRESH_BUDGET_HOURLY_DECISION_NEW_RESERVE",
+      "TRACE_AND_CHECKPOINT"
+    ],
+    "tie_stress": "Move old-order fill/fee phase before snapshot; preserve info first and all subsequent dependencies",
+    "same_time_new_order_fill": false,
+    "per_raw_mark_tick_trigger": false,
+    "closed_scope_endpoint_us": "natural_last_close_us + 1 (not a query time)"
+  },
+  "postings_and_finality": {
+    "status": "ENGINEERING_REVIEW_REQUIRED",
+    "fee_obligation_key": [
+      "account_id",
+      "fill_id",
+      "fee"
+    ],
+    "fee_total": "-executed_contracts*multiplier*exact_fill_price*fee_fraction",
+    "fee_revision": 1,
+    "fee_posting_key": [
+      "fee_obligation_id",
+      "posting",
+      1
+    ],
+    "fee_known_us": "fill_us",
+    "fee_booking_us": "fill_us later phase",
+    "no_fill_fee": "0",
+    "funding_obligation_key": [
+      "account_id",
+      "instrument_id",
+      "source_timestamp_us",
+      "accepted_source_row_identity"
+    ],
+    "funding_total": "-snapshot_signed_contracts*multiplier*qualified_snapshot_MARK*exact_final_rate",
+    "zero_eligibility": "KNOWN_ZERO_WITH_CALENDAR_EVIDENCE_NOT_FABRICATED_MARK",
+    "duplicate": "NO_OP_IF_IDENTICAL_ELSE_HARD_STOP",
+    "finality_scope": [
+      "fills",
+      "fee_revisions",
+      "funding_revisions",
+      "all_linked_postings_and_corrections",
+      "zero_eligibility_calendar_coverage"
+    ],
+    "finality_authority": "FROZEN_NAMED_SCENARIO",
+    "current_revision_invalidation": true,
+    "past_as_known_immutable": true
+  },
+  "unknown_policy": {
+    "decision_group": "U2",
+    "mode": "RETAIN_TRACE_BLOCK_NEW_RISK",
+    "missing_decision_mark": "UNSUPPORTED_CHECK_RECORDED_NO_NEW_RISK",
+    "flat_U": "KNOWN_ZERO_BY_INVENTORY_NOT_PRICE_SUBSTITUTE",
+    "stale_held_mark": "U_NULL_BUDGET_NULL_ALLOW_SUPPORTED_NATURAL_REDUCTION",
+    "missing_snapshot_mark": "OBLIGATION_UNKNOWN_PERMANENTLY_NO_LATER_MARK_SUBSTITUTION",
+    "missing_fill_open_or_capacity": "NO_FILL_NO_FEE",
+    "no_returns_based_period_removal": true,
+    "recover_current_valuation": "ONLY_FRESH_QUALIFIED_POINT_AT_LATER_SCHEDULED_QUERY",
+    "permanent_unknown_after_flat": "REMAIN_BLOCKED",
+    "hard_errors": [
+      "HASH",
+      "SCHEMA",
+      "ORDER",
+      "ID_CONFLICT",
+      "NUMERIC_BOUNDARY",
+      "CAUSALITY",
+      "CHECKPOINT",
+      "UNEXPECTED_QUERY",
+      "BUDGET_EXHAUSTED"
+    ],
+    "complete_trace_with_gaps_status": "COMPLETE_WITH_UNSUPPORTED_NOT_FULL_ACCEPTANCE"
+  },
+  "native_feedback": {
+    "decision_group": "U2",
+    "material_strategy_adaptation": true,
+    "fill_call": "unchanged record_fill(closed=False); pnl=realized_price_cash+executed_fee_cash",
+    "opening_fee_included": true,
+    "funding_at_fake_fill": false,
+    "natural_flat": "WAIT_EPISODE_FINALITY; no new entries or timing.decide while waiting",
+    "saved_state": [
+      "episode_id",
+      "delivered_fill_feedback_sum",
+      "natural_close_feature",
+      "natural_close_direction",
+      "natural_close_bar_ts",
+      "full_native_timing_and_sizing_books"
+    ],
+    "completion_event": "TYPED_FEEDBACK_COMPLETION_NOT_FILL",
+    "completion_call": "unchanged record_fill(closed=True, pnl=settled_episode_net-delivered_fill_feedback_sum, saved_close_feature/side/bar)",
+    "next_decision": "next permitted hourly phase after completion",
+    "unknown_final_net": "REMAIN_WAITING_NO_ZERO_SUBSTITUTION",
+    "later_revision": "ledger/budget/current_finality update only; no retrospective rearm or duplicate close feedback"
+  },
+  "evidence_tail": {
+    "decision_group": "U3",
+    "start_us": 1790812800000000,
+    "end_exclusive_us": 1790820000000000,
+    "duration_us": 7200000000,
+    "allowed": "derived known times/postings/assertions for origins before market cutoff from frozen inputs",
+    "new_market_observation": false,
+    "new_mark_query": false,
+    "strategy_decision": false,
+    "new_order": false,
+    "forced_close": false,
+    "open_at_cutoff": "CENSORED_FOR_FUTURE_EXPORT",
+    "flat_pending": "IMMATURE_OR_INVALID_IF_UNSUPPORTED"
+  },
+  "carry_projection": {
+    "decision_group": "U3",
+    "native_functions_unchanged": true,
+    "funding_timestamp_seconds": "approved_rate_available_us / 1000000 exact",
+    "legacy_available_at_consumption": false,
+    "annualization_interval_seconds": 28800,
+    "annualization_factor": "1095",
+    "meaning": "8H_EQUIVALENT_SCENARIO_UNIT_NOT_ACTUAL_CALENDAR",
+    "cash_proration": false,
+    "native_sampling": "main_bar_open timestamp; signal available only at main_bar_close",
+    "example_utc": {
+      "source": "08:00:03",
+      "rate_available": "09:00:00",
+      "first_sample_bar_open": "12:00:00",
+      "first_signal_decision": "16:00:00"
+    },
+    "missing_native_carry": "NO_NEW_RISK_NO_FAKE_ZERO"
+  },
+  "numeric_projection": {
+    "status": "ENGINEERING_REVIEW_REQUIRED",
+    "id": "qr009-native-f64-1",
+    "authoritative": "exact decimal/rational and integer UTC us",
+    "native_dtype": "float64",
+    "integer_seconds_max_absolute": 9007199254740992,
+    "require_us_divisible_by": 1000000,
+    "nonfinite_or_nonzero_underflow": "REJECT",
+    "tolerance_for_economic_branch": "NONE",
+    "exact_postchecks": [
+      "floor",
+      "round",
+      "min_max_quantity",
+      "tier",
+      "budget",
+      "feedback_net_sign"
+    ],
+    "strategy_allowlist": [
+      "closed economic OHLCV fields",
+      "availability-filtered funding",
+      "causal native signals/targets/timing",
+      "booked C and budget",
+      "approved scenario metadata"
+    ],
+    "audit_fields_in_strategy": false,
+    "future_hash_as_seed": false,
+    "subsecond_clocks_in_native_bisect": false,
+    "source_price_from_float_roundtrip": false,
+    "max_error_by_field_logged": true,
+    "conversion_error_bound": {
+      "absolute_when_abs_x_le_1": "0.000000000001",
+      "relative_otherwise": "0.000000000001"
+    },
+    "generated_identity_rule": "account scope plus causal local sequence; no full-file digest or hash-dependent phase ordering",
+    "raw_identity_bindings": "separate audit envelope; future rehash may change refs, not past economic projection/transitions/generated sequence"
+  },
+  "query_plan": {
+    "status": "PROPOSED_NOT_EVALUATED",
+    "id": "qr009-hour-and-funding-superset-1",
+    "asset_ids": [
+      "BTC_USDT",
+      "ETH_USDT"
+    ],
+    "mark_clock_ids": [
+      "primary",
+      "stress"
+    ],
+    "H_us": 3600000000,
+    "H_grid_count": 32856,
+    "H_grid": "start_us+k*H, 0<=k<32856",
+    "H60": "h+60000000 for h in H_grid",
+    "S": "4107 exact source funding timestamps per asset",
+    "set_rule": "(H_grid union H60 union S) intersect [start_us,end_exclusive_us)",
+    "maximum_times_per_asset_clock": 69819,
+    "maximum_unique_lookups": 279276,
+    "maximum_role_tags_per_lookup": 7,
+    "roles": [
+      "decision",
+      "funding_snapshot",
+      "permitted_fill",
+      "valuation",
+      "reservation",
+      "booking",
+      "finality_check"
+    ],
+    "closure": "all scheduled actionable times are H, H+60s or S; plus H remains H or H+60s; no post-cutoff query; scope +1us is not a trigger",
+    "latest_eligible_rule": "complete raw-prefix maximum source_us with source_us+lag_us<=q and source_age<=limit and available_age<=60s",
+    "independent_complete_prefix_proof_required": true,
+    "qr008_select_mark_sufficient": false,
+    "raw_relevant_months": "all intervals intersecting [q-source_age_limit,q-lag], including adjacent month when needed",
+    "missing_required_month": "UNKNOWN_MISSING_MONTH_NO_INTAKE",
+    "alias_rule": "MARK_EXACT_OBSERVATION_ALIAS_R2",
+    "unexpected_query": "HARD_STOP_NO_DYNAMIC_EXPANSION",
+    "actual_query_trace_subset_required": true,
+    "holdings_based_selection": false,
+    "return_based_selection": false,
+    "hit_rate": "NOT_EVALUATED",
+    "raw_point_materialization": false
+  },
+  "scenarios": [
+    {
+      "id": "P0",
+      "parameters": {
+        "fee_fraction": "0.00075",
+        "slippage_bps": "5",
+        "latency_us": 1000000,
+        "participation_fraction": "0.001",
+        "mark_clock": "primary",
+        "tie_order": "SNAPSHOT_BEFORE_FILL"
+      },
+      "delta_from_primary": {},
+      "trajectories": [
+        "ALLOW_ALL",
+        "SKIP_FIRST_ADMISSIBLE_ENTRY"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    },
+    {
+      "id": "F_HIGH",
+      "parameters": {
+        "fee_fraction": "0.0015",
+        "slippage_bps": "5",
+        "latency_us": 1000000,
+        "participation_fraction": "0.001",
+        "mark_clock": "primary",
+        "tie_order": "SNAPSHOT_BEFORE_FILL"
+      },
+      "delta_from_primary": {
+        "fee_fraction": "0.0015"
+      },
+      "trajectories": [
+        "ALLOW_ALL"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    },
+    {
+      "id": "F_REFERENCE",
+      "parameters": {
+        "fee_fraction": "0.0005",
+        "slippage_bps": "5",
+        "latency_us": 1000000,
+        "participation_fraction": "0.001",
+        "mark_clock": "primary",
+        "tie_order": "SNAPSHOT_BEFORE_FILL"
+      },
+      "delta_from_primary": {
+        "fee_fraction": "0.0005"
+      },
+      "trajectories": [
+        "ALLOW_ALL"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    },
+    {
+      "id": "S_HIGH",
+      "parameters": {
+        "fee_fraction": "0.00075",
+        "slippage_bps": "10",
+        "latency_us": 1000000,
+        "participation_fraction": "0.001",
+        "mark_clock": "primary",
+        "tie_order": "SNAPSHOT_BEFORE_FILL"
+      },
+      "delta_from_primary": {
+        "slippage_bps": "10"
+      },
+      "trajectories": [
+        "ALLOW_ALL"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    },
+    {
+      "id": "L_EXTRA",
+      "parameters": {
+        "fee_fraction": "0.00075",
+        "slippage_bps": "5",
+        "latency_us": 3601000000,
+        "participation_fraction": "0.001",
+        "mark_clock": "primary",
+        "tie_order": "SNAPSHOT_BEFORE_FILL"
+      },
+      "delta_from_primary": {
+        "latency_us": 3601000000
+      },
+      "trajectories": [
+        "ALLOW_ALL"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    },
+    {
+      "id": "Q_LOW",
+      "parameters": {
+        "fee_fraction": "0.00075",
+        "slippage_bps": "5",
+        "latency_us": 1000000,
+        "participation_fraction": "0.0001",
+        "mark_clock": "primary",
+        "tie_order": "SNAPSHOT_BEFORE_FILL"
+      },
+      "delta_from_primary": {
+        "participation_fraction": "0.0001"
+      },
+      "trajectories": [
+        "ALLOW_ALL"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    },
+    {
+      "id": "M_SLOW",
+      "parameters": {
+        "fee_fraction": "0.00075",
+        "slippage_bps": "5",
+        "latency_us": 1000000,
+        "participation_fraction": "0.001",
+        "mark_clock": "stress",
+        "tie_order": "SNAPSHOT_BEFORE_FILL"
+      },
+      "delta_from_primary": {
+        "mark_clock": "stress"
+      },
+      "trajectories": [
+        "ALLOW_ALL"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    },
+    {
+      "id": "T_FILL_FIRST",
+      "parameters": {
+        "fee_fraction": "0.00075",
+        "slippage_bps": "5",
+        "latency_us": 1000000,
+        "participation_fraction": "0.001",
+        "mark_clock": "primary",
+        "tie_order": "PREEXISTING_FILL_BEFORE_SNAPSHOT"
+      },
+      "delta_from_primary": {
+        "tie_order": "PREEXISTING_FILL_BEFORE_SNAPSHOT"
+      },
+      "trajectories": [
+        "ALLOW_ALL"
+      ],
+      "assets": [
+        "BTC_USDT",
+        "ETH_USDT"
+      ],
+      "status": "PROPOSED_USER_ASSUMPTION"
+    }
+  ],
+  "trajectory_policy": {
+    "primary": [
+      "ALLOW_ALL",
+      "SKIP_FIRST_ADMISSIBLE_ENTRY"
+    ],
+    "sensitivity": [
+      "ALLOW_ALL"
+    ],
+    "skip_selection": "first chronologically fully admissible flat-state entry proposal before order submission; no returns used",
+    "skip_if_none": "NO_INTERVENTION",
+    "full_state_required": true,
+    "total_paths": 18,
+    "models": 0
+  },
+  "resource_proposal": {
+    "status": "ENGINEERING_REVIEW_REQUIRED_NOT_AUTHORIZATION",
+    "query": {
+      "producer_attempts_max": 2,
+      "independent_checker_attempts_max": 2,
+      "wall_seconds_each": 600,
+      "rss_mib_each": 512,
+      "new_disk_mib_each": 256
+    },
+    "synthetic": {
+      "scope": "SEPARATE_INITIAL_STREAMING_LEDGER_ENGINEERING_REGISTER",
+      "status": "PROPOSED_QD009_CAPS_CASE_MANIFEST_AND_S13_STAGE_PENDING_REVIEW",
+      "target_commit": "19cd4c7e461799b9b9a13fef2028902e8dfcd48c",
+      "target_section": 8,
+      "reference_max_records": 4096,
+      "benchmark_records": [
+        512,
+        2048,
+        8192,
+        32768
+      ],
+      "repetitions_each": 2,
+      "producer_measured_attempts": 8,
+      "seconds_per_benchmark": 60,
+      "aggregate_benchmark_seconds": 480,
+      "producer_functional_attempts": 1,
+      "qr_functional_attempts": 1,
+      "seconds_per_functional_suite": 120,
+      "whole_register_seconds": 720,
+      "rss_mib": 256,
+      "resident_cache_mib": 8,
+      "new_disk_mib_total": 2304,
+      "time_growth_4x": "T(4N)<=6*T(N)+0.25s",
+      "disk_growth_4x": "bytes(4N)<=4.5*bytes(N)+64KiB",
+      "rss_growth": "RSS32768<=RSS512+32MiB",
+      "supersedes_uncommitted_16k_32k_64k_proposal": true,
+      "native_S13": "SEPARATE_LATER_GATE_NO_INITIAL_PASS_CLAIM"
+    },
+    "replay": {
+      "planned_paths": 18,
+      "failure_diagnostic_restarts_max": 6,
+      "all_started_attempts_max": 24,
+      "wall_seconds_per_attempt": 900,
+      "cpu_seconds_per_attempt": 600,
+      "rss_mib_per_attempt": 1024,
+      "disk_mib_per_attempt": 512,
+      "journal_records_per_attempt": 500000,
+      "checkpoints_per_attempt": 256,
+      "checkpoint_every_active_hours": 168,
+      "checkpoint_at_fold_and_end": true,
+      "concurrent_paths": 1
+    },
+    "whole_stage": {
+      "wall_seconds": 14400,
+      "cpu_seconds": 14400,
+      "new_disk_mib": 14336,
+      "frozen_inputs_read_only_and_not_copied": true,
+      "first_reached_limit_stops": true
+    },
+    "attempt_budget_includes_failures": true,
+    "successful_path_rerun_for_selection": false,
+    "pre_run_scaling_gate": true
+  },
+  "evaluation_annotations": {
+    "calendar_utc": [
+      "2024-01-01T00:00:00Z",
+      "2025-01-01T00:00:00Z",
+      "2025-07-01T00:00:00Z",
+      "2026-01-01T00:00:00Z",
+      "2026-10-01T00:00:00Z"
+    ],
+    "accounts_reset": false,
+    "prior_years_untouched_holdout": false,
+    "fit": false
+  },
+  "minimum_acceptance": {
+    "status": "PROSPECTIVE_NOT_EXECUTED",
+    "keep_QF006_34": true,
+    "reference_parity": true,
+    "prefix_vs_future_perturbation": true,
+    "whole_state_restart_and_fold_continuity": true,
+    "exact_projection_thresholds": true,
+    "unknown_budget_and_exit": true,
+    "finite_query_complete_prefix_and_subset": true,
+    "feedback_finality_and_rearm": true,
+    "A23": "scheduler crossing fold with pending obligations; no reset or prior-fold label; forced-terminal negative fixture censored/null",
+    "A26": "controlled scheduler cash100/ticket80/loss50 vs skip first gives blocked50 vs eligible100; also actual native sizing path",
+    "A34": "reference100/fill101/exit110/base1/fees0/funding0 yields9 through scheduler/cash/feedback; no second slippage expense"
+  },
+  "future_gates": {
+    "R3": "reviewed streaming/projection + independent acceptance + query coverage + user choices + bounded dispatch",
+    "R4": "episode export/independent labels, strict known/end 24h boundaries and cross-asset purge; training-only dependence/sufficiency",
+    "R5": "frozen features/models/budgets/metrics/effect/precision and genuine prospective reservation",
+    "final_fit_gate": "FRESH_HUMAN_CONFIRMATION_REQUIRED",
+    "training_ready": false
+  },
+  "draft_user_questions_file": "research/qr009/replay-protocol-proposal.md#10-draft-user-questions-coordinator-asks-after-qd-review-do-not-send-now",
+  "draft_user_questions_count": 3,
+  "known_limitations": [
+    "No exact historical first availability/revision truth",
+    "Hourly open proxy and prior-volume capacity are scenario assumptions, not executable depth",
+    "No historical tiers or maintenance/liquidation/ADL model",
+    "No actual MARK query support rate",
+    "No R3 implementation, market replay, labels or training"
+  ],
+  "implementation_freeze_gate": {
+    "status": "UNASSIGNED_BLOCKS_RUN",
+    "implementation_commits": null,
+    "independent_checker_commits": null,
+    "checkpoint_schema": null,
+    "query_schema": null,
+    "python_numpy_pandas_versions": null,
+    "complete_resolved_config_hash": null
+  }
+}
