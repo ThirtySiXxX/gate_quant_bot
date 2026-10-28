@@ -1,7 +1,9 @@
 # QD007 synthetic event ledger: typed API checkpoint
 
-Status: **READY_FOR_QR_SCHEMA_REVIEW**. Proposal `qd007-synthetic-r2`,
-2026-10-28 Australia/Melbourne. No implementation exists at this checkpoint.
+Status: **IMPLEMENTATION_SPEC_WITH_REVIEWED_B1**. Profile `qd007-synthetic-r3`,
+2026-10-28 Australia/Melbourne. Original r2 checkpoint was design-only;
+QR accepted its six revisions at 4d2f57a65456c299bb7d05a64e119d01a251a2b9.
+The subsequent implementation handoff and reviewed B1 amendment are recorded below.
 QD sole implementation editor; QR financial reviewer and independent validator.
 Parent QD: `9bb3c0ec2b57e7154a51e56d795645c273c1308d`.
 Semantic authority: QR `c7e9a2492247fa31e216035f87e8bb20cca6e6ad`,
@@ -465,8 +467,8 @@ LotState exactly: `{lot_id,episode_id,instrument_id,opening_fill_id,opened_at_us
 direction:long|short,initial_contracts:I+,remaining_contracts:I,
 entry_price:D+,multiplier:D+,live_ranges:list[UnitRange],closed_slice_ids:list[ID]}`.
 ClosedSlice exactly: `{slice_id,lot_id,episode_id,closing_fill_id,closed_at_us,
-unit_start:I,unit_end:I+,realized_price_pnl_usdt:D,entry_fee_cash_usdt:D,
-exit_fee_cash_usdt:D,funding_cash_usdt:D|null,attribution_revision:I+,
+unit_start:I,unit_end:I+,realized_price_pnl_usdt:D,entry_fee_cash_usdt:D|null,
+exit_fee_cash_usdt:D|null,funding_cash_usdt:D|null,attribution_revision:I+,
 null_reasons:object}`. Unknown funding uses that slice's own
 `funding_cash_usdt:UNKNOWN_OBLIGATION_TOTAL` or UNRESOLVED_SNAPSHOT_COVERAGE.
 Closed lots/slices remain addressable. No averaged-entry division is necessary.
@@ -588,7 +590,7 @@ view, allowing late-discovered postings. It never overwrites snapshot(e).
 Restated budget is null/RESTATED_VIEW and new_risk_supported=false: this API is
 for audit only and cannot feed order budgets or historical decision features.
 
-Snapshot exactly: `{namespace,schema_version,profile:"qd007-synthetic-r2",
+Snapshot exactly: `{namespace,schema_version,profile:"qd007-synthetic-r3",
 ledger_id,trajectory_id,scenario_id,view,as_of_us,knowledge_cutoff_us,
 causal_policy_sha256:H,
 balances:BalanceSnapshot,lots:list[LotState],closed_slices:list[ClosedSlice],
@@ -654,7 +656,7 @@ OPEN_EPISODE, UNSETTLED_OBLIGATION, UNRESOLVED_FINALITY,
 INVALID_ASSERTION_AUTHORITY. No unknown-zero coercion or additional balance field
 is accepted as a substitute for these exact nullable values.
 
-Audit exactly: `{namespace,schema_version,profile:"qd007-synthetic-r2",ledger_id,config_sha256:H,
+Audit exactly: `{namespace,schema_version,profile:"qd007-synthetic-r3",ledger_id,config_sha256:H,
 source_manifest_sha256:H,committed_sha256:H,committed_state:object,
 integrity:clean|stopped,failure_receipts:list[object]}`. committed_state exactly
 `{config:LedgerConfig,records:list[normalized records],derived_entries:list[LedgerEntry],
@@ -699,6 +701,36 @@ QR supplies literals and uses the public API; expected values must not call QD
 finance/allocation helpers. Missing source files or unknown actual market evidence
 are dependencies, not reasons to create a downloader or expand the namespace.
 
-Checkpoint stops at schema review. Code/tests require the coordinator's exact QR
-review handoff. No real-data intake/replay/labels, model/scaler fitting, runtime
+The original checkpoint stopped at schema review. The coordinator subsequently
+provided IMPLEMENT-1 and B1-AMENDMENT-1, authorizing the assigned code/tests with
+the reviewed B1 change; independent implementation validation is still pending. No real-data intake/replay/labels, model/scaler fitting, runtime
 migration, risk-default change, merge, deployment or scheduler is authorized here.
+
+
+## Reviewed B1 amendment: fee attribution unknowns (r3 only change)
+
+QR proposal snapshot SHA256:
+`8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1`.
+Dispatch QF-DISPATCH-20261028-QD007-B1-AMENDMENT-1 authorizes this local
+clarification after the r2 design ACCEPT. Namespace/schema_version remain local
+version1; output profile advances to qd007-synthetic-r3. The six r2 acceptances
+remain design history, not evidence that implementation passed.
+
+ClosedSlice.entry_fee_cash_usdt and exit_fee_cash_usdt are each D|null. At the
+query cutoff, if a corresponding latest available fee obligation T is unknown,
+that side is null with its own UNKNOWN_OBLIGATION_TOTAL reason. Known other fee
+side, funding if known, realized gross, quantity, time and IDs remain intact.
+All already closed slices affected by that obligation become unknown, not just
+the last slice. Later known cumulative T recomputes the current attribution by
+the same accepted FIFO closing path without changing cash. Earlier as-known
+values and original Fill/Leg calculated fees remain immutable audit facts.
+
+Literal oracle (no funding): entry10,m0.001,price49900/50100, gross2, fees
+-0.2495/-0.2505 already posted, C10001.5. Entry fee revision2 T=null makes
+entry attribution null/UNKNOWN_OBLIGATION_TOTAL, exit stays -0.2505, C unchanged,
+entry B stays -0.2495 and aggregate A/L/E/budget follow R06 unknown propagation.
+Revision3 T=-0.2 restores entry=-0.2 and current derived net1.5495, C remains
+10001.5, A0.0495/E10001.5495. Only a new refund Posting+0.0495 makes C10001.5495
+and A0. Test the symmetric exit case, both sides unknown and partial closes.
+S1 emits no new net/episode fields: an independent checker deriving net must
+return unknown if any required attribution is unknown, never skip null in a sum.

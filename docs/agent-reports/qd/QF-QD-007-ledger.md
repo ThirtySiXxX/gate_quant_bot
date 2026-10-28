@@ -1,5 +1,26 @@
 # QF-QD-007-LEDGER: schema/API checkpoint
 
+Current status: **CODE_TESTED_CANDIDATE_PREPARATION**. Implementation milestone
+and current identities are appended after the preserved schema-review history.
+
+## Resolved B1 dependency (history, 2026-10-28)
+
+Dispatch QF-DISPATCH-20261028-QD007-IMPLEMENT-1; implementation in progress after
+QR acceptance `4d2f57a65456c299bb7d05a64e119d01a251a2b9`. Frozen schema unchanged.
+**B1: unknown revised fee attribution needs counterpart clarification.** A
+closed fill's fee obligation has a known original total, then an allowed fee
+ObligationRevision sets cumulative_signed_total_usdt=null/UNKNOWN_AMOUNT. Financial
+T/P/A/L/E/budget can remain unknown as required, but ClosedSlice entry_fee_cash_usdt
+and exit_fee_cash_usdt are nonnullable D, while current attribution must reflect
+the latest cumulative revision. Zero or the previous total would falsely assert
+known current fees; adding nullability is outside the frozen code allowlist.
+Requested resolution: explicitly permit unknown affected fee attribution with a
+null reason, or specify a separate prior-known attribution/validity convention.
+No capability is silently rejected or field changed. Continue independent core
+implementation while coordinator/QR resolves this concrete schema dependency.
+Resolution: coordinator supplied the exact QR-reviewed B1 amendment below;
+the formerly blocking dependency is closed in profile qd007-synthetic-r3.
+
 Date: 2026-10-28 Australia/Melbourne.
 Status: **READY_FOR_QR_SCHEMA_REVIEW**. No ledger or test code written.
 Current proposal: `qd007-synthetic-r2`; six-request revision response is appended
@@ -200,3 +221,130 @@ The original main HEAD, staged-diff SHA and index-byte SHA again match the
 preservation values above. Git changes are exactly the two owned Markdown files;
 ledger/test Python files remain absent. No existing evidence or shared document
 was changed, and no market/operational action was performed.
+
+## Implemented synthetic ledger, reviewed r2 plus B1
+
+Implementation dispatch: `QF-DISPATCH-20261028-QD007-IMPLEMENT-1`;
+parent `a183e40ed27b2250f7030ce3babbe5d579dc268b`. QR's six-request schema ACCEPT
+is exact commit `4d2f57a65456c299bb7d05a64e119d01a251a2b9`, review SHA256
+`6244a0fce343215ba43f60db76483a945075f4c6bcdfe4bd349dab6d1e30bf54`.
+The accepted r2 schema SHA remains historical
+`6e5fea553aedcdf6d800ced8a2ba5d0d49b5abd0b60cf931417fd6dff78408b7`.
+
+`QF-DISPATCH-20261028-QD007-B1-AMENDMENT-1` additionally authorized the owned
+schema edit after QR's minimal B1 review. Verified exact proposal snapshot
+`/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/qr007-b1-reviewed-proposal.txt`,
+SHA256 `8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1`.
+Local profile now **qd007-synthetic-r3**, namespace/schema_version still the
+standalone local version1. Only the two ClosedSlice fee fields gained reviewed
+nullable propagation; no target/net field, cash rule or runtime migration added.
+
+Implemented the frozen public APIs in `research/qd007/event_ledger.py`, standard
+library only: strict typed normalization and fixture provenance, canonical hashes,
+exact rational arithmetic, quantum/residual FIFO attribution, explicit event
+eligibility, original fee claims and independent cash postings, cumulative T/B/P
+revisions, after-close credits/surcharges, unknown propagation, synthetic budget,
+availability-filtered snapshots, separate restated audit, scoped completeness
+diagnostics, global entity ownership, source idempotency and all-batch atomic
+commit/integrity stop. Public inputs are copied and all returned data deep-copied.
+The module performs no I/O and imports no app/exchange/model code.
+
+Implementation details within the accepted contract: attribution_revision is a
+positive deterministic counter from the relevant available source revisions,
+so updates to either independent fee side change the current version; it is not
+the maximum unrelated revision ordinal. Balance entries remain one per obligation
+transition, with separate FIFO slice attribution. Canonical candidate state/hash
+and receipt are prepared before commit. Conflicting simultaneous reserve updates
+reject rather than selecting a monetary state by ID order. Constant-multiplier
+profile rejects undeclared conversion capability.
+
+## Executed producer verification
+
+Added `tests/test_qd_event_ledger.py`: **32 unittest methods passed**, including
+hundreds of strict-type/null/shape subcases (not counted as separate tests).
+Expected monetary values are literal independent examples, not calls to QD
+finance helpers used as oracles. QR's new validator/tests were not read or edited.
+
+- All R01-R06 positive/negative scenarios execute through the public API,
+  including cross-fixture future catalogue perturbation, whole-batch late-fill
+  rejection, mark availability versus late final rate, 10/20/21/22 completeness,
+  two-coin ID ownership, and numeric Posting with unknown total/null deltas.
+- Signed/zero fees/funding, explicit no-event calendar, partial closes before and
+  after snapshot, adds/reversal attribution, split payments, refunds, revision gaps,
+  conflicting IDs and posting restatement rejection execute on synthetic tapes.
+- S02 signed 1/1/1 and 2/1 paths, cumulative correction recomputation, invalid
+  weights and opposite-sign coarse-quantum residual rejection pass independently
+  of ambient Decimal precision/traps.
+- B1 tests cover entry unknown, symmetric exit unknown, both unknown, every affected
+  closed partial slice, later restoration and separate refund. Known other values,
+  original cash/B and earlier cutoff outputs remain intact; malformed null reasons
+  reject. No new episode-net output was invented.
+- Output field sets/local null maps, source corroboration versus causal hashes,
+  deep-copy/input preservation, rehashed semantic corruption and atomic rollback
+  are checked. Restated future booking outside its economic cutoff initially
+  exposed a DANGLING_ORIGIN error; filtering excluded bookings before finance
+  projection fixed it. The corrected focused suite passes; this was not hidden.
+
+Commands from the QD worktree (no installs):
+
+```sh
+# Focused: existing interpreter, socket connects blocked before unittest discovery.
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python - <<'PY'
+import socket, unittest
+def offline(*a, **k):
+    raise AssertionError('QD007 offline only')
+socket.create_connection = socket.socket.connect = socket.socket.connect_ex = offline
+r = unittest.TextTestRunner(verbosity=1).run(
+    unittest.defaultTestLoader.discover('tests', pattern='test_qd_event_ledger.py'))
+raise SystemExit(not r.wasSuccessful())
+PY
+# Existing guarded file entry supports macOS spawn and blocks child socket connects.
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/qd005/run_offline_tests.py
+node tests/web_regressions.cjs
+git diff --check
+```
+
+Results: focused **32 passed** (0.127s); full Python discovery **262 passed**
+(12.264s); **8 frontend regression groups passed**; whitespace checks passed.
+These are producer/old-regression results, not QR independent implementation PASS.
+Fixture log messages about HTTP responses/disk failure are intentional mocks;
+no actual market request or application/engine startup was performed.
+
+Current code/schema identities before candidate generation:
+
+| File | SHA256 |
+| --- | --- |
+| `research/qd007/schema.md` | `7fd7df5f84a8822f5fdd37243d24e0eb293d9eeacda17514c8b1f1ad04ac475a` |
+| `research/qd007/event_ledger.py` | `354df077fba2c7ea0cd2d7cfb83c4a68f9102aa7fb398b1af7106727bf40645a` |
+| `tests/test_qd_event_ledger.py` | `628e8a22eb87384e72867f7e673ea58ef4fcc1b2de07efd388c97c77eeb8a1f2` |
+
+## Stage evidence and remaining gates
+
+Executed S1 primitive/ledger evidence covers A01/A02/A04/A05/A07/A09-A14/A17-A20
+and R01-R06/B1. Partial S1 evidence only: A03/A06 order/no-event arithmetic,
+A08/A15/A16/A31-A33 profile/rule rejection rather than historical proof,
+A21/A29 synthetic readiness rather than EpisodeLabel export, A22 units rather
+than complete fold purge, A24 FIFO/add arithmetic rather than target export,
+A27 local namespace/static isolation, A30 synthetic mark freshness and A34 given-
+fill PnL. A23/A25/A26/A28 full fold/selection/counterfactual/training-workflow
+acceptance is deferred. Do not label all 34 design IDs implemented PASS.
+
+The 4096-record limit and immutable full fixture catalogue are explicit prototype
+capacity/transport boundaries, not a claim that the API can replay full market
+history. No historical-exact, fractional-contract, late-origin repair, imported
+posting restatement>1, liquidation/ADL or real available-margin support is claimed.
+Full-state market replay, historical/volume precision coverage, target exporter,
+purge/embargo integration and statistical sufficiency remain separate gates.
+
+The newer human choices (2026-10-01 economic cutoff; repair volume before research;
+named clock/integer-ticket/multiplier scenarios; 0.075% main/0.15% stress/0.05%
+reference costs) are future market-run configuration, not constants/defaults
+inserted into this API. A helper test accepts explicit 0.00075/0.0015 fractions;
+no market comparison was run. Volume source recovery/independent acceptance is
+required before future market replay/labels/research. Fitting still lacks approval.
+
+Only the four owned files change, including the specifically authorized B1 schema
+amendment. No shared runtime/contracts/journals, QR files, original main, frozen
+market evidence, live services or configuration changed. Candidate creation will
+write only ignored synthetic inputs/actual API outputs with exact code binding;
+the module itself has no writer. After publishing those identities, stop for QR.
