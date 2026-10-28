@@ -24,6 +24,7 @@ independent acceptance to market replay.
 | QD007 code / schema r3 | commit `0ea2d51901689a351068bb9d33906c3240832afa`; SHA `7c1a08c569b79618b6de3092e297ef1ed1a51b54da29d62e76e7e2c900620636` / `7fd7df5f84a8822f5fdd37243d24e0eb293d9eeacda17514c8b1f1ad04ac475a`; current bytes match |
 | Old public PhaseA fixture | QR worktree `research/qr001/replay_fixture.json`, SHA `e7ab2cfabfe09ec233ed64a809b1584255265254b572dce0427a74fac751879b`; public/simulated ETH snapshot, not private config |
 | New MARK metadata only | coordination `mark-r2-raw-handoff.json`, SHA `30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce`; verified exact handoff bytes, no raw-object scan |
+| Funding lineage supplement | coordination `funding-raw-lineage-through-september-r1.json`, SHA `176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5`; exact evidence bytes checked under `QF-CONTROL-20261028-QD008-FUNDING-LINEAGE-1`, no raw archive re-scan |
 
 Native source remains byte-identical to this base and the old observer's pins:
 strategy_signals SHA `aa3b9e71512008ff43f49639d8d2cf113e81def7ab031e41676453def86e78dc`;
@@ -90,6 +91,15 @@ account once at its declared start. Never reset cash, FIFO inventory, reservatio
 pending obligations, revisions, IDs, timing state or information history monthly,
 at2024 start after an already active account, or at a fold boundary. Chunking disk
 I/O is permitted only when the same economic state and historical queries survive.
+
+The subsequent funding-lineage handoff confirms an **observed4107 source rows per
+coin** in this window, not merely the illustrative8h event count above. It reports
+full gzip/CRC/order/hash/domain checks on90 monthly funding_applies objects and
+exact rate lexemes/timestamps/source_id/source_row against v2. All8214 old
+available_at values equal source timestamp. Observed second offsets remain intact;
+matching total counts does not justify flooring to8h or imposing a fixed cadence.
+This is the coordinator's raw-lineage evidence, not a new normalized scenario
+event table, independent market-query acceptance or historical snapshot proof.
 
 Additional interface blockers: the config requires a complete literal source
 catalogue with hashes of each input payload. A simulated Fill depends on prior
@@ -177,6 +187,39 @@ inventory and audit hashes never enter numeric features, strategy branches,
 economic state or random seeds. Retain provenance separately rather than removing
 it to fake identical full rows after rehashing.
 
+### Funding clock correction from the exact lineage handoff
+
+This supplement supersedes the initial preflight's shorthand
+"next-whole-hour+60s availability": rate availability and cash booking are
+distinct. Preserve the old CSV/source_settlement_proxy unchanged. In the approved
+new SCENARIO, with integer microseconds and h=3600000000:
+
+- snapshot_us=source_timestamp_seconds*1000000, without8h rounding. It is a
+  simulation mapping, not proof that the exchange historically took that snapshot.
+- rate_available_us=(snapshot_us//h+1)*h, the **strictly next UTC hour**, even if
+  the source lies exactly on an hour. Carry/features cannot read that event's
+  final rate at the earlier source timestamp or at a fabricated old available_at.
+- amount_known_us=max(rate_available_us, qualified_causal_MARK_information_available_us).
+  A missing/unqualified snapshot MARK leaves the amount and its known time unknown;
+  do not substitute a later observation, trade price or zero. Preserve the accepted
+  MARK delay/age and snapshot-causality qualification before taking this maximum.
+- funding_booking_us=amount_known_us+60000000, only when that amount is known;
+  use a distinct linked Posting. Recognition does not itself change C/B.
+- Scoped finality follows completion of the specified evidence scope **and** cash
+  settlement by one hour: earliest permitted finality is
+  max(scope_evidence_complete_us, scope_cash_settled_us)+3600000000. Incomplete
+  scope, unknown amount or unsettled P cannot supply either a fabricated time or
+  finality. A funding-only assertion does not finalize an entire later episode.
+
+Required synthetic boundary expectations (manual derivation, **not executed
+conversion or replay**): source08:00:00 and08:00:03 both have rate availability
+09:00:00; source07:59:59 has08:00:00. With qualified MARK already available,
+rate known09:00:00 permits booking09:01:00; if full scoped evidence and settlement
+are complete then, earliest scoped finality is10:01:00. Later scoped evidence
+delays finality; missing MARK leaves amount/booking unknown. Just-before versus
+equal rate/book/finality boundaries must be tested separately, with duplicate
+delivery leaving clocks/cash unchanged. These examples add no new scenario choice.
+
 ## Separate event loop and feedback requirements
 
 The scheduler needs one reviewed deterministic merge of available-information,
@@ -246,8 +289,10 @@ cannot satisfy the new protocol by changing report labels or postprocessing PnL.
 
 Do not re-ask the already approved choices supplied by this dispatch: per-fill
 fee fractions0.00075 primary/0.0015 stress/0.0005 reference; MARK source+60s with
-age120s and stress+120s/age180s; funding source-time mapping, next-whole-hour+60s
-availability and+1h finality; integer tickets with scenario multipliers BTC0.0001/
+age120s and stress+120s/age180s; funding source-time snapshot mapping, strictly
+next-UTC-hour rate availability, amount known as the qualified-input maximum,
+booking60s later and scoped finality1h after evidence completion/settlement (the
+exact lineage supplement above); integer tickets with scenario multipliers BTC0.0001/
 ETH0.01; end-exclusive2026-10-01; approved whole-record OHLCV segmentation. Bind
 their exact rule IDs/formulas/authority/clock definitions into the frozen run spec;
 the terse handoff is not a replacement for typed event inputs or booking linkage.
@@ -260,7 +305,7 @@ Still needed from QR/owner, and user only for materially new scenario choices:
 | Decision/latency/executable open | Exact decision schedule, delay, equality and next-observed-open rule; no same-open execution after positive latency or inferred intrabar stop/queue. Accepted MARK delay is not order latency. |
 | Capital / reserves / account scope | Initial C, ledger start/warmup exposure, independent account identity per asset/trajectory, allocation/ticket equity binding, reserved margin/fees for pending and held positions, expiries and double-count exclusions. Old fixture10000USDT is historical reference, not new approval. No zero-reserve assumption. |
 | Ticket/risk scenario metadata | Explicit supplied historical-scenario tiers, leverage/min/max limits and price rounding if used, distinct from current exchange snapshots. Keep existing5%/200x native logic and disabled daily-loss gate; accepted constant multipliers do not prove real historical tiers or liquidation survival. |
-| Posting/feedback/finality details | Exact synthetic booking IDs/clocks relative to accepted funding availability, fee posting assumptions, assertion scope including late corrections, timing feedback PnL when net is not yet known, and whether evidence observation continues after market cutoff. Do not reopen accepted lag values; resolve their typed bindings. |
+| Posting/feedback/finality details | Funding's next-hour rate/amount-known+60s booking/scoped+1h finality are fixed by the exact supplement, not open numerical choices. Still freeze typed booking IDs/source linkage, fee posting assumptions, full assertion scope including late corrections, timing feedback PnL when net is not yet known, and any evidence observation after market cutoff. Resolve bindings without reopening accepted lags. |
 | Stress/run budget | Freeze finite scenario matrix and paired trajectories/counts: selected cost levels, slippage/latency/capacity/tie-order combinations, which are primary versus sensitivity, and total attempts including failures. No automatic full Cartesian search or old PhaseA allow-all+three-skips budget reuse. |
 
 Hourly contract volume is not contemporaneous executable book depth. Any proposed
@@ -341,6 +386,7 @@ accounting/parser and trace rules, not producer totals as expected values.
 | A26 | Full two-trajectory loss50/skip example changes next ticket80 eligibility; extend to delayed booking/refund, unsupported MARK and reservation changes. Validate timing and all later proposals, not just adjusted totals or deletion of old rows. |
 | A34 | Reference100/fill101/exit110 gives exact gross9, no second slippage expense; check all four entry/exit long/short directions, fee-on-filled-only, partial/reversal sequencing. Actual execution path is required; ledger arithmetic alone was partial stage1 evidence. |
 | A04/A07/A09-A14/A19/A20 | Atomic partial/reversal, snapshot-versus-booking ownership, late cumulative revision versus separate cash Posting, unknown/new-risk gating and conserved budget after booking. Both boundary sequences only as frozen scenarios. |
+| A07/A19/A21 funding-clock extension | Exact source seconds/lexemes/lineage retained; source at versus just after the hour maps to strictly next hour; no old available_at carry leakage; amount-known maximum requires qualified snapshot MARK; missing MARK stays unknown; separate booking+60s and complete-scoped settled finality+1h. Include before/equal boundaries, duplicate deliveries and later evidence delaying finality. Supplement evidence is raw-lineage support only, not implemented adapter PASS. |
 | A21/A24/A25/A29 | Complete scope/knowledge trace, gross-entry denominator with adds, unfilled selection retained and late finality unknown. Episode targets/validity are stage4; QD007 readiness alone is not target export. |
 | A22/A28 | Retain information intervals for later strict end+24h<B and known+24h<B, including cross-asset overlap purge; equality fails. No preprocessing fit, exposed2026 period renamed unseen, or training approval inferred from trace completeness. |
 | A27/A30-A33 | Native compatibility, declared MARK query freshness including exact-age boundary/+1us failure, fixed source mapping and multiplier/rule assumptions; missing historical-exact evidence remains unsupported, not fabricated by SCENARIO. |
@@ -376,3 +422,12 @@ unstaged diff SHA `35d57c81948f2de4c2c6e56db9cda60a507b06e0aa39583585cdb30505d8f
 full porcelain/untracked-files=all SHA
 `2a358fa935fea949c6c34fba46c5f07d6e08f6f1ed5066da7e6f12c570904649`,72 entries.
 Report checks use stdlib/Git and are not application regression or market evidence.
+
+Funding supplement verification only: hashed and read the exact coordinator JSON
+above. Its status is RAW_LINEAGE_EXACT_SCENARIO_TRANSFORM_NOT_IMPLEMENTED,
+new_normalized_event_table_written=false and full_market_queries_evaluated=false;
+historical first arrival/revisions remain UNKNOWN and historical_snapshot_time_proved=false.
+Its four clock fixture checks are the coordinator's evidence, not tests run here.
+No old CSV, event table, other role file or runtime was edited or transformed.
+This same-task report-only supplement starts from committed preflight
+`6460a2e1c34459fc794aa9c6fcff086cff71a2ad`; the one-file claim is unchanged.
