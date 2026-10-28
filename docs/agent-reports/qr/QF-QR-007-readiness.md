@@ -1,10 +1,10 @@
 # QF-QR-007-READINESS 预检、schema审查及经济覆盖规范
 
 日期：2026-10-28 Australia/Melbourne。角色：QR。
-当前结论：**SCHEMA_REVISE_REQUIRED（六项定点修订）**，见schema审查记录。
+当前结论：**SCHEMA_ACCEPTED_DESIGN_ONLY（r2六项闭合）**，见最新schema复核记录。
 覆盖规范子步骤：**SPEC_READY_FOR_REVIEW / PROPOSED_NOT_ACTIVE**，见最新记录。
 预检结论仍为 PASS（仅文档/验收准备）；以下原预检记录保留。
-当前依赖：QD 修订精确 schema 后复核/负责人交接。实现验收未执行；训练就绪仍未达。
+当前依赖：负责人交接有界实现与独立验证。实现验收未执行；训练就绪仍未达。
 Dispatch QF-DISPATCH-20261028-QR007-PREFLIGHT-1，补充 DECIMAL-SCOPE-1；
 CAPACITY-1只恢复同一任务，没有改模型或扩大范围。
 
@@ -226,3 +226,28 @@ validator。固定范围 `[2023-01-01,2026-10-01)` UTC，仅BTC/ETH，2023 warmu
 报告本身由最终commit及另列hash识别。随后收到schema复核交接
 `QF-DISPATCH-20261028-QR007-SCHEMA-RECHECK-1`：先独立提交本覆盖检查点，再另一个
 提交只复核QD六项修订；不把覆盖选择D01–D04自动批准或加入schema依赖。
+
+## r2 schema有界复核检查点：ACCEPT（仅设计）
+
+Dispatch `QF-DISPATCH-20261028-QR007-SCHEMA-RECHECK-1`。本次起点为已独立提交的
+覆盖检查点 `2f283ee17a59d48b9e8bcc5cb523c4ef39ccbc36`，工作树干净；它的报告SHA256
+为 `ba69315b83e02a13755d0110538359a3651477d41225a654c9391ebb7149ae90`。
+该commit的coverage protocol/spec保留上一节列明hash，本次完全不修改。
+
+只读核对 QD `a183e40ed27b2250f7030ce3babbe5d579dc268b` 相对d474fdf的两文件差异：
+schema `6e5fea553aedcdf6d800ced8a2ba5d0d49b5abd0b60cf931417fd6dff78408b7`；QD报告
+`3b129fe20f3ad74ec01d1257f25154f61967a8c3b34503e7ada48d3da129476a`。
+工作树字节与提交一致。此次仅修改 `research/qr007/ledger-review.md` 和本报告。
+
+**R01—R06全部ACCEPT，无剩余schema修订要求。** 具体行号、有限profile选择与原
+正负例逐项列在review末节：因果policy hash与完整catalogue分离、全候选迟到fill门、
+causal MARK公式时钟、assertion入库/充分性分离、全局逻辑ID所有权、未知delta与已知
+现金共存。S02分摊及每义务仅记一次现金直接回归保持，34项A ID仍明确分阶段。
+
+38项标准库文档身份/差异范围/逻辑算例/类型声明检查通过；这不是producer执行或
+38个实现测试。QD ledger、QD测试、QR validator仍不存在，未导入应用或执行市场
+回放/标签。覆盖D01–D04未批准，训练未就绪；设计ACCEPT不依赖先决定市场假设，
+也不批准将合成模型直接用于实际交易。
+
+下一步负责人可基于精确r2交接QD有界实现与QR独立验证器任务；本轮按要求独立提交
+复核后停止。源主仓/索引和QR006继续受保护，不合并、不下载、不拟合、不自动调度。

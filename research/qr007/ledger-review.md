@@ -1,7 +1,7 @@
 # QR007 账本独立验收预检
 
 2026-10-28 Australia/Melbourne。任务 QF-QR-007-READINESS。
-当前状态：**SCHEMA_REVISE_REQUIRED**；精确 schema 审查见末节。本文件保留预检，账本尚未实现/验收。
+当前状态：**SCHEMA_ACCEPTED_DESIGN_ONLY**；r2六项复核见末节。保留原REVISE记录，账本尚未实现/验收。
 QR 起点 52ce1ebeb054abd49c41fc4acbb4c7b7eb41c762。
 语义基线 QR006 c7e9a2492247fa31e216035f87e8bb20cca6e6ad；对应 QD006
 9bb3c0ec2b57e7154a51e56d795645c273c1308d 接受 34 项设计标准。
@@ -262,3 +262,42 @@ unknown obligation totals produce no numeric entry；这无法同时记录已知
 当前 schema 其余已列出部分接受，不重复推翻34项经济协议。QD只需回答各R项的
 修订位置、选定边界及正/负例，不需要重写工程。覆盖探测的新证据见同任务角色报告；
 不以合成schema修订宣布历史数据/标签完整或训练已就绪。
+
+## r2 有界复核：六项 ACCEPT（仅设计）
+
+Dispatch `QF-DISPATCH-20261028-QR007-SCHEMA-RECHECK-1`。覆盖规范先独立提交为
+`2f283ee17a59d48b9e8bcc5cb523c4ef39ccbc36`，本复核另作提交，只修改review与角色报告。
+只读 QD commit `a183e40ed27b2250f7030ce3babbe5d579dc268b`，相对已审
+`d474fdf0fdca7cb22aa47cfb220806b8ea2ab84f` 的完整两文件差异及相邻条文。
+QD工作树与提交字节一致；`qd007-synthetic-r2`精确身份：
+
+| 文件 | SHA256 |
+| --- | --- |
+| research/qd007/schema.md | 6e5fea553aedcdf6d800ced8a2ba5d0d49b5abd0b60cf931417fd6dff78408b7 |
+| docs/agent-reports/qd/QF-QD-007-ledger.md | 3b129fe20f3ad74ec01d1257f25154f61967a8c3b34503e7ada48d3da129476a |
+
+下列行号只对应上述r2 commit。**QR007-R01—R06全部设计级ACCEPT，无剩余schema
+修订请求；可供负责人交接有界实现与独立验证。** 不把允许的profile限制扩大为
+历史重建能力，也不因覆盖方案尚待决而阻塞此合成接口交接。
+
+| 项目 | 精确闭合位置与结论 | 实现后仍须独立验证的原反例 |
+| --- | --- | --- |
+| R01 ACCEPT | schema126–137、573–605：完整config/catalogue留在Audit，causal_policy精确排除source_manifest，Snapshot含policy hash且明确preimage，不含未来source/hash | 相同初始政策，仅改20时future T并重hash整个catalogue与旧source_refs，snapshot10内容/hash相同，audit不同；换已声明政策不要求hash相同 |
+| R02 ACCEPT | 208–220、512–523：whole-candidate对预声明calendar先检查可用性，再只用已可用库存经济排序；还拒绝可用顺序中的逆向fill；限制明确且可接受 | F7/available9跨S8时，F单独或[F,S]/[S,F]都拒绝，已提交S保持；F7/available7正例通过；同刻两种tie仍各自固定 |
+| R03 ACCEPT | 295–317：valuation<=valuation_available<=snapshot，年龄按snapshot，known覆盖全部公式输入；允许final rate较晚；不添加posthoc mark情景 | S80/mark79 available90拒绝；mark79 available79、rate95、known95/available100通过，99仍未知，100才识别T |
+| R04 ACCEPT | 364–390、619–639：入库合法性与query充分性分开，current available assertion heads确定状态；合法过期不stop；null mapping在本实例明确永久未决 | 10 complete，20 T修订后immature，21现金结清但旧refs仍immature，22 successor才complete；整批/分批一致；null-authority可被有效successor替代 |
+| R05 ACCEPT | 95–108、285–294：各逻辑kind的ID在ledger内有唯一owner，派生ID同受约束；allocation hash纳入完整owner域，跨引用再核对kind/币种/trajectory/scenario | BTC/ETH同fill f1拒绝，f_btc/f_eth及不同义务可共用账户；跨币退款/lot/assertion引用拒绝，未变更状态 |
+| R06 ACCEPT | 474–498、544–571、591–655：已知Posting始终记录现金，未知pending/A/L delta为null；未知聚合/coverage issues可见，输出字段及本地null原因明确 | T未知、b=-.02时C999.98/B-.02，P/A/L/E/budget未知；后T=-.05时C不变、P-.03/L.03/E999.95，未知前值delta仍null |
+
+直接回归检查：S02在448–462保留正负/零、过粗残差拒绝、1/1/1与2/1剩余FIFO
+路径及累计-.01→-.02归属重算；不新增现金。R06选择每个义务/Posting一条余额entry，
+逐lot归属另由allocation/slice保存，因此不能把同一现金在每个分配行重复累计。
+无新增native adapter、网络或市场情景；namespace保持局部，profile明确r2。
+
+使用标准库进行38项身份/差异范围/独立字面算例/结构检查，全部通过。其中hash
+与排序例子是逻辑见证，不是伪造完整producer payload来声称已通过API；期望值未
+调用QD helper。34项稳定A ID仍恰好映射一次，代码/测试文件仍不存在。账本实现、
+原子事务、逐字段输出检查、独立污染检测与完整数据回放均要等实际代码后验收。
+
+覆盖D01–D04仍待负责人持具体方案与用户决策，与本合成schema ACCEPT分开。
+当前不写validator或QD代码；提交此复核后停止等待实现交接。没有启动任何fit。
