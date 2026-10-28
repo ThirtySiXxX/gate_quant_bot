@@ -4,6 +4,8 @@ from dataclasses import asdict
 from decimal import Context, localcontext, ROUND_HALF_EVEN, InvalidOperation, DivisionByZero, Overflow
 from fractions import Fraction
 import math
+import base64
+import zlib
 from research.qd009 import streaming_ledger as sl
 from src.execution_timing import ExecutionTiming, TimingConfig, TimingDecision, TimingState
 from src.strategy_execution import ExecutionPlan, record_fill
@@ -24,7 +26,7 @@ def pack(v):
         return {k:pack(x) for k,x in v.items()}
     if v is None or type(v) in (str,int,bool):
         return v
-    raise InputGap('UNSUPPORTED_NATIVE_STATE_TYPE')
+    raise InputGap('UNSUPPORTED_NATIVE_STATE_TYPE:'+type(v).__name__)
 
 
 def unpack(v):
@@ -73,7 +75,7 @@ def validate(s):
     data=unpack(s['value']['data']);sl.need(type(data) is dict,'INPUT_BINDING_MISMATCH')
     allowed={'environment':{'episodes','funding','heads'},'execution':{'fills','risk_status'},
              'feedback':{'source_policy','timing','delivered','waiting','completed','seen_fills','fill_receipts'},
-             'policy':{'timing','decisions','basket_status'},'reserve':set()}
+             'policy':{'timing','decisions','basket_status','native_receipt'},'reserve':set()}
     sl.need(set(data)<=allowed[s['adapter_id']],'INPUT_BINDING_MISMATCH')
     for amount in data.get('delivered',{}).values():exact(amount)
     if 'timing' in data:
@@ -89,6 +91,63 @@ def plan_wire(plan):
 def plan_read(w):
     d=unpack(w);d['decision']=TimingDecision(**d['decision']);d['timing_config']=TimingConfig(**d['timing_config'])
     return ExecutionPlan(**d)
+
+
+def pack_prepared(v):
+    """Preserve actual early native NaNs explicitly; never turn them into zero."""
+    if type(v) is float and math.isnan(v):return {'native_unavailable':'INDICATOR_WARMUP'}
+    if type(v) is float:return pack(v)
+    if isinstance(v,(list,tuple)):return [pack_prepared(x) for x in v]
+    if type(v) is dict:return {k:pack_prepared(x) for k,x in v.items()}
+    return pack(v)
+
+
+def unpack_prepared(v):
+    if type(v) is dict and v=={'native_unavailable':'INDICATOR_WARMUP'}:return float('nan')
+    if type(v) is dict and set(v)=={'f64'}:return unpack(v)
+    if type(v) is dict:return {k:unpack_prepared(x) for k,x in v.items()}
+    if type(v) is list:return [unpack_prepared(x) for x in v]
+    return v
+
+
+def encode_cache(data):
+    raw=sl.canonical_bytes(pack_prepared(data))
+    return dict(codec='zlib-json-f64-v1',expanded_bytes=len(raw),sha256=sl.hashlib.sha256(raw).hexdigest(),
+                payload=base64.b64encode(zlib.compress(raw,9)).decode('ascii'))
+
+
+def decode_cache(cache):
+    sl.shape(cache,'codec expanded_bytes sha256 payload')
+    sl.need(cache['codec']=='zlib-json-f64-v1' and 0<cache['expanded_bytes']<=32*1024**2,'INPUT_BINDING_MISMATCH')
+    decoder=zlib.decompressobj();raw=decoder.decompress(base64.b64decode(cache['payload'],validate=True),32*1024**2+1)
+    sl.need(decoder.eof and not decoder.unused_data and not decoder.unconsumed_tail and len(raw)==cache['expanded_bytes']
+            and sl.hashlib.sha256(raw).hexdigest()==cache['sha256'],'INPUT_BINDING_MISMATCH')
+    return unpack_prepared(sl.load_json(raw))
+
+
+def validate_context(context,initial_us):
+    """Versioned actual native cache, not the old constant-forecast fixture seed."""
+    sl.shape(context,'version initial_us prepared initial_timing_state prefix native_code_sha256 context_sha256')
+    sl.need(context['version']=='qd011.raw-native-context.v2' and context['initial_us']==initial_us,'INPUT_BINDING_MISMATCH')
+    sl.need(context['context_sha256']==sl.digest({k:v for k,v in context.items() if k!='context_sha256'}),'INPUT_BINDING_MISMATCH')
+    sl.need(unpack(context['initial_timing_state'])==ExecutionTiming().dump(),'INPUT_BINDING_MISMATCH')
+    from research.qd010.economic_inputs import SYMBOLS, HOUR, US
+    sl.need(set(context['prepared'])==set(SYMBOLS) and set(context['prefix'])==set(SYMBOLS),'INPUT_BINDING_MISMATCH')
+    result={}
+    for symbol,packed in context['prepared'].items():
+        data=decode_cache(packed)
+        for names in (('short_ts','short_f','adaptive_risk_multiplier','adaptive_efficiency_ratio','adaptive_vol_ratio','timing_features'),
+                      ('main_ts','main_f','carry_f','vol_ann'),('regime_ts','regime')):
+            sl.need(all(type(data[n]) is list for n in names) and len({len(data[n]) for n in names})==1,'INPUT_BINDING_MISMATCH')
+        sl.need(len(data['short_ts'])>=300 and len(data['main_ts'])>=300,'INPUT_BINDING_MISMATCH')
+        for name,width in (('short_ts',HOUR),('main_ts',4*HOUR),('regime_ts',24*HOUR)):
+            times=data[name]
+            sl.need(all(math.isfinite(x) and x*US+width<=initial_us for x in times),'FUTURE_DEPENDENCY')
+            sl.need(all(a<b for a,b in zip(times,times[1:])),'INPUT_BINDING_MISMATCH')
+        sl.need(data['short_ts'][-1]*US==initial_us-HOUR,'INPUT_BINDING_MISMATCH')
+        sl.need(context['prefix'][symbol]['max_available_us']<=initial_us,'FUTURE_DEPENDENCY')
+        result[symbol]=data
+    return result
 
 
 def feedback(timing,symbol,plan,feature,delta,*,closed=False,direction=0,entry_price=0,net=None):

@@ -18,7 +18,7 @@ from research.qd009 import streaming_ledger as sl
 from research.qd010.economic_inputs import (INSTRUMENTS, SYMBOLS, MULTIPLIERS, HOUR, US,
     FEE, SLIP, G, exact, text, InputGap, Selection, pending_reserve, execution_boundary)
 from research.qd010.joint_native_bridge import research_config, JointNativeBridge, Order
-from .codec import state, validate, pack, unpack, projection, plan_wire, plan_read, feedback, native_context
+from .codec import state, validate, pack, unpack, projection, plan_wire, plan_read, feedback, native_context, validate_context
 
 INTENT_CONTRACT=sl.digest({'name':'qd011.native-intent.v1','fields':['action','plan','price','native_target','basket','decision_cutoff']})
 RUNTIME=dict(python=sys.version,numpy=np.__version__,pandas=pd.__version__)
@@ -32,6 +32,56 @@ def facts(p,schema):
     return [dict(instrument_id=f['instrument_id'],at=f['economic_at_us'],available=f['scenario_available_at_us'],
                  key=f['fact_key'],**{c['name']:c['cell'].get('value') for c in f['cells']})
             for f in p['permitted_facts'] if f['schema_id']==schema]
+
+
+def native_facts(p):
+    return facts(p,p['causal_config'].get('native_schema_id','native'))
+
+
+def timing_feature(f,v2=False):
+    feature={k:projection(f[k]) for k in ('quality','extension','close','atr','recent_high','recent_low')}
+    feature.update(bar_ts=f['at']/US,bar_seconds=projection(f['bar_seconds']) if v2 else 3600.,
+                   long_run=f['long_run'],short_run=f['short_run'])
+    if v2:feature.update(breakout_long=f['breakout_long'],breakout_short=f['breakout_short'])
+    return feature
+
+
+def prepared_v2(p):
+    """Replay available observations onto the actual closed native warmup cache."""
+    cfg=p['causal_config'];at=p['slot']['at_us']
+    prepared=validate_context(cfg['native_context'],cfg['initial_us']);latest={}
+    for i,symbol in zip(INSTRUMENTS,SYMBOLS):
+        data=prepared[symbol]
+        fs=sorted((f for f in native_facts(p) if f['instrument_id']==i and f['available']<=at),key=lambda f:f['at'])
+        for f in fs:
+            if any(f.get(k) is None for k in ('short','main','vol','carry','risk','efficiency','range_vol_ratio',
+                'regime','regime_open_us','regime_available_us','cov_btc_btc','cov_eth_eth','cov_cross','cov_available_us',
+                'quality','extension','close','atr','recent_high','recent_low','bar_seconds','long_run','short_run','breakout_long','breakout_short')):
+                raise InputGap('INCOMPLETE_NATIVE_V2_OBSERVATION')
+            if f['main_open_us']+4*HOUR>f['available'] or f['regime_available_us']>f['available'] or f['cov_available_us']>f['available']:
+                raise InputGap('FUTURE_NATIVE_V2_FEATURE')
+            short=dict(short_f=projection(f['short']),adaptive_risk_multiplier=projection(f['risk']),
+                       adaptive_efficiency_ratio=projection(f['efficiency']),adaptive_vol_ratio=projection(f['range_vol_ratio']),
+                       timing_features=timing_feature(f,True))
+            ts=f['at']/US
+            if ts==data['short_ts'][-1]:
+                if any(data[k][-1]!=v for k,v in short.items()):raise InputGap('MUTATED_INITIAL_NATIVE_CACHE')
+            elif ts==data['short_ts'][-1]+3600:
+                data['short_ts'].append(ts)
+                for k,v in short.items():data[k].append(v)
+            else:raise InputGap('NATIVE_V2_SHORT_GRID_GAP_OR_REWIND')
+            for name,ts,values,width in (
+                ('main',f['main_open_us']/US,dict(main_f=projection(f['main']),vol_ann=projection(f['vol']),carry_f=projection(f['carry'])),14400),
+                ('regime',f['regime_open_us']/US,dict(regime=f['regime']),86400)):
+                previous=data[name+'_ts'][-1]
+                if ts==previous:
+                    if any(data[k][-1]!=v for k,v in values.items()):raise InputGap('MUTATED_CLOSED_NATIVE_'+name.upper())
+                elif ts==previous+width:
+                    data[name+'_ts'].append(ts)
+                    for k,v in values.items():data[k].append(v)
+                else:raise InputGap('NATIVE_V2_'+name.upper()+'_GRID_GAP_OR_REWIND')
+        if fs and fs[-1]['at']==at-HOUR:latest[i]=fs[-1]
+    return prepared,latest
 
 
 def peer(p,kind):
@@ -110,9 +160,17 @@ def posting(p,id,oid,amount,ranges,inst):
 
 def native_inputs(p):
     """Supplied causal native feature observations, not a constant action script."""
+    if p['causal_config'].get('native_input_version',1)==2:
+        prepared,latest=prepared_v2(p);cfg=research_config();at=p['slot']['at_us']
+        signals={}
+        for i,symbol in zip(INSTRUMENTS,SYMBOLS):
+            if i in latest:
+                sig=strategy_signals.signal_at(symbol,prepared[symbol],at/US,cfg)
+                if sig is not None:signals[symbol]=sig
+        return signals,latest
     at=p['slot']['at_us'];seed=p['causal_config']['seed'];cfg=research_config();native={};latest={}
     for i,symbol in zip(INSTRUMENTS,SYMBOLS):
-        fs=sorted((f for f in facts(p,'native') if f['instrument_id']==i and f['available']<=at),key=lambda f:f['at'])
+        fs=sorted((f for f in native_facts(p) if f['instrument_id']==i and f['available']<=at),key=lambda f:f['at'])
         if not fs or fs[-1]['at']!=at-HOUR:
             continue
         start=seed['initial_us'];base=projection(seed['forecast']);vol=projection(seed['vol'])
@@ -182,13 +240,26 @@ def _policy(p,d,r,episodes):
         raise InputGap('NATIVE_STATE_HANDOFF_MISMATCH')
     timing=ExecutionTiming();timing.restore(fback.get('timing',d.get('timing',{})))
     d['timing']=timing.dump();d['decisions']=[]
-    if at>=cfg['end_us'] or at%HOUR:
+    if cfg.get('native_input_version',1)==2:d.pop('native_receipt',None)
+    economic_end=cfg.get('economic_end_us',cfg['end_us'])
+    if at>=economic_end or at%HOUR:
         return
     native,latest=native_inputs(p);f=finance(p);plans={};allocation=None
     if len(native)==2 and all(latest[i]['cov_cross'] is not None for i in INSTRUMENTS) and f['equity'] is not None and f['equity']>0:
         vols=[native[s].vol_annual for s in SYMBOLS];cross=[exact(latest[i]['cov_cross']) for i in INSTRUMENTS]
         if cross[0]!=cross[1]:raise InputGap('COVARIANCE_CROSS_MISMATCH')
-        a=np.array([[vols[0]**2,projection(cross[0])],[projection(cross[0]),vols[1]**2]])
+        if cfg.get('native_input_version',1)==2:
+            rows=[latest[i] for i in INSTRUMENTS]
+            if any(rows[0][k]!=rows[1][k] for k in ('cov_btc_btc','cov_eth_eth','cov_available_us')):
+                raise InputGap('JOINT_NATIVE_COVARIANCE_MISMATCH')
+            a=np.array([[projection(rows[0]['cov_btc_btc']),projection(cross[0])],
+                        [projection(cross[0]),projection(rows[0]['cov_eth_eth'])]])
+            d['native_receipt']=dict(version=2,decision_us=at,cov_available_us=rows[0]['cov_available_us'],covariance=a.tolist(),sizing_vol=vols,
+                regime={s:latest[i]['regime'] for i,s in zip(INSTRUMENTS,SYMBOLS)},
+                efficiency={s:native[s].efficiency_ratio for s in SYMBOLS},
+                range_vol_ratio={s:native[s].range_vol_ratio for s in SYMBOLS},
+                warmup_context_sha256=cfg['native_context']['context_sha256'])
+        else:a=np.array([[vols[0]**2,projection(cross[0])],[projection(cross[0]),vols[1]**2]])
         if not np.isfinite(a).all() or np.any(np.diag(a)<=0) or np.min(eigvalsh(a)) < -1e-12:
             raise InputGap('INVALID_NATIVE_COVARIANCE')
         allocation=pf.allocate_portfolio(native,projection(f['equity']),pd.DataFrame(a,index=SYMBOLS,columns=SYMBOLS),research_config())
@@ -212,7 +283,7 @@ def _policy(p,d,r,episodes):
             if round(abs(ratio))!=sx.notional_to_contracts(plan.target_notional,projection(price),projection(MULTIPLIERS[i])):
                 raise InputGap('NATIVE_QUANTITY_ROUND_DISAGREEMENT')
         for action,side,q in actions:
-            if execution_boundary(at)>=cfg['end_us']:continue
+            if execution_boundary(at)>=economic_end:continue
             if action=='open' and held and held*(1 if side=='long' else -1)<0:continue
             o=Order('', '', i,action,1 if side=='long' else -1,q,at,price,Fraction.from_float(plan.target_notional))
             candidates.append(o);order_plans[i]=plan
@@ -247,9 +318,13 @@ def _execution(p,d,r,episodes):
     at=p['slot']['at_us'];cfg=p['causal_config'];orders=[o for o in active(p) if o['intent']['eligible_at_us']<=at]
     d['fills']=[];d['risk_status']='NO_DUE_BASKET'
     if not orders:return
+    if at>=cfg.get('economic_end_us',cfg['end_us']):
+        d['risk_status']='ECONOMIC_WINDOW_CLOSED'
+        r['order_transitions']=[dict(order_id=o['intent']['order_id'],at=p['slot'],status='cancelled',fill_keys=[],reason='ECONOMIC_WINDOW_CLOSED') for o in orders]
+        return
     if any(o['intent']['eligible_at_us']!=at for o in orders):raise InputGap('MISSED_SINGLE_EXECUTION_BOUNDARY')
     prices={f['instrument_id']:exact(f['open_price']) for f in facts(p,'open') if f['at']==at}
-    closed={f['instrument_id']:f for f in facts(p,'native') if f['at']==at-HOUR}
+    closed={f['instrument_id']:f for f in native_facts(p) if f['at']==at-HOUR}
     pending=[order_object(o) for o in orders if o['intent']['action']=='open'];f=finance(p,ignore_pending=True)
     needed={o.instrument_id for o in pending}|{i for i,q in f['positions'].items() if q}
     status=('EXECUTION_INPUT_MISSING' if needed-set(prices) else JointNativeBridge._validate(None,pending,f,prices,filling=True)) if pending else 'ADMITTED'
@@ -301,7 +376,7 @@ def _feedback(p,d,r,episodes):
     delivered=d.setdefault('delivered',{});waiting=d.setdefault('waiting',{});completed=d.setdefault('completed',{})
     fills=peer(p,'execution').get('fills',[]);seen=d.setdefault('seen_fills',[]);receipts=d.setdefault('fill_receipts',{})
     changes=selected(p,'financial');slices=selected(p,'slice');obligations=selected(p,'obligation')
-    latest={i:max((f for f in facts(p,'native') if f['instrument_id']==i and f['at']+HOUR<=at),key=lambda f:f['at'],default=None) for i in INSTRUMENTS}
+    latest={i:max((f for f in native_facts(p) if f['instrument_id']==i and f['at']+HOUR<=at),key=lambda f:f['at'],default=None) for i in INSTRUMENTS}
     for info in fills:
         b=info['fill'];fid=b['record_id'];i=b['instrument_id'];eid=info['episode_id']
         if fid in seen:continue
@@ -314,8 +389,7 @@ def _feedback(p,d,r,episodes):
         plan=plan_read(info['plan']);symbol=SYMBOLS[INSTRUMENTS.index(i)];record=None
         feature=latest[i]
         if feature is None or feature['at']!=at-HOUR:raise InputGap('ACTUAL_FILL_CLOSED_FEATURE_MISSING')
-        tf={k:projection(feature[k]) for k in ('quality','extension','close','atr','recent_high','recent_low')}
-        tf.update(bar_ts=feature['at']/US,bar_seconds=3600.,long_run=feature['long_run'],short_run=feature['short_run'])
+        tf=timing_feature(feature,p['causal_config'].get('native_input_version',1)==2)
         if plan.timing_config.enabled:
             record=feedback(timing,symbol,plan,tf,cash,entry_price=projection(b['fill_price']) if info['order_payload']['action']=='open' else 0.)
             delivered[eid]=text(exact(delivered.get(eid,'0'))+cash)
@@ -345,7 +419,7 @@ def _feedback(p,d,r,episodes):
 
 def _reserve(p,d,r,episodes):
     at=p['slot']['at_us'];cfg=p['causal_config']
-    if at>=cfg['end_us']:return
+    if at>=cfg.get('economic_end_us',cfg['end_us']):return
     ms=marks(p);pending=active(p)
     for i in INSTRUMENTS:
         ls=[l for l in live(p) if l['instrument_id']==i];qs=sum(quantity(l) for l in ls)
