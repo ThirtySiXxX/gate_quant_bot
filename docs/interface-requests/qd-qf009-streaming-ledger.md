@@ -1,13 +1,25 @@
 # QF009: versioned offline streaming ledger contract proposal
 
-2026-10-28 Australia/Melbourne. Task QF-QD-009-STREAMING-CONTRACT-PROPOSAL.
-Dispatch QF-DISPATCH-20261028-QD009-STREAMING-CONTRACT-PROPOSAL-1.
+2026-10-28 Australia/Melbourne. Revision `qd009-contract-amendment-r1`.
+Task `QF-QD-009-CONTRACT-AMENDMENT-R1`;
+dispatch `QF-DISPATCH-20261028-QD009-CONTRACT-AMENDMENT-R1`.
 **READY_FOR_QR_CONTRACT_REVIEW — proposed, not accepted or implemented.**
 Author/implementation owner QD; financial/provenance reviewer and independent
 oracle owner QR; integration requires separate coordinator/user approval.
 Worktree `/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot`, branch
-`codex/qd-cache-safety`, clean base `d90e3684dbfcb54ead9bbfd933b209e71fb42ce5`.
+`codex/qd-cache-safety`, clean base `89cf347482c8121a4e3da559c6fb639a30788d6f`.
 Only this file is allocated now. No implicit implementation/test/output claim.
+
+This supersedes the *proposal* at19cd4c7 (SHA256
+`36a7b157cdba45692b6737ba465d7b2bf4e29b9d2a012a52b67d454fb1c02ac7`),
+which remains intact in Git. Review inputs: QR4d4e530
+`research/qr009/streaming-ledger-review.md`, SHA256
+`a141bbf5ed69663b2db29ba0c7acffd41712c730eb0c0ce08ad166e6efa8578e`;
+QD89cf347 engineering report, SHA256
+`8ca4301e21aa599f97fde432695a5b40bfbcb8a58e03751f089430e2d3325e3e`.
+No moving QR r2 draft was read. This amendment addresses only RV01–RV04 and
+transport/lifecycle links R03/R05; QR owns native callback/partial-sizing and
+research scenario choices. No reviewed proposal is an implementation permission.
 
 ## 1. Authority, boundary and compatibility
 
@@ -21,8 +33,8 @@ the capacity/source-binding issues. Coordinator funding-lineage evidence SHA
 `176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5` supports raw
 lineage only; it neither supplies a converted event table nor proves arrival.
 
-Propose namespace `qf009.streaming-ledger`, schema_version1, profile
-`qf009-offline-stream-r1`. Separate from qd007.synthetic-ledger/r3, qf006/native
+Propose namespace `qf009.streaming-ledger`, schema_version2, profile
+`qf009-offline-stream-r2`. Separate from qd007.synthetic-ledger/r3, qf006/native
 interfaces, result schema3 and feature version1. Scope: one scenario/account/
 trajectory, BTC/ETH USDT linear, integer contracts, exact arithmetic and a controlled deterministic adapter port.
 Initial implementation acceptance uses synthetic contract tests; the port contract
@@ -48,6 +60,25 @@ No live/native consumer may auto-select it. Unapproved market slippage, capital,
 reserves, feedback and capacity are not selected here. Approved fee/funding/MARK/
 multiplier choices need no new user question; their later typed scenario binding
 is outside this synthetic infrastructure proposal.
+
+### Amendment/version rejection table
+
+| Review item | Old proposal -> this proposal | Compatibility / acceptance link |
+| --- | --- | --- |
+| RV01 | Roots plus own state -> typed economic selections, durable order status and explicit per-role selectors/read bindings (§4.1) | Changed AdapterDefinition/Input/Result/State/Generated and economic components; schema2/profile-r2 only. Independent P/X/environment fixtures S02/S04. |
+| RV02 | Ambiguous pre-genesis facts -> InitialContext plus one-time original-clock prefix receipt/cursors (§3.1) | Config/Checkpoint change; financial origin range unchanged. S03/S09. |
+| RV03 | Readable HEAD resolution -> lease/barrier/readback/reachable-request proof and persistent control guard/stops (§5.1,§7) | New control rows/files and checkpoint binding; no old-store open/import. S08/S09. |
+| RV04 | Open-ended S01–S13 variants -> finite named S01–S12 manifest; S13 explicitly later (§8.1) | Initial limits unchanged; neither missing S13 nor unexecuted cases count as PASS. |
+| R03/R05 link | Unspecified end/fact consumption -> expiry/noop tail and qualified fact/consumer-clock rules (§3.2,§4.2) | No added r3 FinancialBody fields or post-cutoff origin exception; external native/query schemas still required. |
+
+Every streaming Envelope/CreateRequest/Checkpoint must use schema_version2 and
+profile-r2. Profile-r1 objects reject UNSUPPORTED_VERSION; r3/qf006/native objects
+reject UNSUPPORTED_NAMESPACE, with no field inference or automatic upgrade. Mixed
+schema/profile/files reject CHECKPOINT_MISMATCH on restore. Internal format_version2
+files have a new run/store identity; never rewrite an existing profile-r1 store.
+RawCatalogue's inventory namespace/schema1 and the financial r3 meaning remain
+unchanged. New hash-domain versions below prevent cross-profile witness reuse.
+No producer/consumer has migrated: this is a one-file unimplemented proposal.
 
 ## 2. Types and exact financial payloads
 
@@ -169,7 +200,7 @@ Config = {
  allocation_quantum_usdt:D+,rules:list[Rule],
  expected_snapshots:list[ExpectedSnapshot],ingestion_mode:reference_import|controlled_adapters,
  adapters:list[AdapterDefinition],initial_adapter_states:list[AdapterState],
- schedule:list[Tick],fact_schemas:list[FactSchema],
+ schedule:list[Tick],fact_schemas:list[FactSchema],initial_context:InitialContext,
  limits:Limits,random_source:"NONE"
 }
 ExpectedSnapshot = {instrument_id:Inst,event_id:ID,snapshot_at_us:T,mapping_rule_id:ID}
@@ -216,6 +247,8 @@ RawObject = {object_id:ID,root_id:ID,instrument_id:Inst,sha256:H,bytes:I+,relati
  retrieved_at_us:T or null,null_reasons:ReasonMap}
 RawRef = {object_id:ID,raw_sha256:H,source_row:I+}
 FactSchema = {schema_id:ID,kind:price|mark|rate|billed_total,
+ view_kind:closed_bar|execution_open|mark_point|mark_selection|funding_rate|billed_total|synthetic_price,
+ interval_us:I,
  fields:list[{name:ID,type:D|D0|D+|I|SI|T|bool|ID,unit:USDT|contracts|
              USDT_per_base|fraction|UTC_microseconds|none}]}
 Cell = {tag:"known",type:ScalarTag,value:Scalar}
@@ -265,12 +298,136 @@ only initial account/scenario/rules/calendar/adapter/schedule/fact-schema semant
 excluding limits, paths, raw/fact hashes, qualification/retrieval metadata. Facts
 and adapter approval_ref are excluded from this policy preimage. The adapter part
 contains adapter_id/role, fixed code/source/contract identities, causal_config and
-initial causal state value; it omits external approval/data-catalogue bindings.
+initial causal state including tracked episode IDs, context plan and declared
+selectors; it omits external approval/data-catalogue bindings and future
+qualified selection-index results.
 Thus a new whole-catalogue approval identity cannot change past economic policy.
 Facts enter economic state only when available. No full catalogue/index/registry hash,
 file name, export time, global row count or future inventory is readable by an
 adapter policy payload, an economic arithmetic path or a random source. random_source is NONE;
 any seed/PRNG/entropy request rejects UNSUPPORTED_RANDOMNESS in this profile.
+
+### 3.1 RV02: immutable pre-initial context, not financial replay
+
+```text
+InitialContext = {mode:none|closed_fact_prefix,from_us:T,schemas:set[ID]}
+ContextReceipt = {from_us:T,before_us:T,fact_count:I,
+ economic_prefix_sha256:H,audit_binding_sha256:H}
+FactCursor = {schema_id:ID,last_available_us:T or null,last_fact_key:ID or null}
+```
+
+For mode=none require schemas=[] and from_us=initial_at; the receipt binds an
+empty prefix. Otherwise from_us<initial_at. At create the controller validates
+exactly all qualified facts in these schemas whose economic_at>=from_us and
+scenario_available<initial_at. Original availability must be known, economic<=
+available; closed_bar additionally economic_at+interval_us<=available. An
+unresolved required context fact rejects FUTURE_DEPENDENCY, not omission or zero.
+Only closed_bar/funding_rate/synthetic_price may be context; no execution_open,
+future observation, intent, Fill, fee, financial snapshot/claim or native feature
+capsule. The receipt's before_us is exactly initial_at, exclusive. Facts available
+exactly at initial_at are first normal releases, not duplicate context.
+
+Receipt economic_prefix hashes the ordered semantic FactProjection rows excluding
+raw/audit identity; audit_binding hashes the exact resolved source/ref evidence.
+The economic receipt binds the initial state construction, while raw qualification
+and whole-store hashes stay audit-only. Future-only rehash may change the latter,
+never this unchanged prefix/native preparation. At create the context is admitted
+once and its semantic keys/clocks/index plus ContextReceipt and FactCursors persist
+in genesis. Each cursor is per schema, sorted by (available_us,fact_key), including
+context entries; both cursor fields are null only before the first release.
+No normal first delivery may skip an equal-time key. Dedup uses
+stable fact_key plus semantic row equality; conflicting semantic values reject
+INPUT_BINDING_MISMATCH. Exact repetitions do not initialize state twice.
+
+First controlled slot receives the whole applicable original-clock prefix via its
+approved available_prefix selectors, including normal facts available at genesis.
+It runs its ordinary typed initialization from that prefix, recording next_state
+atomically. Before that slot, initial AdapterState must be the schema's explicit
+uninitialized/empty value, not unexplained precomputed indicators. An adapter that
+needs a different evidenced initial-state constructor requires a new reviewed
+binding; this proposal does not permit hidden initialization. Restart before/after
+the first slot reproduces admission/preparation once, with context and slot cursors
+validated. Prefix retention/reconstruction, not fresh account creation, applies
+at later folds. All validation/preparation/recovery counts against existing caps.
+
+The account financial calendar contains expected snapshots only at
+initial_at<=snapshot<end_exclusive. Pre-initial source calendar entries may be
+qualified context evidence of flat/no-account eligibility; they are not emitted
+as FundingSnapshot or zero ObligationRevision. Thus a proposed2023 context/2024
+account uses this separation without financial activity in2023 or resetting an
+already active account in2024. This is transport expressibility, not approval of
+those dates. Reference-import has mode=none and retains its original origin rules.
+Only this explicit genesis context admission bypasses the normal first interval;
+after genesis no backdated new fact/delivery may invoke the exception.
+
+### 3.2 R03/R05 transport boundary
+
+FactSchema.kind/view_kind mapping is closed: closed_bar/execution_open/
+synthetic_price use kind=price; mark_point/mark_selection use mark; funding_rate uses rate;
+billed_total uses billed_total. interval_us>0 only for closed_bar and0 otherwise.
+An execution_open schema contains exactly open_us:T and open_price:D+ cells;
+economic_at=the open_us cell. It is a separately qualified retrospective view,
+not the finalized row with its clock changed. Source refs may join the same raw
+row in audit; H/L/C/V cannot enter that projection. Its qualification and any
+assumed availability need separate QR/user scenario approval. Policy selectors
+cannot select execution_open. A closed_bar retains its interval/closed clock.
+
+Raw fact availability a and consumer slot q remain separate. A Fact may be
+released once at a and selected again at q>=a without a new delivery. A financial
+Valuation generated from it at q retains source valuation_at, but has
+known_at=available_at=q. Calculation.valuation_available_at continues to denote
+the approved raw selected-point availability, not that later consumer clock.
+The external output validator must bind both explicitly. This does not allow a
+new Body backdated to a behind the seal. Known still-valid financial records may
+instead be reused; there is no need to re-emit each raw point. Actual MARK query
+qualification/age/latest-eligible proof remains an external registered gate.
+
+`mark_selection` is a distinct qualified consumer-fact view: economic_at=
+scenario_available=query_at=q, with cells query_at_us:T, source_at_us:T,
+source_available_at_us:T, selected_price:D+, source_fact_key:ID and clock_id:ID.
+On unsupported lookup the three selected-source cells and selected_price are
+typed unknown with the external query schema's exact reasons; query_at/clock
+remain known. It is a report of the query at q, not a raw point retimestamped to q.
+The qualified fact-store/index binds these cells to original raw evidence and
+independent complete-prefix query acceptance. Core transport does not establish
+that qualification or implement its scanner. A registered schema must distinguish
+these clock meanings and reject a false source clock or inferred zero. The selector
+can supply this bounded per-q result without delivering every raw MARK point.
+One result per instrument/clock/query is required by the approved query schema,
+including unsupported results; absence is a binding failure, not a silent noop.
+
+Tail selector rule is fixed at create, not a caller override: for slots at/after
+end_exclusive, closed_bar/execution_open/mark_point/mark_selection/synthetic_price
+selectors are inactive and supply a complete empty selection, bound with count0.
+No new market row, current MARK lookup or prefix feature refresh reaches a tail
+port, including a finalized last bar whose availability equals cutoff. This
+specified inactive selection is distinct from a missing required pre-cutoff
+qualified_at_slot result. Funding_rate/billed_total selectors may supply only
+already-scoped economic_at<end facts with newly arrived evidence before knowledge
+end. Stored qualified snapshot facts, order/episode evidence and owned state remain
+available through the ledger/state transport. Tail lifecycle/feedback uses those
+saved inputs; registration rejects a tail port that needs fresh market features.
+
+If selected source time precedes account genesis, it can remain qualified fact
+evidence; it cannot be emitted as an out-of-range financial Valuation origin or
+shifted to genesis. With no initial inventory, flat U=0 is an identity and a
+query-result fact can independently gate the first order. Any native binding
+requiring an unsupported pre-genesis financial origin must return for review.
+
+At economic end, pending reserve records must already expire no later than
+end_exclusive. Expiry is invalid at equality, so it does not mean proved zero
+reserves or supported risk. A scheduled typed cutoff lifecycle slot may cancel/
+expire order status and update AdapterState with events=[]; no Fill, snapshot,
+Valuation, new Reserves origin, decision or new order is permitted there. It is
+an audited noop/transport transition within the knowledge window. Subsequent
+tail slots permit only already-originated obligation/posting/assertion evidence
+and necessary declared bookkeeping; no new current-market facts/query. Financial
+views still evaluate true MARK age/expired reserves and can report null U/budget;
+open exposure is retained, never liquidated by the kernel. Finality may use stored
+qualified evidence. This expresses the proposed evidence-only tail without an
+economic-origin exception or cutoff-1us backdating. Tail length and native state
+semantics remain external QR/user choices. Unsupported tail economics require a
+separate version amendment, not a silent extension here.
 
 ## 4. Controlled deterministic adapter port and generated-event witnesses
 
@@ -285,21 +442,48 @@ proof that arbitrary Python has no outside dependency. No DSL/compiler is propos
 AdapterDefinition = {adapter_id:ID,role:environment|policy|execution,
  code_commit:Git40,source_files:list[{relative_path:str,sha256:H}],
  entrypoint:str,input_contract_sha256:H,output_contract_sha256:H,
- state_contract_sha256:H,causal_config:JsonValue,approval_ref:H}
+ state_contract_sha256:H,causal_config:JsonValue,approval_ref:H,
+ fact_selectors:list[FactSelector],ledger_selectors:list[LedgerSelector],
+ peer_state_selectors:list[PeerSelector]}
 Git40 = lowercase40-hex commit
 JsonValue = null|bool|I|SI|str|list[JsonValue]|object[str,JsonValue]
 Tick = {at_us:T,slots:list[{slot_id:ID,adapter_id:ID,phase:I}]}
-AdapterState = {adapter_id:ID,contract_sha256:H,value:JsonValue,state_sha256:H}
+AdapterState = {adapter_id:ID,contract_sha256:H,tracked_episode_ids:set[ID],
+ value:JsonValue,state_sha256:H}
 AdapterInput = {slot:Cutoff,slot_id:ID,causal_policy_sha256:H,
  permitted_facts:list[FactProjection],before:EconomicView,
- prior_state:AdapterState,causal_config:JsonValue}
+ economic_inputs:list[EconomicSelection],peer_states:list[AdapterState],
+ previous_invocation:Cutoff or null,prior_state:AdapterState,causal_config:JsonValue}
 FactProjection = {fact_key:ID,instrument_id:Inst,schema_id:ID,economic_at_us:T,
  scenario_available_at_us:T,cells:list[{name:ID,cell:Cell}]}
 AdapterResult = {outcome:emit|noop,events:list[FinancialBody],
- decisions:list[DecisionRecord],next_state:AdapterState}
+ decisions:list[DecisionRecord],orders:list[OrderIntent],
+ order_transitions:list[OrderTransition],next_state:AdapterState}
 DecisionRecord = {decision_id:ID,at_us:T,instrument_id:Inst,order_ids:set[ID],
  input_projection_sha256:H,prior_adapter_state_sha256:H,
  intent_contract_sha256:H,intent:JsonValue}
+FactSelector = {selection_id:ID,schema_id:ID,instruments:set[Inst],
+ mode:available_prefix|latest_available|qualified_at_slot}
+LedgerSelector = {selection_id:ID,instruments:set[Inst],
+ kind:live_lots|orders_active_and_changed|decisions_for_selected_orders|
+      financial_changes|episode_lots|episode_slices|episode_obligations}
+PeerSelector = {selection_id:ID,adapter_id:ID}
+EconomicSelection = {selection_id:ID,items:list[EconomicItem]}
+EconomicItem = {kind:live_lot,value:LiveLot}|{kind:order,value:OrderRecord}|
+ {kind:decision,value:DecisionRecord}|{kind:financial,value:FinancialBody}|
+ {kind:lot,value:Lot}|{kind:slice,value:Closed}|{kind:obligation,value:Obligation}
+LiveLot = {lot_id:ID,episode_id:ID,instrument_id:Inst,opening_fill_id:ID,
+ opened_at_us:T,direction:long|short,entry_price:D+,multiplier:D+,
+ live_ranges:list[UnitRange]}
+OrderIntent = {order_id:ID,decision_id:ID,instrument_id:Inst,
+ action:open|reduce|close,direction:long|short,requested_contracts:I+,
+ submitted_at_us:T,eligible_at_us:T,expires_at_us:T,
+ payload_contract_sha256:H,payload:JsonValue}
+OrderTransition = {order_id:ID,at:Cutoff,
+ status:partially_filled|filled|cancelled|expired,fill_keys:set[Key],reason:ID}
+OrderRecord = {intent:OrderIntent,status:pending|partially_filled|filled|cancelled|expired,
+ filled_contracts:I,remaining_contracts:I,last_changed:Cutoff,fill_keys:set[Key],
+ terminal_reason:ID or null}
 ```
 
 JsonValue forbids JSON float/nonfinite values; the adapter's separately versioned
@@ -355,11 +539,17 @@ Each generated registry entry is exactly:
 Generated = {registry_seq:I+,slot:Cutoff,slot_id:ID,adapter_id:ID,
  parent_audit_prefix:H,parent_registry_sha256:H,before_economic_state:H,
  adapter_definition_sha256:H,input_projection_sha256:H,
- prior_adapter_state_sha256:H,reads:list[Read],
+ prior_adapter_state_sha256:H,reads:list[Read],selection_bindings:list[SelectionBinding],
  result:AdapterResult,result_sha256:H,entry_sha256:H}
-Read = {fact_key:ID,field:ID,cell:Cell,raw_refs:set[RawRef]}
-Envelope = {namespace:"qf009.streaming-ledger",schema_version:1,
- profile:"qf009-offline-stream-r1",body:FinancialBody,
+Read = {kind:fact,fact_key:ID,field:ID,cell:Cell,raw_refs:set[RawRef]}
+ | {kind:ledger,selection_id:ID,item_kind:live_lot|order|decision|financial|lot|slice|obligation,business_key:list[str|I],
+    source_cutoff:Cutoff,value:EconomicItem}
+ | {kind:state,adapter_id:ID,source_cutoff:Cutoff,state:AdapterState}
+SelectionBinding = {selection_id:ID,source_cutoff:Cutoff,
+ source_roots:list[{component:lots|closed_slices|obligations|entries|links|orders|decisions|adapter_states|facts|fact_selections,root_sha256:H}],item_count:I,
+ selected_keys_sha256:H,selected_values_sha256:H}
+Envelope = {namespace:"qf009.streaming-ledger",schema_version:2,
+ profile:"qf009-offline-stream-r2",body:FinancialBody,
  origin:{kind:generated,registry_seq:I+,output_index:I}
       | {kind:reference_import,fact_key:ID},created_at_us:T}
 ```
@@ -371,7 +561,7 @@ removed**, retaining Balance, cutoff and economic component roots only; the
 precise EconomicView closed schema is `{view,economic_at_us,knowledge_cutoff,
 causal_policy_sha256,balance,economic_component_roots,coverage,economic_state_sha256}`,
 economic_component_roots is list[{component:lots|closed_slices|obligations|entries|
-links|adapter_states,root_sha256:H,count:I}]. It contains no events/registry/source audit component.
+links|adapter_states|orders|decisions,root_sha256:H,count:I}]. It contains no events/registry/source audit component.
 State hashes are continuity witnesses, not adapter decision inputs: the controller
 strips hash-valued continuity fields before handing numeric policy payloads to
 native functions. They cannot choose branches or seeds. Fixed policy identity is
@@ -379,7 +569,7 @@ part of the contract, not a numeric feature.
 
 reads is the complete controller-supplied packet field inventory, not a caller's
 claim of every internal Python access. Its field values must equal frozen available
-facts and raw_refs resolve to those facts; packet membership/exclusion is verified
+facts or ledger/state projections; raw_refs resolve to facts only. Packet membership/exclusion is verified
 independently of adapter output. Record all supplied fields even if unused, so
 future noninterference is tested against actual input packets. State and decision
 bindings identify predecessor declared state and exact permitted numeric inputs.
@@ -404,7 +594,7 @@ price/timing/capacity conditions are checked by the registered execution-output
 contract, whose actual numerical assumptions must be frozen by QR separately.
 Decision/intent content is stored, not just its hash, for independent replay.
 For generated new entities the controller's required ID helper is
-prefix+H(["qf009.id-v1",ledger_id,trajectory_id,scenario_id,instrument_id,
+prefix+H(["qf009.id-v2",ledger_id,trajectory_id,scenario_id,instrument_id,
 logical_kind,tick_at_us,slot_id,ordinal]); prefixes f:/p:/d:/o: identify new fill,
 posting, decision/order IDs and fit the96-character Fill bound. Derived lot/
 episode/leg IDs retain r3 rules; fee obligation can use fee:<fill_id>. Snapshot IDs
@@ -418,7 +608,7 @@ requires events=[]; a noop may update declared causal adapter state. Unknown
 financial inputs cannot silently become known cells or zero; a port either emits
 valid unknown-bearing records or a typed no-new-risk/noop decision under its
 reviewed output contract. The kernel still enforces all financial guards. A due
-expected snapshot cannot disappear through a noop. Full registry/result/adapter
+expected snapshot cannot disappear through a noop. Full registry/result/order/decision/adapter
 state and emitted FinancialBodies commit atomically, closing the source-manifest
 cycle without preconstructing future fills.
 
@@ -456,6 +646,147 @@ that state must be reported as R3_NOT_READY, not hidden by a synthetic-only PASS
 Same port/envelope/state transport is intended for that bridge; if its typed
 requirements cannot fit, QD/QR must review a versioned amendment **before** native
 implementation rather than quietly adding fields or unsupported callback paths.
+
+### 4.1 RV01: complete bounded cross-port inputs and authoritative order state
+
+Selectors are closed enums above, not caller expressions, callbacks or unrestricted
+scan requests. mark_selection must use qualified_at_slot, and that mode
+is forbidden for all other view kinds. The per-q index is derived only from the
+qualified fact_store already declared in CreateRequest; there is no implicit
+external selection file or loader. IDs are unique per definition, instruments are a nonempty subset of
+Config scope, peer IDs name another declared adapter, and fact schema IDs must
+exist. Definitions and per-role field validators are frozen under their contract
+hashes before create; no per-call selector/filter/limit override. Packet order is
+selection_id then typed business-key order, with complete sets, not favorable
+subsets. `previous_invocation=null` means never invoked, otherwise the controller's
+last completed slot of this adapter, including staged earlier slots in this tick.
+
+| Selector | Exact membership and authoritative truth |
+| --- | --- |
+| fact available_prefix | All facts in schema/instruments released by slot, including declared context, sorted (available_us,fact_key). |
+| fact latest_available | Latest such fact per instrument by (available_us,economic_at_us,fact_key); only schemas whose qualification defines this choice. It is not generic latest-eligible MARK selection. |
+| fact qualified_at_slot | Only for mark_selection: all rows of that schema/instruments with query_at=economic_at=scenario_available=slot.at_us, for the approved finite query schedule. The per-q index is a deterministic index of this declared immutable fact_store, not a second unlisted source. Missing row/schema/qualification blocks invocation; original source clocks remain separate cells. No arbitrary loader or on-demand query. |
+| live_lots | Every lot with remaining units in instruments at the before-view, with actual disjoint current FIFO live_ranges, prices/multipliers/direction. No financial history is inferred from a root. |
+| orders_active_and_changed | All nonterminal OrderRecords plus every terminal order changed after previous_invocation and before the current slot. Initial lower bound is genesis slot0. |
+| decisions_for_selected_orders | Full earlier DecisionRecords for exactly those selected orders, including native plan/feature payload if its registered schema requires it. No future decision list. |
+| financial_changes | All normalized FinancialBodies made available/accepted after previous_invocation through the before-view, sorted by actual slot then economic/tie/key order. It includes fill, fee/funding revisions, postings, valuations/reserves and assertions; not audit events. |
+| episode_lots / episode_slices / episode_obligations | All corresponding current Lot/Closed/Obligation rows for prior_state.tracked_episode_ids, within instruments, including closed original lots/old obligations. Obligation membership follows retained episode allocations even if closed. Full calculation/allocation evidence is supplied via financial_changes or already-retained owned state, not inferred from reference roots. |
+| peer state | Exact before-slot AdapterState of each explicit peer ID; read-only, schema checked. No other adapter's globals or state are available. |
+
+The episode selectors' output is **only** those typed current rows; the final
+sentence about additional old-body needs is a registration restriction, not an
+extensible query hook. This profile supplies no arbitrary old-body lookup. A
+native binding needing it must either retain that already-read evidence in owned
+state or return for an explicit typed amendment. No hidden scan is permissible.
+
+| Role | Fact view allowlist | Ledger selector allowlist | State rights |
+| --- | --- | --- | --- |
+| policy | closed_bar, funding_rate, synthetic_price | All seven listed ledger kinds | Own state write; explicitly declared peer states read only |
+| execution | closed_bar, execution_open, mark_point, mark_selection, synthetic_price | All seven listed ledger kinds | Own state write; explicitly declared peer states read only |
+| environment | mark_point, mark_selection, funding_rate, billed_total, synthetic_price | live_lots, orders_active_and_changed, financial_changes, episode_lots, episode_slices, episode_obligations | Own state write; peer_state_selectors=[] |
+
+The registered per-role input contract must enumerate exact selected cell names
+and economic payload fields; the controller rejects fields outside it before
+invocation. It cannot select a partial live range/order record while asserting
+complete membership. Root/hash fields remain continuity evidence, stripped before
+native numerical calls. Role allowlists are upper bounds, not permission to feed
+all delivered financial values into native features or to replace a MARK with
+trade close. Output validators enforce the approved purpose/clock/formula.
+
+OrderIntent is created only by a policy role, with submitted_at=its current slot,
+eligible>=submitted, expires>submitted and within the declared scenario lifecycle.
+An eligible time at/after expiry means no executable opportunity, not a forced
+fill or rejected submission; no Fill is allowed at/after expiry.
+Its decision/order scope and quantities must match the full stored DecisionRecord
+and registered intent/payload schemas; order_ids exactly enumerate its created
+orders. No insertion of a reconstructed past intent. Controller creates pending
+OrderRecord with filled0/remaining=requested, then maintains it from validated
+OrderTransitions and actual Fill references, not an adapter's asserted totals.
+filled=sum absolute contracts of that order's distinct accepted fills;
+remaining=requested-filled, including unfilled quantity after cancellation.
+No duplicate fill counting, excess fill, terminal-to-pending transition or changing
+an immutable intent. partially_filled requires0<filled<requested; filled requires
+remaining0; terminal_reason is null only for nonterminal status. Existing fills,
+cross-order conflicts and one order's direction/action are checked before commit.
+
+Execution may emit fill-confirmation/partial/filled/cancel transitions. Policy may
+cancel/expire existing intent under its approved lifecycle; environment cannot
+modify orders. Cutoff expiry/cancellation may be a policy lifecycle invocation
+with no new decision. Every OrderTransition.at equals its current slot; fill_keys
+refer only to already available or same-result matching Fills. Ordered partial
+then cancellation in one result is supported. Empty fill_keys on a pure cancel
+does not create a Fill or cash. The registered output validator, not this kernel,
+defines which market no-fill/partial/reversal choices are admissible.
+
+State has one writer: next_state must match the invoked adapter_id/schema.
+tracked_episode_ids are causal existing scoped episode IDs (empty before any
+episode); selecting an absent/future/cross-account ID rejects INPUT_BINDING_MISMATCH.
+Peer state cannot be patched via next_state. A binding sharing native books must
+assign one owner and schedule that owner's feedback slot before the next dependent
+decision, or use a reviewed composite owner. This is a transport restriction;
+QR's future native schema chooses the actual callback/feature/partial-sizing rules.
+All changes of a tick, including fill/fee/order status and each owner's feedback
+state, stage together and publish atomically. Failure in the later feedback slot
+rolls back the whole tick's proposed changes, not an already acknowledged fill.
+
+SelectionBinding is controller evidence outside AdapterInput: source roots bind
+the before-view economic components or immutable qualified fact index, plus count,
+complete selected keys and semantic values. Hash preimages use domain
+`qf009.selection-v2`, selection definition, cutoff and ordered contents; selected
+values exclude audit refs. Fact membership evidence separately resolves raw refs.
+For peer selectors it binds the prior adapter_states root/value. All membership,
+omission, stale value and future inclusion checks occur before evaluation and again
+before publication against the same staged predecessor; hashing a forged subset
+does not validate it. A Generated entry records every supplied Fact field, every
+ledger EconomicItem and every own/peer State in reads, even if unused. Reconstruct
+input_projection_sha from this complete packet plus fixed config/before-view;
+Read is not a self-reported list of accesses. Native output never sees audit paths.
+
+Controller selectors use indexed bounded reads, no uncontrolled public scan handle.
+No root decoding, hidden state duplication or external fetch is accepted. Enforce
+max_adapter_input_bytes, state bytes, wall and reads **before** invoking a port.
+Freeze read accounting here: one read for each supplied Fact cell and each of its
+two economic/availability clocks; one for each economic scalar leaf in ledger
+items, intent/owned/peer-state payloads and live ranges. Pure transport wrappers,
+stable membership keys and hash continuity fields are verified in the complete
+inventory/selection binding and charged in input bytes, not counted again as
+extra economic reads. Fact clock reads use reserved field IDs
+clock:economic_at_us and clock:scenario_available_at_us with typed T Cells.
+FactSchema field names starting clock: are reserved and reject SCHEMA_VIOLATION;
+ledger item_kind must equal its EconomicItem tag, never an arbitrary string.
+No whole OrderRecord/state is counted as just one read. The262144 ceiling is
+unchanged; counts/definitions are reported before execution, never redefined to
+rescue a failing candidate. Excess complete selection is
+RESOURCE_EXHAUSTED; there is no truncation, partial inventory or new smaller page
+chosen by strategy. Controller may page internally under existing cache bounds,
+but the delivered packet must be complete within the unchanged caps.
+
+Orders/decisions become retained economic components with canonical business keys
+(instrument,order_id)/(instrument,decision_id); their prior versions remain on
+disk, including terminal status. Generated audit remains separate. Checkpoint
+persists those rows, every owned state, per-adapter last invocation and fact/context
+cursors atomically. Restart between submission/fill/feedback never rebuilds intent
+from current prices or clears sizing/timing state. Actual native completeness is
+still proved by later S13, not self-certified by a declared state hash.
+
+### 4.2 R05 stable semantic identities and external-schema dependencies
+
+Raw refs/full-file hashes are audit joins only. Qualified source keys use the
+declared instrument, original source timestamp, source role and a deterministic
+duplicate ordinal only if the qualified source policy requires it; the actual
+key mapping/alias rule is pinned externally. A funding obligation uses the same
+stable source identity, never the full file/catalogue digest. Future-only rehash
+can change refs/qualification evidence, not existing semantic keys, financial IDs,
+selector membership, generated order/fill sequence or prior native state.
+
+FactSchema/qualified_at_slot can express distinct open facts and repeated selection
+of an old available MARK; neither establishes raw support or a query proof. Exact
+native numeric/feature/intent/payload/state and external query/qualification/index
+schemas are **UNASSIGNED_BLOCKS_NATIVE_REGISTRATION** until separately reviewed.
+No new callback, forecast, float tolerance, partial-ticket sizing policy or query
+universe is selected by this transport amendment. Existing QF00634 criteria and
+full real native replay target remain intact; S13 cannot be replaced by this port
+table or a hand-authored financial tape.
 
 ## 5. Advance, queries and atomic failure
 
@@ -499,7 +830,8 @@ First advance covers [initial_at,through]; later covers (last committed through_
 through]. through_us>=previous time; complete every due schedule tick/slot and
 calendar coverage assessment up to through. No commit midway through a tick.
 Batch source/import availability must lie in this interval, except exact accepted
-duplicates. Caller supplies the required generated witnesses/results or requests
+duplicates and the one-time pre-initial context admitted at create (§3.1), which
+is not a financial import or later delivery. Caller supplies the required generated witnesses/results or requests
 controller-driven adapter generation by passing generated=[]; in either case kernel
 invokes every required approved adapter slot, and supplied nonempty witnesses must match exactly.
 An empty array is not permission to skip slots. Imported events are only frozen
@@ -575,12 +907,59 @@ resolution. A committed complete new prefix may exist; no half cash/registry is
 admitted. CommitResolution exactly `{request_id:ID,outcome:committed|not_committed|unknown,
 head:Head or null,receipt:Receipt or null,null_reasons:ReasonMap}`; unknown head/
 receipt reason COMMIT_OUTCOME_UNKNOWN, known-not-committed receipt null=
-NOT_COMMITTED. Resolver reopens/validates the actual durable HEAD and request index;
-matching committed request returns its reconstructed Receipt; known old prefix
-and no committed request yields not_committed. Ambiguous/corrupt store remains
+NOT_COMMITTED. Resolver must use the barrier/reachability proof below, rather than
+treat readable HEAD/request-index bytes as durable. Ambiguous/corrupt store remains
 unknown. No blind retry, new request ID or balance subtraction is an outcome
 resolution. Any controlled resubmission after proven noncommit retains exact
 request identity and counts against the frozen attempt/resource budget.
+
+### 5.1 RV03: bounded durable resolution and independent persistent stops
+
+`resolve_commit` acquires the same exclusive writer lease and performs one bounded
+resolution pass; no automatic loop/retry/backoff or extra attempt. New writes and
+financial use remain blocked while its write guard is unresolved.
+
+1. Open the exact run/profile/config and independently recover CONTROL (§7),
+   preserving semantic/resource latches. Read HEAD and validate the reachable
+   manifest chain/request cores and hashes, using validated checkpoint plus suffix
+   where available. Validate relevant blobs/dependencies against declared files;
+   an orphan segment/request index entry is not reachable because its bytes exist.
+   Budget includes this work and conservative crash debit.
+2. Under the lease, re-establish required barriers for the chosen reachable HEAD:
+   fsync referenced newly published blobs/manifests and their containing directory
+   entries, fsync the HEAD file and its parent directory, then close/reopen/read
+   back HEAD and required control pointer. Exact hashes, sequence, prefix and
+   pointer identity must remain consistent. Previously acknowledged dependencies
+   may use validated durable checkpoint evidence, never unacknowledged cache
+   state. Filesystems lacking these local atomic/fsync guarantees fail precondition;
+   this is no guarantee for arbitrary mounts or devices.
+3. Any continued barrier/readback failure or ambiguous/corrupt candidate returns
+   outcome=unknown with null head/receipt and leaves the guard. It does not
+   acknowledge a readable new prefix or claim the old prefix survived. A control
+   latch/uncertainty record cannot be silently cleared because this call failed.
+4. If the now-durable reachable chain contains request_id with exactly the saved
+   canonical request_sha256, reconstruct its single original committed Receipt
+   from manifest/ReceiptCore, persist guarded resolution and return committed.
+   No financial transition is re-executed or added. Repeating this call returns
+   the same committed content; replayed is only the existing API receipt status.
+5. If that ID is reachable with a different hash, return Error REQUEST_CONFLICT /
+   quarantine and persist the integrity latch; never “not committed for this hash”
+   or a new receipt. A corrupt index disagreeing with the chain gives
+   STORE_INTEGRITY_FAILURE/unknown, not an alternative transaction history.
+6. not_committed requires a durable validated HEAD at the guarded predecessor
+   (or another already acknowledged reachable chain), no reachable matching ID,
+   and no unresolved competing pointer/control publication. An orphan tail alone
+   is retained/quarantined audit evidence, never imported as commit or payment.
+   Persist not_committed resolution before returning it. Only a separately allowed
+   same-ID/hash resubmission may follow, within remaining caps.
+
+The returned resolution.head is current Head with the independent control overlay;
+saved Receipt.after remains its historical committed head. Resolving I/O may
+remove only that guard's COMMIT_UNKNOWN condition. Any integrity/resource latch
+still yields a stopped current Head; financial success does not clear it. No
+restart/new request/older checkpoint clears a stop. All error/receipt persistence,
+readback, suffix work and resolver invocations count within the declared suite/
+attempt/wall/disk budget. Limits cannot be raised to force a proof.
 
 ## 6. Financial views and bounded paging
 
@@ -589,12 +968,12 @@ causal_policy_sha256:H,balance:Balance,components:list[ComponentSummary],
 coverage:list[CoverageIssue],economic_state_sha256:H}`. View is exactly ViewCore
 plus top-level `view_sha256:H`. **No ViewCore component contains a view ID.**
 Compute economic_state_sha256 first as
-H(["qf009.economic-state-v1",EconomicViewCore]), where EconomicViewCore is exactly
+H(["qf009.economic-state-v2",EconomicViewCore]), where EconomicViewCore is exactly
 the closed EconomicView defined in section4 with economic_state_sha256 omitted;
 its component list contains only economic ComponentSummary values, excluding
 events/registry. This preimage includes actual query clocks and coverage, no
 audit/view/handle identity. Then compute
-view_sha256=H(["qf009.view-v1",ViewCore]). No recursive nested exclusions apply.
+view_sha256=H(["qf009.view-v2",ViewCore]). No recursive nested exclusions apply.
 Only after these hashes exist may public handles be assembled by copying one
 ComponentSummary and adding this view_sha256. View itself uses summaries, not
 those handles. Receipt.entries is a handle to the **whole after-view entries**
@@ -661,13 +1040,13 @@ The exact readiness reason codes are OPEN_EPISODE,UNRESOLVED_SNAPSHOT_COVERAGE,
 UNKNOWN_OBLIGATION_TOTAL,UNSETTLED_OBLIGATION,UNRESOLVED_FINALITY and
 INVALID_ASSERTION_AUTHORITY, with the precedence stated above.
 
-Component enum: lots|closed_slices|obligations|entries|links|events|registry|adapter_states.
+Component enum: lots|closed_slices|obligations|entries|links|events|registry|adapter_states|orders|decisions.
 ScanFilter exactly `{kind:"all"}` or
-`{kind:"owner",owner_kind:lot|obligation|adapter,owner_id:ID}` or
+`{kind:"owner",owner_kind:lot|obligation|adapter|order|decision,owner_id:ID}` or
 `{kind:"record",key:Key}`. Owner kind and ID are both checked, never bare ID across
 different logical kinds. lots/closed_slices accept lot owner; obligations/entries
 accept obligation owner; links accept lot/obligation; registry/adapter_states
-accept adapter; events accept record filter. All components accept all; other
+accept adapter; orders/decisions accept matching order/decision owner; events accept record filter. All components accept all; other
 combinations reject SCHEMA_VIOLATION. Aggregate/non-obligation entries remain
 available through all, not falsely attributed to an obligation filter.
 PageToken exactly `{view_sha256:H,component:Component,filter:ScanFilter,
@@ -703,7 +1082,7 @@ Link = {owner_kind:lot|obligation,owner_id:ID,ordinal:I,
  value:{kind:slice,id:ID}|{kind:allocation,id:H}|{kind:posting,key:Key}}
 ```
 
-Items are respectively Lot/Closed/Obligation/Entry/Link/Envelope/Generated/AdapterState. A Lot's
+Items are respectively Lot/Closed/Obligation/Entry/Link/Envelope/Generated/AdapterState/OrderRecord/DecisionRecord. A Lot's
 live_ranges is [] or its one remaining FIFO contiguous range. Paged links replace
 unbounded closed_slice_ids/allocation_refs/posting_refs lists, not their content;
 ordinals/root hashes preserve r3 FIFO/set ordering as applicable. Reconstruct these
@@ -732,9 +1111,9 @@ Internal persisted rational is exactly `{numerator:str,denominator:str}`: signed
 canonical integer numerator, positive canonical integer denominator, gcd1 and
 zero denominator representation forbidden; zero is0/1. No float/cache rounding.
 Persistent economic roots use a canonical ordered Merkle treap over typed business
-keys: priority=H(["qf009.index-priority-v1",component,key]); compare priority then
+keys: priority=H(["qf009.index-priority-v2",component,key]); compare priority then
 key to break ties; BST order is the declared business-key tuple order. A node
-hash is H(["qf009.economic-node-v1",component,key,canonical economic item,left,right]);
+hash is H(["qf009.economic-node-v2",component,key,canonical economic item,left,right]);
 empty=H([component,"empty"]). This defines one root independent of insertion,
 chunk/page layout or checkpoint timing without a count-dependent tree rebalance
 that would rehash the full history each append. Index priority is a deterministic
@@ -746,18 +1125,21 @@ registry/raw audit metadata is always in separate roots. Other valid indexes may
 cache work but must preserve these canonical roots and the frozen growth bounds.
 
 ```text
-Checkpoint = {namespace:"qf009.streaming-checkpoint",schema_version:1,
- profile:"qf009-offline-stream-r1",ledger_id:ID,trajectory_id:ID,scenario_id:ID,
+Checkpoint = {namespace:"qf009.streaming-checkpoint",schema_version:2,
+ profile:"qf009-offline-stream-r2",ledger_id:ID,trajectory_id:ID,scenario_id:ID,
  committed_seq:I,cutoff:Cutoff,audit_prefix:H,economic_state_sha256:H,
  config_sha256:H,causal_policy_sha256:H,raw_catalogue_sha256:H,
  fact_store_sha256:H,adapters_sha256:H,schedule_sha256:H,
  journal_prefix_sha256:H,registry_prefix_sha256:H,
  calendar_cursor:I,next_tick_index:I,registry_next_seq:I+,files:list[CheckpointFile],
+ context_receipt:ContextReceipt,fact_cursors:list[FactCursor],
+ adapter_cursors:list[AdapterCursor],control_seq:I,control_sha256:H,
  resource_spent:{active_wall_us:I,total_written_bytes:I,attempts_started:I+},
  runner_state_coverage:"CAPTURED_DECLARED_ADAPTER_STATE_NOT_R3_ACCEPTANCE",checkpoint_sha256:H}
 CheckpointFile = {component:config|raw_catalogue|facts|adapters|schedule|adapter_states|journal|
- registry|projection|ownership|dedup|revisions|calendar,
- relative_path:str,format_version:1,bytes:I,rows:I,sha256:H}
+ registry|projection|ownership|dedup|revisions|calendar|context|cursors|orders|decisions|control,
+ relative_path:str,format_version:2,bytes:I,rows:I,sha256:H}
+AdapterCursor = {adapter_id:ID,last_invocation:Cutoff or null}
 ```
 
 checkpoint hash excludes only checkpoint_sha256. File inventory is exact and
@@ -770,6 +1152,9 @@ dedup rows `{key:Key,body_sha256:H,first_commit:I+,audit_refs_root:H}`; revision
 rows `{kind:obligation|assertion,entity_id:ID,revision:I+,key:Key,cutoff:Cutoff}`;
 calendar rows `{entry:ExpectedSnapshot,seen_key:Key or null,null_reasons:ReasonMap}`,
 null seen_key=MISSING_EXPECTED_SNAPSHOT. Files are canonical JSON/JSONL with
+context file containing ContextReceipt and ordered admitted semantic FactProjection
+rows, cursor files containing tagged FactCursor/AdapterCursor, order/decision files
+containing OrderRecord/DecisionRecord versions, control files as below, and
 declared row types; projection rows are tagged `{cutoff:Cutoff,component:Component,
 item:ComponentItem}`. No undocumented mutable index is authoritative on restore.
 Private caches may be discarded and rebuilt **without changing economic state**.
@@ -804,10 +1189,93 @@ evidence. failure_sha excludes itself. Failure rows are outside economic commit
 prefixes and cannot move the financial cursor; pagination includes failures even
 when multiple precondition rejections share the same committed sequence.
 
+RV03 control persistence is a small append-only companion to those failure rows,
+not another financial ledger or a restartable task framework:
+
+```text
+ControlRecord = {ledger_id:ID,profile:"qf009-offline-stream-r2",control_seq:I+,
+ previous_control_sha256:H,at_committed_seq:I,audit_prefix:H,
+ kind:write_guard|validated|integrity_stop|resource_stop|resolution,guard_id:ID,
+ guard_input:FileRef,
+ request_id:ID or null,request_sha256:H or null,error:Error or null,
+ outcome:committed|not_committed|unknown or null,
+ null_reasons:ReasonMap,control_sha256:H}
+ControlPointer = {control_seq:I,control_sha256:H}
+```
+
+All guard inputs/control rows and CONTROL pointer publication use the same file,
+containing-directory fsync and close/reopen readback barriers as financial blobs/HEAD.
+Hash excludes only control_sha256, domain `qf009.control-v2`. Genesis control_seq0
+hash is H([domain,ledger_id,profile,"genesis"]), with no control row. Other rows
+strictly chain from the previous control hash, bind a reachable committed prefix
+and run identity; guard_id identifies the original write_guard, not a financial
+entity. Nullable request/hash use UNKNOWN_INPUT_IDENTITY/NONCANONICAL_INPUT if
+transport is invalid; error null=NOT_APPLICABLE for guard/validated/resolution; outcome
+null=NOT_APPLICABLE except resolution. Stop rows require their exact Error;
+resolution requires the canonical request identity and outcome. All rows of a
+guard bind its same guard_input bytes; unknown resolution does not clear a guard.
+No control field may enter native/economic policy hashes.
+
+Under the writer lease, durably append/fsync a write_guard and atomically publish/
+fsync/readback the dedicated CONTROL pointer **before validating/admitting the
+submitted canonical JSON write or attempting financial HEAD publication**. Save
+the exact submitted JSON as an exclusive fsynced one-row guard_input first, so an
+interrupted admission is reproducible; this is audit evidence, not committed input.
+Before HEAD publication append/durably acknowledge a validated row for this guard
+after all admission/semantic/resource checks succeed. Known non-latching
+PREFIX_MISMATCH preconditions and read calls do not require a guard. A canonical
+but malformed submitted write can have null identity and still leave a guarded
+integrity stop. Invalid JSON/nonfinite wire syntax rejected before admission is
+a non-latching transport rejection; it cannot reach financial code.
+If initial guard durability fails, no financial publication or validation success
+is allowed; the instance remains unusable until store/control preconditions are
+re-established. Never claim a stop was durably recorded when its barrier failed.
+
+There is at most one active write guard. On pre-publication semantic/resource
+failure, append the corresponding stop row and durably update CONTROL before
+acknowledging the error. On fully durable financial success, append its committed
+resolution and durably update CONTROL before acknowledging success. On proven
+noncommit append not_committed resolution. If any control append/pointer barrier
+fails after the guard, retain the unresolved durable guard, report unknown and
+refuse new writes. There is no gap where an acknowledged failure can disappear
+after crash merely because the economic prefix stayed unchanged. Unacknowledged
+control tails remain evidence; they cannot clear a durable guard or prior latch.
+
+An interrupted write_guard with no durable validated/stop row is unclassified,
+not proof that validation passed. Even proven financial noncommit alone cannot
+clear it. One bounded recovery validation of its saved exact input against the
+guarded predecessor and persisted/conservative resource debit may classify it:
+append validated if all checks pass, otherwise persist the proper stop. If that
+classification/barrier cannot finish, remain COMMIT_UNKNOWN. This prevents a
+failed stop write followed by crash from forgetting a reproducible semantic error
+or evading a resource cap. Recovery never executes new financial transitions.
+
+`open`/`restore` always discover and validate the current CONTROL tip/chain under
+lease independently of checkpoint, verify reachability of its committed anchors,
+and reapply all durable integrity/resource stops and unresolved guards. The
+checkpoint control_seq/hash is a lower-bound witness, never authority to rewind
+the current tip. Missing/corrupt/truncated control evidence or an unresolved pointer
+publication yields COMMIT_UNKNOWN / STORE_INTEGRITY_FAILURE, not ACTIVE. A stopped
+run is not repaired by a consistent old economic journal. Current Head.status is
+derived with precedence INTEGRITY_STOPPED, RESOURCE_STOPPED, COMMIT_UNKNOWN, ACTIVE;
+economic roots/cash remain unchanged by this overlay. Receipt historical heads
+remain literal saved values. Cold recovery validates the control chain once;
+ordinary writes use its verified tip. Stop rows are monotone within this identity;
+resolver can discharge one I/O guard, never clear an independent semantic/resource
+stop. Resume after such a stop needs separately reviewed continuation/new identity,
+with retained evidence, never automatic restored ACTIVE or larger resource limits.
+
+Control writes/guard/readback/storage count inside the existing caps. If a cap or
+I/O failure prevents durable stop publication, the already persisted guard keeps
+the run blocked across restart. No automatic scavenging/truncation of tails or
+unbounded resolver polling is part of this contract. A successful readback without
+the required file/directory barriers never upgrades it to durable acknowledgement.
+
 Write transaction blobs/indices to exclusive unpublished files; flush/fsync them
 and their manifest, then under the existing single-writer lease atomically replace
 the dedicated local store's small HEAD pointer. This HEAD change is the only commit
-linearization point. Acknowledgement follows the required directory fsync/readback.
+linearization point. Acknowledgement follows the required directory fsync/readback
+and durable guard resolution described above.
 Crash before HEAD preserves the old committed prefix; unreferenced tails remain
 quarantined evidence. Crash after HEAD restores that exact committed transaction,
 including request-id dedup, not half its registry/cash changes. Never truncate or
@@ -882,6 +1350,163 @@ literal oracle, not an r3 cap exception. Mapping new statuses back to r3 must no
 turn missing provenance/unknowns into pass. Restore-from-committed-prefix is the
 only automatic crash recovery; data repairs/semantic-stop continuations are not.
 
+### 8.1 RV04: closed initial functional manifest
+
+Initial acceptance is exactly the following **90 named cases**, S01–S12 only.
+Each runs once in the QD producer functional suite and once in the QR independent
+functional suite: two suite attempts,90 outcomes each, seed=NONE, no hidden random
+or parameter sweep. QD owns producer fixture/store calls, QR owns independent
+expected values, rejection reasons, state/receipt/artifact checks. For every case
+both record PASS/FAIL/NOT_EXECUTED plus actual bodies/slots/reads/bytes/checkpoints;
+one missing/failed case fails that suite. “PASS” below is the required future
+outcome, not an execution result. S13 is explicitly
+**NOT_EXECUTED/BLOCKED_NATIVE_PORT/R3_NOT_READY**, outside the90, not a skipped PASS.
+
+Replica inventory is also closed: all cases use one fresh fixture except
+S01.06=3,S01.10=2; S03.01/.02/.06/.07=2 each; S04.07=3;
+S05.01/.02/.04=2 each; S08.08/.09/.11=2 each; S09.01/.02/.03=2 each;
+S11.02/.04/.05/.08=2 each,S11.09=3; S12.02/.03/.04/.06=2 each.
+This is exactly118 fixture instantiations per suite, with90 named outcomes;
+within-fixture request/query/restart steps are not extra benchmark attempts.
+No unused replica allowance can be reassigned to a new probe or failed-case retry.
+
+Fixture conventions are finite: unless overridden, one independent fresh store,
+C1000, one BTC instrument, m1, fee0, empty funding calendar, integer q1, economic
+range[0,1000)us, knowledge end1200us, literal facts at10/20/30/40/50us, at most64
+FinancialBodies/16 market Cell facts/8 ticks/4 slots per tick/2 checkpoints/16 query calls.
+Reference-import uses one ReferenceFact per FinancialBody, not the16 market-fact bound.
+No current time or random seed. A specified negative mutates only the named field
+from that group's valid tape. Each case has at most four explicitly named wire
+variants, counted inside that case and reported individually; no unspecified
+“all permutations” loop. Ranges/limits below override only that convention, never
+the global register. Small reference cases stay<=512 accepted bodies per tape.
+
+| Case | Concrete fixture / clocks / size override | Required outcome / reason |
+| --- | --- | --- |
+| S01.01 | t10 buy10,m.001,price49900,fee.0005; close50100 at20 | gross2, fees.5; entry claim-.2495; exact r3 fields |
+| S01.02 | same notional499,maker rate-.0001 at10 | signed fee cash+.0499, no taker substitution |
+| S01.03 | long10 at5, short10 after25; m.001,MARK50000; snapshots10/20/30/40, rates +.0001/-.0001/+.0001/-.0001 | four funding cash totals -.05,+.05,+.05,-.05; no elapsed proration |
+| S01.04 | A11/A12:10 units entry49900/exit50100,m.001,fee.0005,funding-.05; exit6 then4 | net .87/.58,total1.45; exact residual/FIFO |
+| S01.05 | old long10 reverses short6 at100,m1,fee.00025 | reversal fee.4 splits old.25/new.15; old funding stays old |
+| S01.06 | R02 F filled7/available9 crosses expectedS8; three fresh replicas: [F,S],[S,F],[F] | all LATE_ORIGIN_UNSUPPORTED, old prefix unchanged |
+| S01.07 | R03 snapshot80,MARK79 available90,rate95,revision100 | FUTURE_PROXY_MARK; no trade-close substitution |
+| S01.08 | MARK79 available79,S80,rate95,revision available100 | unknown at99, known at100; both r3 views agree |
+| S01.09 | R04 assertion10,T revision20,settling Posting21,successor22 | complete10 -> immature20/21 -> complete22; old query immutable |
+| S01.10 | R05 same f1 ID BTC/ETH at10, then separately valid unique scoped IDs | ID_SCOPE_CONFLICT for shared ID; unique case PASS |
+| S01.11 | R06 unknown T,Posting-.02 at10,T=-.05 at20 | C999.98/B-.02; T/P/A/L/E null then L.03; unknown-prior deltas null |
+| S01.12 | B1 three sequential episodes: unknown entry / exit / both fee sides, each4 units partial exits1+3; restore T-.25->-.20->-.30 and refund+.05/top-up-.10;<=128 bodies,24 ticks | only affected fee sides null; gross/other side known; exact old-slice restoration/residuals |
+| S02.01 | separate P/X/environment: P submits long3 at10; X fills1@100/cancels2 at20; environment after X snapshots actual live range; P close1 at30,X fills40 | full intent/status/range transported, no private scan; ledger/native-placeholder state atomically matches literals |
+| S02.02 | same tape, checkpoint after submission10, restore then20/30/40 | identical order identity/payload, all P/X/env states and finance |
+| S02.03 | same tape, checkpoint after partial/cancel20 | no top-up/replayed fill; actual one-unit range persists |
+| S02.04 | P owns typed state at10, X reads declared peer at20; P updates own state in later20 slot | X sees predecessor only; single writer; later slot sees new state |
+| S02.05 | end50,knowledge end60; pending order submitted40/eligible49/expires50,reserve expires50; lifecycle50,old-origin Posting51/assertion55 | cutoff cancel/no new Fill/decision; expired reserve null; tail view retains open/immature exposure |
+| S03.01 | t30 future price101->500, rehash whole raw catalogue/store | unchanged t10/20 numeric packets/state/IDs/roots; audit may differ (R01) |
+| S03.02 | repeat same fixed source/config twice in two stores | canonical economic/registry content equal except declared creation metadata |
+| S03.03 | initial10,context from0; closed facts economic1/7,available2/8; fact available10 | two context rows once; equality10 normal first release; cash unchanged |
+| S03.04 | same context, required row's availability unresolved | FUTURE_DEPENDENCY before native initialization |
+| S03.05 | qualified context available2 altered to10 in proposed packet | INPUT_BINDING_MISMATCH; original-clock evidence wins |
+| S03.06 | S03.03 checkpoint before first slot, then after first slot; two explicit restart positions | same prefix/init once/cursors; no warmup finance |
+| S03.07 | S03.03 change only future row20 and whole-file hash | identical economic ContextReceipt/first-slot state, changed audit binding allowed |
+| S04.01 | packet at20 includes fact available30 | FUTURE_DEPENDENCY, no prefix change |
+| S04.02 | external generated result q2, frozen port emits q1 | ADAPTER_RESULT_MISMATCH |
+| S04.03 | omit one live unit range from S02 before-view selection | INPUT_BINDING_MISMATCH even after rehashing subset |
+| S04.04 | substitute older pending intent/status at20 in S02 | INPUT_BINDING_MISMATCH |
+| S04.05 | change peer state's value/hash or omit required own-state read | INPUT_BINDING_MISMATCH |
+| S04.06 | policy selector requests execution_open or undeclared field | FORBIDDEN_INPUT before invocation |
+| S04.07 | three fixed negative-port probes: direct future file read; entropy request; unregistered global/audit input lookup | file/global:FORBIDDEN_INPUT; entropy:UNSUPPORTED_RANDOMNESS; no effects |
+| S04.08 | output replaces unknown funding/reserve with zero without source | INPUT_BINDING_MISMATCH; unknown retained |
+| S05.01 | ticks10/20/30: one advance30 versus three complete-tick advances10,20,30 | same final financial/native-placeholder content and selected old views |
+| S05.02 | same-time old10 close/new4 open atS20; two named snapshot-before/fill-before rules | eligibility10 versus4 per declared rule; intermediate views exclude later slots |
+| S05.03 | remove required same-time Fill sequence in that tape | AMBIGUOUS_FILL_SEQUENCE |
+| S05.04 | two fresh replicas after sealing20: new availability19; exact accepted duplicate | new PAST_AVAILABILITY; accepted duplicate no effect without first latching that replica |
+| S05.05 | old origin10 revised/known/available30 after seal20 | legal current revision; as_known20 unchanged |
+| S06.01 | duplicate request/Body/Posting before+after checkpoint20; three exact redeliveries | one cash/ID effect; saved receipt replay |
+| S06.02 | same request_id different canonical request hash | REQUEST_CONFLICT/quarantine |
+| S06.03 | BTC lot reference linked into ETH fee/posting | REFERENCE_SCOPE_MISMATCH; owner unchanged |
+| S06.04 | allocation deliberately links another episode's unit range | ALLOCATION_MISMATCH |
+| S06.05 | revision1->3 missing2 | REVISION_GAP |
+| S06.06 | Posting correction points to itself | DEPENDENCY_CYCLE |
+| S06.07 | Posting revision2 instead of new refund ID | UNSUPPORTED_POSTING_RESTATEMENT |
+| S07.01 | fixed8192-body/8192-ReferenceFact history,1024 ticks,128-body advances,checkpoint4096,earliest closed lot corrected at end; economic end20000us | all retained versions/old query match literal oracle; no4096 history reset |
+| S07.02 | 512 bodies:128 live lots of2 units,128 unpaid funding claims, then oldest partial exit/revision;checkpoint384;<=256 ticks/256 facts | complete paged live/episode selections or explicit resource failure; acceptance requires exact continuation within caps |
+| S07.03 |128-body/128-ReferenceFact B1 closed-episode tape,<=24 ticks across named fold at20/checkpoint,unknown fee then restore/refund at30/40 | old as-known unchanged; latest attribution exact, no fold reset |
+| S08.01 | fail initial guard durability before admission at10 | no financial publish/ack; unusable pending storage proof |
+| S08.02 | durable guard/validated, fail before blob fsync at10 | old financial prefix; barrier-proven not_committed, no blind retry |
+| S08.03 | fail after blobs before HEAD; orphan tail contains exact request | durable old HEAD -> not_committed; orphan never imported |
+| S08.04 | fail after HEAD before receipt at10 | bounded resolver reconstructs one committed receipt/cash effect |
+| S08.05 | readable new HEAD but directory fsync fails on two explicit resolver calls | both unknown, durable guard retained, no extra retry |
+| S08.06 | same uncertainty then successful full barrier/readback; resolve twice | committed twice with one financial effect/same saved receipt |
+| S08.07 | reachable request_id/hashA, resolve with hashB | REQUEST_CONFLICT/quarantine, never not_committed |
+| S08.08 | rehash forged checkpoint C or omit global-owner row; two replicas | STORE_INTEGRITY_FAILURE from journal recomputation |
+| S08.09 | old ACTIVE checkpoint, durably latched integrity / resource stop at same economic prefix; two replicas | restore respectively INTEGRITY_STOPPED / RESOURCE_STOPPED |
+| S08.10 | stop/CONTROL publication fails after durable guard, crash and reopen | unclassified guard stays blocked; bounded saved-input validation persists original stop, never silently ACTIVE |
+| S08.11 | interrupt suffix recovery at one fixed boundary, reopen; then corrupt CONTROL hash in separate replica | valid suffix recovers within budget; corrupt control STORE_INTEGRITY_FAILURE, not ACTIVE |
+| S09.01 | restore profile-r1 or unknown schema3 checkpoint; two replicas | UNSUPPORTED_VERSION for both; no upgrade |
+| S09.02 | change catalogue or adapter identity; two replicas | CHECKPOINT_MISMATCH |
+| S09.03 | remove declared dependency or symlink outside root; two replicas | STORE_INTEGRITY_FAILURE / SCHEMA_VIOLATION |
+| S09.04 | path ../escape in source ref | SCHEMA_VIOLATION, no read/write outside root |
+| S09.05 | restore checkpoint10 with expected HEAD20 and intact declared committed suffix20 | validate/replay suffix to Head20, never rollback or ignore expected HEAD |
+| S09.06 | restore older context/adapter cursors than committed first slot | CHECKPOINT_MISMATCH; no duplicate initialization |
+| S09.07 | prior available2 row offered as new context after seal20 | PAST_AVAILABILITY; genesis exception unavailable |
+| S10.01 | economic Posting10 learned20; query as_known10 then restated10/knowledge20 | historical cash preserved; restated separate, budget null |
+| S10.02 | missing due snapshot11 at query11 then late legal evidence | coverage unresolved until supported; no zero replacement (R06) |
+| S10.03 | legal stale assertion then successor | immature not integrity stop; original complete time not inherited (R04) |
+| S10.04 | MARK source10/max_age1; queries10/11/12 | fresh10/11,stale12; equality exact |
+| S10.05 | reserve expiry11; query10/11/12 | valid10,unknown11/12, no stale cached budget |
+| S10.06 | through11 with no tick after10; query11,then attempt new availability11 | Head11,proper coverage/age; new sealed-time delivery PAST_AVAILABILITY |
+| S10.07 | construct ViewCore/handle/ReceiptCore/manifest and page token; mix token from20 with view10 | no hash cycle; SCHEMA_VIOLATION for mixed token |
+| S10.08 | current MARK raw available10 selected at20 and30, emitted consumer valuations known20/30; max_age100 | repeat fact selection no duplicate delivery; correct distinct source/consumer clocks |
+| S10.09 | after seal20 new valuation body available10 from old selected point | PAST_AVAILABILITY; no source clock rewrite |
+| S11.01 | exact amount9007199254740993 and a31-digit integer; rational allocation | exact r3 fields, no float/Decimal28 rounding |
+| S11.02 | mixed scales .1/.03,quantity split1/3,residual; Decimal precision6 then50 | exact same output both contexts |
+| S11.03 | float money in candidate body | INVALID_DECIMAL |
+| S11.04 | bool contract count or fractional integer count; two replicas | INTEGER_CONTRACT_VIOLATION for both |
+| S11.05 | percent string or exponent string; two replicas | INVALID_DECIMAL |
+| S11.06 | exact rational1/3 requested as unrounded wire D | NONTERMINATING_AMOUNT |
+| S11.07 | exact integer8193bits versus cap8192 | RESOURCE_EXHAUSTED, no rounding |
+| S11.08 | negative price / wrong-price-kind trade-as-MARK; two replicas | DECIMAL_DOMAIN / WRONG_PRICE_KIND respectively |
+| S11.09 | source_record differs from source_seconds*1000000 by1us; then wrong mapping_rule_id; then unknown mapping in three replicas | CLOCK_CONTRADICTION; SNAPSHOT_MAPPING_MISMATCH; unresolved coverage respectively (A33) |
+| S12.01 | one complete tick4097 bodies with transaction cap4096 | RESOURCE_EXHAUSTED, no split/partial commit |
+| S12.02 | per-slot selected input exceeds32MiB or262144 scalar reads; two replicas | RESOURCE_EXHAUSTED before evaluation, no truncated selection |
+| S12.03 | state exceeds2MiB or output65 events; two replicas | RESOURCE_EXHAUSTED, no checkpoint of incomplete state |
+| S12.04 | injected disk ceiling / wall ceiling; two fixed boundary failures | RESOURCE_STOPPED persists; no automatic larger cap |
+| S12.05 | page257 items or page bytes>2MiB; two read calls | RESOURCE_EXHAUSTED_READ, no partial page/no financial mutation |
+| S12.06 |S07.01 history/clock bounds at fixed cache budgets64KiB and8MiB, page64,checkpoint4096 | exact reconstructed results equal within hard limits; no history dropped |
+| S12.07 | serialize restore+resolve spend at limit and interrupted-work debit | no counter reset/new free attempt; RESOURCE_STOPPED if exhausted |
+
+S07.01's8192-body tape is fixed:1023 eight-body cycles plus eight suffix bodies.
+Each cycle opens/closes1 unit100/101, revises opening fee to-.1 and posts-.1,
+then emits MARK100,zero reserves,a flat funding snapshot and known-zero funding
+revision. Each fits a complete tick with declared fill-before-snapshot rule.
+Suffix revises the earliest fee unknown then-.05, posts refund+.05, emits
+MARK/reserves/flat snapshot/zero funding revision and a scoped first assertion.
+Ticks are10+cycle_index, suffix at1100, end20000; checkpoint after body4096.
+S07.02 is a distinct fixed512-body tape:128 opening Fills(q2@100),128 snapshots
+and128 known authoritative funding revisions(T=-.01 each,unposted),126 MARK100
+valuations,one oldest-lot reduction(q1@100) and one old opening-fee revision(T=-.1).
+Use ticks10..137 for the openings/snapshots/claims, MARKs after them at138..263,
+and suffix at264; checkpoint after384 bodies. All128 lots/claims remain present
+until the single partial exit; complete allocation/residual evidence is retained.
+S12.06 reuses S07.01, not a new random tape. Overlarge inputs in S12.01–03 are
+negative fixtures; expected controlled rejection is acceptance, not a cap waiver.
+
+This manifest freezes case identities, finite variant counts, data/clock bounds
+and required reasons. Implementation handoff must pin exact fixture bytes and
+independent expected-state tables (including any precise r3 parser error within
+the named transport alternatives) **before** execution. Conflicting literal/error
+expectations require QR review, never update expected values from producer output.
+The published manifest may clarify construction without changing these90 IDs,
+adding retries, shrinking hard cases or increasing limits; otherwise return for
+a new reviewed register. No case is deleted because the120s suite might fail.
+
+S13 later requires a separate frozen finite native fixture/case/attempt/CPU/wall/
+RSS/disk register and actual pinned policy, numeric/feature/intent/execution/state
+schemas. It must cover complete native timing/sizing/feedback and full-state
+A23/A26/A34; the current90 cases do not claim those criteria passed. Original
+QF00634-stage mapping remains unchanged: financial isolation is S1 only; raw
+support S2, actual full-state native replay S3, labels/purge/sufficiency S4/R4 and
+future model/evaluation/fresh fit permission R5 remain separate.
+
 Finite performance ladder: N=512,2048,8192,32768 FinancialBodies on one fixed
 deterministic repeating synthetic tape, one account, fixed active-state pattern
 (one current lot and bounded unresolved set), with old closed references retained
@@ -890,8 +1515,11 @@ separately from registry/no-op slots. Complete ticks/transactions<=256 bodies,
 checkpoint every1024 bodies, final historical/late-revision query included.
 Two repetitions each, **8 measured producer attempts total**, no warmup/retry
 builds. Small reference comparisons S01/S02 are functional tests, not these timing
-runs. One functional-suite attempt containing the finite S01-S13 variants and one
-QR independent-suite attempt are proposed separately; no unlimited rerun loop.
+runs. One90-case S01–S12 producer suite and one90-case QR independent suite are
+the two functional attempts; S13 is outside this initial register. QR additionally
+checks the **eight saved producer benchmark artifacts and their ratios inside its
+same120s suite**; it does not run another eight benchmarks or regenerate timings.
+Any independent reference/long-tape computations count inside that suite's cap.
 
 Proposed hard producer benchmark budget:60s each/480s aggregate measured wall,
 RSS<=256MiB, resident cache<=8MiB, page<=256 items/2MiB, transaction<=4096 bodies/
@@ -965,7 +1593,7 @@ The concrete native bridge remains proposed QD `research/qd008/native_adapter.py
 and `tests/test_qd_event_replay.py`; QR reviews its numeric/intent/execution/state
 schemas and supplies independent future-perturbation/end-to-end checks. This port
 can be registered through the initial adapter/state transport once those exact
-contracts/code pass; no new kernel version should be necessary for the known
+contracts/code pass; the reviewed typed transport is intended to cover the known
 purpose. If S13 exposes a representational gap, QD authors a typed delta and QR
 reviews it before that bridge is claimed ready. The ledger's atomic commit can
 include its declared state, but completeness is not self-certified by the adapter.
@@ -985,14 +1613,25 @@ scope/diff checks are documentation checks, not implementation PASS. After the
 one-file commit, stop at READY_FOR_QR_CONTRACT_REVIEW; no response is approval and
 no new file allocation or market run is inferred.
 
-Delivery checks actually performed: nine numbered sections, thirteen named
-unexecuted acceptance cases, balanced fences/whitespace, frozen code/schema/
-preflight/funding/QR acceptance identities, and static extraction of the76 retained
-r3 error codes. Reviewed non-circular ViewCore/handle and ReceiptCore/commit
-preimages and literal non-tick age/expiry semantics, incorporating coordinator
-controls FULL-REPLAY-FIDELITY-1 and VIEW-HASH-1. These are document/reference checks,
-not executed hash-graph, causal, storage or implementation tests. Exact Git scope
-is one new proposal; source main's HEAD/branch/staged diff/index bytes/unstaged
-diff/full72-entry status fingerprints again match the protected baseline.
-No old tracked file, staging boundary, raw/candidate data or shared journal changed.
-No synthetic stream, benchmark, new numerical policy or market result was produced.
+Amendment delivery checks: exact QR4d4e530/QD89cf347 review-object SHA256 and
+base/status; one-file diff and unchanged financial payload/error registry; closed
+new type references,90 unique case IDs/118 fixture counts, balanced fences, schema/profile/hash
+domain consistency, fixed budget arithmetic and source-checkout preservation.
+These are documentation/stdlib checks only. All S01–S13, producer/QR functional
+suites, eight measured benchmarks, persistence fault injections, native bridge,
+MARK/query validation, market replay and fit remain NOT_EXECUTED by this task.
+The exact byte-identical r3 FinancialBody definition and retained76-code registry
+are compared with19cd4c7; no historical research claim or user choice is added.
+
+RV closure offered for independent QR review: RV01§4.1/types/components/checkpoint;
+RV02§3.1/initial context/cursors; RV03§5.1/CONTROL/restore; RV04§8.1/90-case manifest
+and unchanged initial caps. R03/R05 mechanical links are§3.2/4.2. They are proposal
+changes, not self-approved implementation acceptance. The result commit is the
+one changing this file; resolve with:
+
+```sh
+git log -1 --format='%H' -- docs/interface-requests/qd-qf009-streaming-ledger.md
+```
+ Stop after that one-file
+commit and wait for QR's exact-object review. Main, existing staged/unstaged user
+work, prior reports, QR files, native code, old r3 and shared journals stay intact.
