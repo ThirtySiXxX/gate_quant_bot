@@ -14,7 +14,28 @@ from .sources import (SourceError, ActualHistoryOff, metadata, hourly_specs, mon
 from .native import prepare_native, execution_opens, funding_points
 from .queries import Query, MarkSelector, mark_objects, query_plan, select_queries
 
-BASE='61536c823926fb873f9a4a130778f34e0b87c161'
+BASE='48a09a6b1f162f3ae39ad971bd006f9a8f6145b7'
+APPROVED_TRAJECTORIES=[
+    {'scenario':'P0','trajectory':'ALLOW_ALL'},
+    {'scenario':'P0','trajectory':'SKIP_FIRST_ADMISSIBLE_BASKET'},
+    {'scenario':'F_HIGH','trajectory':'ALLOW_ALL'},
+    {'scenario':'F_REFERENCE','trajectory':'ALLOW_ALL'},
+    {'scenario':'S_HIGH','trajectory':'ALLOW_ALL'},
+    {'scenario':'L_EXTRA','trajectory':'ALLOW_ALL'},
+    {'scenario':'Q_LOW','trajectory':'ALLOW_ALL'},
+    {'scenario':'M_SLOW','trajectory':'ALLOW_ALL'},
+    {'scenario':'T_FILL_FIRST','trajectory':'ALLOW_ALL'},
+]
+SNAPSHOT_CODE_PATHS=(
+    'research/qd012/actual_snapshot_entry.py','research/qd012/prepare.py','research/qd012/sources.py',
+    'research/qd012/native.py','research/qd012/queries.py','research/qd011/driver.py',
+    'research/qd011/ports.py','research/qd011/codec.py','research/qd010/joint_native_bridge.py',
+    'research/qd010/economic_inputs.py','research/qd009/streaming_ledger.py','research/qd007/event_ledger.py',
+    'research/qd008/repair_history.py','src/__init__.py','src/config.py','src/strategy_signals.py',
+    'src/strategy_execution.py','src/execution_timing.py','src/position_sizing.py','src/portfolio.py',
+    'src/trend.py','src/carry.py','src/vol.py','src/risk.py','src/indicators.py','src/models.py',
+    'src/data_fetcher.py','src/crypto_ml.py',
+)
 ACCEPTED=dict(qr008_report='0a90b2555db8e16934053abff31db29bac4296a2',
     qr008_checker='9cae8458fb85e474a047fc1793abe0458cd83ab3',
     qr010_shared_account='88168f34c8c2855e9e65510bcde749cc459ff12a',
@@ -109,21 +130,21 @@ def assemble(hours,funding,selectors,*,decision_times,economic_end_us,settlement
             posting_us=(f.source_us//HOUR+1)*HOUR+60_000_000,source_ref=f.source_ref) for f in fps]),bundles[0])
 
 
-def preparation_manifest(catalogues):
+def preparation_manifest(catalogues,*,snapshot_entry_plan=None):
     """Metadata-only task deliverable, no source revalidation or acceptance loop."""
     f=catalogues['metadata']['funding']['raw_sources'];m=catalogues['metadata']['mark']['objects']
     at=int(datetime(2024,1,1,tzinfo=timezone.utc).timestamp())*1_000_000
     chosen_m=[e for e in m if e['month'] in ('202312','202401')]
     chosen_f=[e for e in f if e['first_source_seconds']*1_000_000<at+HOUR and e['last_source_seconds']>=1672531200]
-    return dict(namespace='qd012.frozen-native-preparation',schema_version=2,base_commit=BASE,
-        status='NEW_CANDIDATE_SYNTHETIC_CHECKS_ONLY',actual_history_execution='OFF',accepted_conclusions=ACCEPTED,
+    return dict(namespace='qd012.frozen-native-preparation',schema_version=3,base_commit=BASE,
+        status='SNAPSHOT_ENTRY_STATIC_PREPARATION_ONLY_NOT_EXECUTED',actual_history_execution='OFF',accepted_conclusions=ACCEPTED,
+        snapshot_entry_plan=snapshot_entry_plan,
         dataset_id=DATASET,source_policy_id=POLICY,manifest_sha256=dict(ohlcv=OHLCV_MANIFEST_SHA,mark=MARK_HANDOFF_SHA,funding=FUNDING_HANDOFF_SHA),
-        code_sha256={p:sl.hashlib.sha256((Path(__file__).resolve().parents[2]/p).read_bytes()).hexdigest() for p in (
-            'research/qd012/sources.py','research/qd012/native.py','research/qd012/queries.py','research/qd012/prepare.py',
-            'research/qd011/driver.py','research/qd011/ports.py','research/qd011/codec.py')},
+        code_sha256={p:sl.hashlib.sha256((Path(__file__).resolve().parents[2]/p).read_bytes()).hexdigest() for p in SNAPSHOT_CODE_PATHS},
         scope=dict(warmup_start='2023-01-01T00:00:00Z',warmup='INDICATORS_ONLY_NO_POLICY_FILLS_OR_CASHFLOWS',
             account_start='2024-01-01T00:00:00Z',economic_end_exclusive='2026-10-01T00:00:00Z',
-            settlement_end_exclusive='2026-10-01T02:00:00Z',initial_shared_cash_usdt='10000',accounts=1,scenarios=10),
+            settlement_end_exclusive='2026-10-01T02:00:00Z',initial_shared_cash_usdt='10000',accounts_per_trajectory=1,
+            scenarios=8,joint_trajectories=9,trajectory_register=APPROVED_TRAJECTORIES),
         contracts=dict(native_input_version=2,warmup_context='qd011.raw-native-context.v2',cache_codec='zlib-json-f64-v1',
             timestamp='integer_UTC_microseconds',source_seconds='exact_decimal_max_6dp',price='USDT_per_base',volume='decimal_contracts',
             covariance='native_annual_2x2_BTC_ETH_separate_from_sizing_std',carry='8h_equivalent_28800s_1095_per_year_MAIN_BAR_OPEN_alignment',
@@ -137,7 +158,7 @@ def preparation_manifest(catalogues):
             hourly_objects=[s.__dict__ for s in catalogues['ohlcv']],funding_objects=chosen_f,mark_objects=chosen_m,
             whole_selected_compressed_bytes=sum(s.bytes for s in catalogues['ohlcv'])+sum(e['bytes'] for e in chosen_f+chosen_m),
             suggested_observation_limits=dict(wall_seconds=300,cpu_seconds=200,rss_mib=256,new_output_mib=8,compressed_input_mib=128),
-            uncertainty='METADATA_ONLY: gzip prefix expansion/CPU/native full-year memory and output unmeasured; reduce scope or seek amended limits if insufficient'),
+            uncertainty='METADATA_ONLY: full-year warmup is mandatory; gzip traversal/native memory and output unmeasured; stop at limit, no narrowing or retry without a new human decision'),
         limitations=['No raw actual-history payload opened or rehashed by this task',
             'Supplied manifest hash is provenance, partial streams do not prove full-object SHA or gzip CRC',
             'MARK query coverage UNKNOWN until separately approved bounded evaluation',
