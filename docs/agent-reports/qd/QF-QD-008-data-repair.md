@@ -1,6 +1,10 @@
 # QF-QD-008-DATA-REPAIR: engineering preflight
 
-2026-10-28 Australia/Melbourne. **PLAN_COMPLETE_PENDING_FROZEN_QR_SPEC.**
+2026-10-28 Australia/Melbourne. **IMPLEMENTATION_IN_PROGRESS; MARK_DESIGN_ACCEPT.**
+Current dispatch `QF-DISPATCH-20261028-QD008-EXACT-CANDIDATE-1` authorizes
+the exact JSONL/UTC-microsecond builder and two bounded offline candidate builds.
+Earlier preflight statements below are preserved history, superseded by the
+frozen spec and explicit external human approval in the checkpoint appended here.
 Dispatch `QF-DISPATCH-20261028-QD008-ENGINEERING-PREFLIGHT-1`.
 QD worktree `/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot`;
 branch `codex/qd-cache-safety`; clean base
@@ -84,3 +88,63 @@ acquisition, market build/replay, labels/features, model/scaler fit, activation,
 main edit, push/merge, app/engine launch, Windows/NAS change or scheduling occurred.
 Data repair feasibility is not dataset acceptance, ledger independent PASS,
 economic label validity, training readiness or a profitability claim.
+
+## QD data-owner review: MARK_EXACT_OBSERVATION_ALIAS_R2 — ACCEPT
+
+Decision: **ACCEPT as a bounded representation/continuation design**, not MARK
+implementation/data acceptance or permission to execute requests in this task.
+Exact QR commit `8b9e85e5c041fcf9167940520035693562f761ba`; working and committed
+bytes match amendment SHA256
+`0b33bf4272bbb87bb33d1e19fe27ab7e5a7765ddd2b98baf4a4678530bc17ece`.
+Protocol SHA `c71cae75331346e000c231c522db88e383a41cbefcdfb7deb44fd97f8fd67327`;
+machine-spec SHA `cd0e123d019b428e7bd12754e553c0322d4aac5593537b07752bab777280bdc0`.
+
+The rule is implementable without modifying or discarding raw evidence: within
+one fixed raw object/instrument/month, only a maximal adjacent run with all four
+parsed original strings identical aliases to the first physical row. Preserve
+every physical row in its consecutive source_rows group, primary first row,
+alias_count and exact raw text. A greater timestamp creates a new observation
+even at identical prices; equal numeric time with any different spelling/value
+and descending time still reject the whole object. Runs spanning read chunks
+require retained parser state, not per-chunk deduplication. No cross-object alias
+or general sorting/cleaning is inferred. Version2 point identity includes namespace,
+version, instrument, raw hash and first physical row; downstream references must
+use that version/complete group, without double valuation or changed availability.
+
+Budget arithmetic agrees: 98-17=81 attempts remaining, 71 fixed GETs plus at most
+10 global retries; 2147483648-34975986=2112507662 bytes. Reuse/hash-check all19 old
+objects, including the originally quarantined complete body, in a new manifest;
+do not rewrite the old result or re-fetch those bodies. Existing and new audit
+bytes count toward the same16MiB ceiling. The old continuous deadline has expired.
+The explicit proposed continuation inherits26.732s and permits1173.268s additional
+active processing (sum1200s), including revalidation/requests/waits/checks. Paused
+human review is excluded only by this explicit amendment; this is not a fresh
+20-minute reset. A separate coordinator continuation dispatch must activate it.
+All remaining per-object/global disk, bytes, time, retry and stop rules stand.
+
+Required-query coverage remains NOT_EVALUATED until both accepted delay/age
+scenarios are checked against explicit required queries, including all gaps and
+month boundaries. No finite count or removal of five aliases proves support.
+Unsupported queries retain null/reasons and risk blocking. This document review
+does not reparse MARK, run QR oracle tests, implement conversion or change the
+coordinator collector. Those future owner tests remain required as specified.
+
+## Exact OHLCV implementation handoff accepted
+
+Human decision QR008-DATA-SOURCE-1 is supplied by external companion
+`qr008-source-policy-approval.json`, verified SHA256
+`d3eeb12d0d5348f769a9493a215eb32e2f3be40c13ed4a0eb5607e7cef9effa0` in the fixed
+coordination directory. It binds the exact QR spec/commit and policy
+ARCHIVE_PREFIX_REST_COMPLETE_ROWS_FROM_20251201_R1, including the BTC close change.
+QR's original null approval fields remain historical and are not rewritten.
+Only complete rows are selected: archive before2025-12-01, frozen decimal REST
+afterward until2026-10-01, for both instruments. Native code and old data stay frozen.
+
+Only the five allocated QD paths and two new ignored output roots are permitted.
+Candidate status will be PENDING_INDEPENDENT_REVIEW. No independent candidate
+checker has executed: manifest will explicitly distinguish null checker execution
+from the known normative QR commit and oracle script hashes. No ambiguous self-
+acceptance is inferred from the schema's generic checker-identity requirement.
+No network, funding/MARK transform, native adapter, replay/labels or fitting is
+part of this implementation. Subsequent sections will record actual code/tests,
+two-build resource usage, hashes, preservation and remaining independent gates.
