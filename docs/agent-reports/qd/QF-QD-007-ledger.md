@@ -318,6 +318,22 @@ Current code/schema identities before candidate generation:
 | `research/qd007/event_ledger.py` | `354df077fba2c7ea0cd2d7cfb83c4a68f9102aa7fb398b1af7106727bf40645a` |
 | `tests/test_qd_event_ledger.py` | `628e8a22eb87384e72867f7e673ea58ef4fcc1b2de07efd388c97c77eeb8a1f2` |
 
+The table above records initial tested implementation commit
+`69c8bf1d8a060ccdf0b103a3e3226c8f200dc960`. Before publishing candidate outputs,
+a narrow receipt correction makes cross-record admission failures hash the full
+candidate input, with recoverable_identity=null rather than falsely identifying
+the last successfully normalized record. An explicit R02 assertion checks that
+receipt. Financial semantics/schema are unchanged. Focused **32 passed** (0.136s)
+and full socket-blocked **262 passed** (14.478s) after this change; JS remains the
+unchanged-runtime eight-group pass above, not rerun without a frontend change.
+
+Final candidate implementation SHA256:
+`7c1a08c569b79618b6de3092e297ef1ed1a51b54da29d62e76e7e2c900620636`.
+Final producer-test SHA256:
+`aa4ec5c282ab6107c3970c986dd3ba2e45d86638b265eabdc36a86c921f7c8d8`.
+The reviewed B1/r3 schema SHA remains
+`7fd7df5f84a8822f5fdd37243d24e0eb293d9eeacda17514c8b1f1ad04ac475a`.
+
 ## Stage evidence and remaining gates
 
 Executed S1 primitive/ledger evidence covers A01/A02/A04/A05/A07/A09-A14/A17-A20

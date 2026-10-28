@@ -804,7 +804,11 @@ class Ledger:
                     if extras:corroborated.append(_key(r))
                 else:candidate[key]=r;applied.append(_key(r))
             _require(len(candidate)<=4096,"FIXTURE_CAPACITY_EXCEEDED")
-            all_records=list(candidate.values());self._guard(all_records,list(self._records.values()))
+            all_records=list(candidate.values())
+            # Cross-record admission failures concern the complete candidate;
+            # never falsely attribute them to the last normalized input record.
+            current_record=all_records;incumbent=None
+            self._guard(all_records,list(self._records.values()))
             cutoff=max([self._config["initial_at_us"]]+[max(_econ(r),r["available_at_us"]) for r in all_records])
             _,entries,inv,obs,_=self._project(cutoff,cutoff,records=all_records)
             self._assertion_check(all_records,inv,obs)

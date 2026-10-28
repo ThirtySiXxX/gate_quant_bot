@@ -222,7 +222,9 @@ class EventLedgerTests(unittest.TestCase):
         f=fill(at=7,available=9,fee="0");s=snapshot(units=[])
         for records in ([f,s],[s,f]):
             c,rs=bind(records,fee="0");ledger=el.Ledger(c);before=ledger.audit()["committed_state"]
-            with self.assertRaisesRegex(el.LedgerError,"LATE_ORIGIN_UNSUPPORTED"):ledger.apply_batch(rs)
+            with self.assertRaisesRegex(el.LedgerError,"LATE_ORIGIN_UNSUPPORTED") as caught:ledger.apply_batch(rs)
+            self.assertIsNone(caught.exception.receipt["recoverable_identity"])
+            self.assertIsNotNone(caught.exception.receipt["input_sha256"])
             self.assertEqual(before,ledger.audit()["committed_state"])
         c,rs=bind([s,f],fee="0");ledger=el.Ledger(c);ledger.apply_batch(rs[:1]);before=ledger.audit()["committed_state"]
         with self.assertRaises(el.LedgerError):ledger.apply_batch(rs[1:])
