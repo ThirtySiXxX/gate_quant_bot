@@ -1,0 +1,1047 @@
+{
+  "schema_id": "qr013.training-plan",
+  "schema_version": 1,
+  "plan_id": "QF-QR-013-FIRST-EPISODE-MODEL-R1",
+  "status": "PROPOSED_NOT_APPROVED",
+  "training_authorized": false,
+  "research_validation_authorized": false,
+  "task_id": "QF-QR-013-TRAINING-PLAN",
+  "dispatch_id": "QF-DISPATCH-20261028-QR013-TRAINING-PLAN-1",
+  "resume_id": "QF-RESUME-20261028-QR013-CAPACITY-1",
+  "base_commit": "1bd4dd3fa053e03c5b078db173df57ec7237336d",
+  "owner": "QR",
+  "date": "2026-10-28",
+  "runner_implemented": false,
+  "authority": {
+    "mode": "PAPER_OFFLINE_SCENARIO",
+    "instruments": [
+      "gate:usdt:BTC_USDT",
+      "gate:usdt:ETH_USDT"
+    ],
+    "already_approved_do_not_reopen": [
+      "2024 training / 2025 validation",
+      "2023 warmup and economic cutoff 2026-10-01",
+      "whole-row OHLCV policy A",
+      "fee/funding/MARK scenario clocks",
+      "U1 execution and U3 evidence-only tail",
+      "native dynamic risk budget x10",
+      "one cross-margin account total 10000 USDT",
+      "margin divisor 200",
+      "per-asset synthetic 1000000 USDT tier",
+      "joint basket and finality binding"
+    ],
+    "precedence": "QR010 shared account supersedes independent accounts and fixed-ticket examples in QR006/QR009; QR008 fee scenario supersedes QR006 original 0.0005 primary fee; QR012 supersedes direction-proxy usability from QR010.",
+    "consumed_evidence": "Prior accepted conclusions and identities are cited, not revalidated. Current QD repair candidate is not described as accepted."
+  },
+  "references": {
+    "labels": {
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "path": "research/qr006/protocol.md",
+      "sha256": "4957875f25168ea33d630fb63be00a712d86ac049b932bdc11f731e8b980e270"
+    },
+    "ohlcv_review": {
+      "commit": "0a90b2555db8e16934053abff31db29bac4296a2",
+      "path": "research/qr008/exact-data-review.json",
+      "sha256": "f79b29dbd0bd47080bb296f033fafe8c61799fed9e6ebff1608f7cdeee325c60",
+      "ohlcv_status": "PASS_WITH_DISCLOSED_RETROSPECTIVE_SOURCE_LIMITATIONS",
+      "mark_raw_status": "PASS_WITH_GAPS",
+      "mark_queries": "NOT_EVALUATED"
+    },
+    "scenario_base": {
+      "commit": "5dc72325580259ee8d578625f0ee33d0d13eec73",
+      "path": "research/qr009/replay-spec-proposal.json",
+      "sha256": "77662b551963b7d09b429acdc17881bef854ea34df46e0dde05a5727f28d422e"
+    },
+    "dynamic_amendment": {
+      "commit": "a981503",
+      "path": "research/qr009/dynamic-sizing-amendment.md",
+      "identity_note": "Short commit is the recorded historical identifier; full source is also pinned by QR013 base commit. No new hash audit."
+    },
+    "shared_account": {
+      "commit": "88168f34c8c2855e9e65510bcde749cc459ff12a",
+      "path": "research/qr010/shared-account-binding.md",
+      "sha256": "ed9971f0e47811acdbf54442be51828d26e1684a22c7681237d8cfd0d55aed95"
+    },
+    "l2_limitations": {
+      "commit": "3b97e4f56588574e9fd7231e8ffac88c2952378f",
+      "path": "research/qr011/reconciliation-result.json",
+      "sha256": "403613fc98461f2137620bb36bfbc89cf7423f51346927390306442861a8dd92"
+    },
+    "complete_trades": {
+      "commit": "1bd4dd3fa053e03c5b078db173df57ec7237336d",
+      "path": "research/qr012/complete-trades-result.json",
+      "sha256": "1a7ca17bbb2c1799d91dcc226a201d2d4f5828a004dba55e962a5acf2122788c"
+    },
+    "native_ml_interfaces": {
+      "commit": "475aaeaa5b9365b360563294e183d912c382b570",
+      "paths": [
+        "src/crypto_ml.py",
+        "src/ml_training.py",
+        "src/strategy_signals.py",
+        "src/strategy_execution.py"
+      ],
+      "inspection": "Read source only; no import/fit/export or runtime changes"
+    },
+    "qd_repair": {
+      "commit": "0cdbfbdaf047727d0ff4d20d5ee670891e49b070",
+      "status": "REPORTED_INCOMPLETE_NOT_FULLY_ACCEPTED",
+      "basis": "Coordinator resume dispatch; not independently re-reviewed here",
+      "additional_512_record_check_authorized": false
+    }
+  },
+  "inputs": {
+    "hourly_market": {
+      "dataset_id": "gate-btc-eth-exact-ohlcv-v3-candidate",
+      "dataset_revision": 3,
+      "record_namespace": "qr008.exact-ohlcv",
+      "record_schema_version": 1,
+      "manifest_sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+      "catalog_sha256": "05b91231c6ff6214ec50b9dddd595f7fd1fa4184571f0518fe0f2752db150aa9",
+      "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/",
+      "source_policy": "ARCHIVE_PREFIX_REST_COMPLETE_ROWS_FROM_20251201_R1",
+      "known_coverage": {
+        "start_inclusive_utc": "2023-01-01T00:00:00Z",
+        "end_exclusive_utc": "2026-10-01T00:00:00Z"
+      },
+      "accepted_rows_per_asset": {
+        "1h": 32856,
+        "4h": 8214,
+        "1d": 1369
+      },
+      "status": "REUSE_ACCEPTED_OHLCV_NO_RETEST",
+      "historical_observed_availability": {
+        "value": null,
+        "reason": "Never established; use approved BAR_CLOSE_PROXY_NOT_OBSERVED scenario, not a new empirical claim"
+      },
+      "feature_numeric_projection": "Preserve exact source decimals and lineage; convert explicit feature operands to finite binary64 once in a new research adapter. Never alter canonical data or round contract volumes to integer."
+    },
+    "funding": {
+      "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/funding-raw-lineage-through-september-r1.json",
+      "sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+      "source_objects": 90,
+      "rows_per_asset": 4107,
+      "legacy_available_at_forbidden": true,
+      "historical_arrival": "UNKNOWN"
+    },
+    "mark": {
+      "source_ref": "QR008 accepted raw archive review",
+      "status": "PASS_WITH_GAPS_REUSED",
+      "required_query_support": {
+        "value": null,
+        "reason": "Needed queries belong to actual label-producing path; no QR013 market-query execution"
+      }
+    },
+    "episode_labels": {
+      "protocol_revision": "qf006-proposal-r2",
+      "wire_namespace": "qf006",
+      "protocol_schema_version": 1,
+      "producer_role": "QD",
+      "planned_producer": "research/qd009/episode_export.py",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "export_schema_version": null,
+      "null_reason": "No accepted mature-episode export for this joint dynamic-x10 baseline has been delivered to QR013",
+      "status": "PENDING_INPUT_NOT_ZERO_ROWS"
+    },
+    "actual_feature_matrix": {
+      "value": null,
+      "reason": "Research feature adapter and matrix not produced"
+    },
+    "resolved_runtime_config_hash": {
+      "value": null,
+      "reason": "Draft values below are explicit; actual adapter/code/environment/config manifest is not frozen"
+    }
+  },
+  "learning_problem": {
+    "hypothesis": "At original-policy flat-entry proposals, past-only features predict natural-episode cash-settled net return better than a training-only constant; test policy value separately with complete joint-account replay.",
+    "original_target": {
+      "name": "episode_net_return_on_gross_entry_notional",
+      "numerator": "realized_price_pnl + signed_execution_fee_cash + signed_funding_cash",
+      "denominator": "sum(abs(filled_contracts)*scenario_multiplier*actual_fill_price) over all exposure-increasing entry/add fills in the natural episode",
+      "value": "numerator / denominator",
+      "unit": "dimensionless_return_fraction_not_margin_ROE",
+      "serialization": "retain exact numerator/denominator; decimal target to 12 places ROUND_HALF_EVEN",
+      "nonpositive_denominator": "INVALID_NULL_TARGET",
+      "episode": "one asset, one direction, first flat-to-filled exposure through natural flat or reversal closing leg; adds and partial closes remain in same FIFO episode",
+      "decision_origin": "original flat-entry proposal before model gating; bind account, trajectory, instrument, proposal and pre-decision-state identity",
+      "economic_target_unchanged": true
+    },
+    "task_choice": {
+      "recommended": "REGRESSION",
+      "selected": null,
+      "null_reason": "User decision D1 pending"
+    },
+    "regression": {
+      "target": "original continuous target",
+      "loss": "squared_error",
+      "preserve_losses_and_tails": true,
+      "no_target_clipping_or_winsorization": true
+    },
+    "classification_alternative": {
+      "target": "1 if exact episode_net > 0 else 0; denominator must be valid",
+      "zero_net_class": 0,
+      "meaning": "probability of positive after-cost episode outcome, not up/down direction",
+      "threshold": 0.5,
+      "run_only_if_D1_selects_binary": true,
+      "magnitude_loss": "Different win/loss sizes are discarded; probability threshold is not an optimal-money rule"
+    },
+    "sample_unit": "one mature natural episode; never hourly bars, partial fills, repeated decisions, or cost scenarios as independent copies",
+    "training_origin_trajectory": "P0/ALLOW_ALL joint-account ML-off only",
+    "training_sample_weight": "equal per eligible episode; no validation-driven asset balancing",
+    "join_keys": [
+      "account_id",
+      "trajectory_id",
+      "instrument_id",
+      "entry_proposal_id",
+      "pre_decision_state_hash",
+      "episode_id",
+      "label_revision"
+    ],
+    "label_states": {
+      "valid": "include only if cash-settled, complete and eligible as-known at training cutoff",
+      "open": "target/label_end/known_at null; excluded, counted",
+      "immature": "natural label_end may exist; target/known_at null; excluded, counted",
+      "censored": "target/known_at null; no forced close to create label; excluded, counted",
+      "invalid": "target/known_at null with reason; excluded, counted"
+    },
+    "unfilled_or_rejected_proposals": "retain selection log; no realized outcome and no invented zero-return label",
+    "maturity": "label_known_at = max(natural exit, all required input/revision/posting available times, valid current scoped completeness-assertion available times); pending obligations must be settled",
+    "train_eligibility": "status valid AND actual artifact received before real fit AND label_end_us+86400000000 < B_us AND label_known_at_us+86400000000 < B_us AND no cross-asset train/heldout information-interval overlap",
+    "late_revision": "use revision available at simulated boundary B; do not backdate later corrections. Real research acquisition timestamp remains separate."
+  },
+  "feature_set": {
+    "id": "qr013.hourly-episode-entry-v1-proposed",
+    "native_FEATURE_VERSION_1_compatibility": false,
+    "recommended_for_first_arm": true,
+    "order": [
+      "proposal_aligned_return_1h",
+      "proposal_aligned_return_4h",
+      "proposal_aligned_return_24h",
+      "proposal_aligned_return_168h",
+      "volatility_24h",
+      "volatility_72h",
+      "volume_relative_24h",
+      "volume_relative_168h",
+      "range_pct",
+      "efficiency_24h",
+      "proposal_side",
+      "is_eth"
+    ],
+    "features": [
+      {
+        "order": 1,
+        "name": "proposal_aligned_return_1h",
+        "definition": "s * ln(C[t] / C[t-1])",
+        "unit": "dimensionless_log_return",
+        "lookback_hours": 1,
+        "source_fields": [
+          "close",
+          "proposal_side"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features return_1h; multiply by pre-gate proposal_side",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 2,
+        "name": "proposal_aligned_return_4h",
+        "definition": "s * ln(C[t] / C[t-4])",
+        "unit": "dimensionless_log_return",
+        "lookback_hours": 4,
+        "source_fields": [
+          "close",
+          "proposal_side"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features return_4h; multiply by pre-gate proposal_side",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 3,
+        "name": "proposal_aligned_return_24h",
+        "definition": "s * ln(C[t] / C[t-24])",
+        "unit": "dimensionless_log_return",
+        "lookback_hours": 24,
+        "source_fields": [
+          "close",
+          "proposal_side"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features return_24h; multiply by pre-gate proposal_side",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 4,
+        "name": "proposal_aligned_return_168h",
+        "definition": "s * ln(C[t] / C[t-168])",
+        "unit": "dimensionless_log_return",
+        "lookback_hours": 168,
+        "source_fields": [
+          "close",
+          "proposal_side"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features return_168h; multiply by pre-gate proposal_side",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 5,
+        "name": "volatility_24h",
+        "definition": "sample_std(ln(C[j]/C[j-1]), j=t-23..t, ddof=1)",
+        "unit": "hourly_log_return_standard_deviation_not_annualized",
+        "lookback_hours": 24,
+        "source_fields": [
+          "close"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 6,
+        "name": "volatility_72h",
+        "definition": "sample_std(ln(C[j]/C[j-1]), j=t-71..t, ddof=1)",
+        "unit": "hourly_log_return_standard_deviation_not_annualized",
+        "lookback_hours": 72,
+        "source_fields": [
+          "close"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 7,
+        "name": "volume_relative_24h",
+        "definition": "ln((V[t]+1_contract)/(mean(V[t-23..t])+1_contract))",
+        "unit": "dimensionless_log_ratio",
+        "lookback_hours": 24,
+        "source_fields": [
+          "volume_contracts"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features; volume_contracts mapped explicitly to volume",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 8,
+        "name": "volume_relative_168h",
+        "definition": "ln((V[t]+1_contract)/(mean(V[t-167..t])+1_contract))",
+        "unit": "dimensionless_log_ratio",
+        "lookback_hours": 168,
+        "source_fields": [
+          "volume_contracts"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features; volume_contracts mapped explicitly to volume",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 9,
+        "name": "range_pct",
+        "definition": "(H[t]-L[t])/C[t]",
+        "unit": "dimensionless_ratio_not_percentage_points",
+        "lookback_hours": 1,
+        "source_fields": [
+          "high",
+          "low",
+          "close"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 10,
+        "name": "efficiency_24h",
+        "definition": "abs(C[t]-C[t-24])/sum(abs(C[j]-C[j-1]), j=t-23..t)",
+        "unit": "dimensionless_ratio",
+        "lookback_hours": 24,
+        "source_fields": [
+          "close"
+        ],
+        "formula_reference": "src/crypto_ml.py:causal_features",
+        "availability_rule": "BAR_CLOSE_PROXY",
+        "missing_rule": "ZERO_TRAVEL_OR_MISSING_INPUT_REJECT_ROW_NO_ZERO_FILL"
+      },
+      {
+        "order": 11,
+        "name": "proposal_side",
+        "definition": "s=+1 for native post-timing flat-entry long proposal; -1 for short",
+        "unit": "signed_category",
+        "lookback_hours": 0,
+        "source_fields": [
+          "pre_model_native_proposal.signed_target_notional"
+        ],
+        "formula_reference": "src/strategy_execution.py:decide_execution, before existing ML block",
+        "availability_rule": "PRE_MODEL_NATIVE_PROPOSAL_AT_DECISION",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      },
+      {
+        "order": 12,
+        "name": "is_eth",
+        "definition": "1 for gate:usdt:ETH_USDT, 0 for gate:usdt:BTC_USDT",
+        "unit": "binary_indicator",
+        "lookback_hours": 0,
+        "source_fields": [
+          "instrument_id"
+        ],
+        "formula_reference": "research-local fixed two-instrument encoding",
+        "availability_rule": "STATIC_APPROVED_INSTRUMENT_SCOPE",
+        "missing_rule": "REJECT_PROPOSAL_FEATURE_ROW_NO_IMPUTATION"
+      }
+    ],
+    "notation": "d is a scheduled UTC whole-hour decision; t is the latest complete 1h bar opening d-1h; C/H/L/V refer to canonical close/high/low/volume_contracts; s comes from the pre-model native flat-entry proposal.",
+    "global_availability": "Use only rows research_available_at_us<=d and bar_close_us<=d. At d, all features become available after the native pre-gate proposal is formed. Never read the current unclosed bar or simulator execution-open view.",
+    "BAR_CLOSE_PROXY": "maximum required source research_available_at_us, then pre-gate side available at d; source observed arrival remains unknown under approved scenario",
+    "segment_rule": "require 169 consecutive valid hourly bars ending at t; gap/invalidity resets lookback; both instruments keep common calendar; no interpolation, ffill, zero substitution or stale vector reuse",
+    "missing_in_fit": "exclude missing feature/label row with instrument/time/reason and report selection; keep ML-off economic comparator intact",
+    "missing_in_policy": "reject only fresh model-gated entry with explicit unavailable reason; preserve native held-position adds/reductions/exits and account risk gates",
+    "forbidden_inputs": [
+      "future OHLCV/current execution-hour HLCV",
+      "label-known time as feature",
+      "future funding rate",
+      "dataset/catalog hashes or source segment IDs",
+      "future directory completeness",
+      "realized episode duration/net/fees",
+      "account outcome-derived normalization",
+      "QR012 unknown flow renamed as valid pressure"
+    ],
+    "preprocessing": {
+      "method": "StandardScaler on 12 training columns only; zero training variance uses scale 1 and is reported, no silent column removal",
+      "imputation": "none",
+      "feature_selection": "none",
+      "target_transform": "none",
+      "asset_pooling": "one pooled BTC/ETH model with is_eth and proposal_side; no claim of cross-contract generalization"
+    }
+  },
+  "microstructure": {
+    "first_scope_choice": {
+      "recommended": "HOURLY_BASELINE_FIRST_THEN_PREREGISTERED_MICRO_INCREMENT",
+      "selected": null,
+      "null_reason": "User decision D2 pending"
+    },
+    "scientific_reason": "The accepted target is a variable-horizon native natural episode with hourly decisions. A causal hourly baseline identifies the incremental question. It does not test or reject a subminute order-flow hypothesis; such a hypothesis needs aligned micro data.",
+    "accepted_evidence": "QR012 verifies September 2026 neutral trades only; QR011 rejects current exact archive/snapshot L2 binding. Adopt both findings without new parsing.",
+    "candidate_whitelist": [
+      {
+        "name": "trade_count_5m",
+        "definition": "count of unique qualified trades in [d-300s,d)",
+        "unit": "trades",
+        "lookback_seconds": 300,
+        "source_fields": [
+          "trade_id",
+          "event_time",
+          "historical_available_at"
+        ],
+        "availability": "all included trades available<=d under a separately approved micro clock",
+        "missing": "null and invalid window; unknown coverage is not zero",
+        "first_arm_enabled": false
+      },
+      {
+        "name": "trade_count_relative_5m_vs_60m",
+        "definition": "ln((N[d-5m,d)+1)/(N[d-60m,d)/12+1))",
+        "unit": "dimensionless_log_ratio",
+        "lookback_seconds": 3600,
+        "source_fields": [
+          "trade_id",
+          "event_time",
+          "historical_available_at"
+        ],
+        "availability": "same explicitly qualified clock for both complete windows",
+        "missing": "null unless both windows are qualified",
+        "first_arm_enabled": false
+      },
+      {
+        "name": "trade_volume_relative_5m_vs_60m",
+        "definition": "ln((sum(abs(size),[d-5m,d))+1_contract)/(sum(abs(size),[d-60m,d))/12+1_contract))",
+        "unit": "dimensionless_log_ratio",
+        "lookback_seconds": 3600,
+        "source_fields": [
+          "exact_signed_size_contracts",
+          "trade_id",
+          "event_time",
+          "historical_available_at"
+        ],
+        "availability": "same explicitly qualified clock and whole-window coverage",
+        "missing": "null if coverage, event inclusion, identity or timing unresolved",
+        "first_arm_enabled": false
+      }
+    ],
+    "excluded_until_binding_resolved": [
+      "aggressive_buy_sell_pressure: archive sign/event-scope UNKNOWN",
+      "exact_OFI_queue_depth_fills: QR011 archive/snapshot mismatch",
+      "snapshot fractional depth silently treated as exact"
+    ],
+    "required_before_increment": [
+      "Approve a concrete micro clock; MARK delay is not transferred to trades",
+      "Admit event inclusion/units/duplicates and continuous same-period BTC/ETH coverage for training and comparison",
+      "Freeze feature order and window/missing policy before reading micro-conditioned outcomes",
+      "Use same account, label definition and matched calendar; report both common-support and full-calendar missing effects",
+      "Approve one hourly-only versus hourly-plus-three-features comparison and its new fit/replay budget"
+    ],
+    "micro_effect_estimated": false,
+    "scientific_value": "UNKNOWN_NOT_TESTED",
+    "additional_collection_authorized": false,
+    "first_arm_if_micro_mandatory": "Do not fit hourly-only as a substitute; return a bounded data/clock proposal for user approval."
+  },
+  "strategy_and_account": {
+    "baseline": "Complete frozen original EWMAC/Carry/regime/adaptive/timing policy, ML off, under approved shared dynamic-x10 SCENARIO; not buy-and-hold, trade deletion or independent-account sum",
+    "native_strategy_config_draft": {
+      "execution_timing": {
+        "symbols": [
+          "ETH_USDT"
+        ],
+        "require_trend_agreement": true,
+        "trail_atr": 3.0
+      },
+      "initial_capital_usdt": 10000,
+      "position_sizing_mode": "volatility",
+      "ml_model_path": "",
+      "ml_min_entry_probability": 0.45,
+      "trend_weight": 0.8,
+      "carry_weight": 0.2,
+      "short_trend_weight": 0.6,
+      "main_trend_weight": 0.4,
+      "ewmac_horizons": [
+        [
+          8,
+          32
+        ],
+        [
+          16,
+          64
+        ],
+        [
+          32,
+          128
+        ],
+        [
+          64,
+          256
+        ]
+      ],
+      "ewma_lambda": 0.94,
+      "forecast_scale_lookback": 1500,
+      "forecast_scale_min_periods": 100,
+      "fdm_max": 2.5,
+      "fdm_lookback": 500,
+      "fdm_min_periods": 60,
+      "regime_ema_fast": 21,
+      "regime_ema_slow": 55,
+      "regime_ema_long": 200,
+      "regime_adx_period": 14,
+      "regime_adx_trend_threshold": 15,
+      "regime_oppose_dampen": 0.5,
+      "regime_range_dampen": 0.8,
+      "carry_scale_lookback": 1000,
+      "target_annual_vol_pct": 100,
+      "covariance_interval": "4h",
+      "max_leverage": 40,
+      "max_instrument_exposure_pct": 550,
+      "max_correlated_group_exposure_pct": 600,
+      "no_trade_buffer_pct": 25,
+      "exit_buffer_multiplier": 3,
+      "invert_direction": false,
+      "manage_existing_positions": false,
+      "auto_close_removed_symbols": false,
+      "tick_interval_sec": 900,
+      "short_trend_interval": "1h",
+      "main_trend_interval": "4h",
+      "regime_interval": "1d",
+      "min_bars_short": 300,
+      "min_bars_main": 300,
+      "min_bars_regime": 220,
+      "adaptive_risk_enabled": true,
+      "adaptive_er_lookback": 24,
+      "adaptive_er_full_risk": 0.35,
+      "adaptive_vol_fast_lambda": 0.75,
+      "adaptive_vol_slow_lambda": 0.995,
+      "adaptive_vol_ratio_start": 1.1,
+      "adaptive_vol_ratio_full": 1.6,
+      "adaptive_max_risk_reduction": 0.65,
+      "adaptive_multiplier_smoothing_span": 4,
+      "adaptive_fast_reduce_threshold": 0.45,
+      "depth_guard_enabled": true,
+      "depth_levels": 20,
+      "max_entry_spread_bps": 5,
+      "max_entry_slippage_bps": 8,
+      "min_depth_fill_ratio": 1
+    },
+    "native_source_pins_reference": "references.scenario_base#/strategy_binding/native_source_sha256; inherited not rehashed",
+    "overrides_source": "QR009 dynamic amendment and QR010 shared-account-binding; no local/deployed config changed",
+    "initial_total_cash_usdt": "10000",
+    "account_count_per_trajectory": 1,
+    "mode": "cross_margin_scenario",
+    "allocation_capital": "qualified E, no fallback to cash/old E when UNKNOWN",
+    "allocation": "one call for BTC/ETH with causal complete 2x2 covariance; native order BTC then ETH is serialization only",
+    "margin_divisor": 200,
+    "divisor_meaning": "only synthetic margin calculation; not x200 targets or an exchange leverage setting",
+    "x10_mapping": {
+      "target_annual_vol_fraction": "1.00",
+      "instrument_abs_notional_over_E_cap": "5.5",
+      "crypto_major_gross_over_E_cap": "6",
+      "pure_allocation_gross_over_E_cap": "40"
+    },
+    "per_asset_tier_usdt": "1000000",
+    "quantity_policy": "native rounded integer quantity then min-lot truncation, exact budget/tier/cap guards, no scaling quantity to afford it",
+    "minimum_order_contracts": 1,
+    "multipliers_base_per_contract": {
+      "BTC_USDT": "0.0001",
+      "ETH_USDT": "0.01"
+    },
+    "equity": "C+A-L+U_BTC+U_ETH",
+    "shared_budget": "C-L+min(U_BTC+U_ETH,0)-M_held-F_held-M_pending-F_pending-S_pending",
+    "basket": "eligible increases admitted atomically on full quantities and one common budget; after admission independent per-asset capacity may yield partial fills; no BTC priority and no reallocation of masked legs",
+    "UNKNOWN": "required financial UNKNOWN blocks all increases, preserves supported reductions/closures; recovery must use qualified current values under R05",
+    "finality": "per-asset WAIT_EPISODE_FINALITY before reentry; proof-only wait need not block other asset when account finance is known",
+    "timing_scope": "ETH only; BTC remains timing-disabled",
+    "no_resets": "2024 genesis; no account reset at year/fold/label boundaries; policy arms identical until model activation",
+    "liquidation_or_ADL_supported": false
+  },
+  "execution_and_costs": {
+    "status": "INHERIT_APPROVED_SCENARIO_NOT_NEW_USER_DECISIONS",
+    "fee_fraction_per_actual_fill": {
+      "primary": "0.00075",
+      "stress": "0.0015",
+      "reference": "0.0005"
+    },
+    "primary": {
+      "slippage_bps_per_side": 5,
+      "latency_seconds": 1,
+      "volume_participation_fraction": "0.001",
+      "mark_delay_seconds": 60,
+      "mark_max_source_age_seconds": 120,
+      "funding_order": "snapshot_before_all_same-time_fills"
+    },
+    "fill_rule": "first UTC hourly boundary >= decision+latency and < economic cutoff; buy open*(1+s), sell open*(1-s); no extra slippage charge",
+    "capacity": "floor(participation*exact previous closed-hour volume_contracts) per asset; reductions first; cancel residual after one opportunity",
+    "funding_clock": {
+      "snapshot": "source_seconds * 1000000",
+      "rate_available": "(snapshot_us // 3600000000 + 1) * 3600000000",
+      "amount_known": "max(rate_available_us, qualified_snapshot_MARK_available_us); null if required MARK unknown",
+      "posting": "amount_known_us + 60000000",
+      "scoped_finality": "max(scope_evidence_complete_us, scope_cash_settled_us) + 3600000000",
+      "historical_snapshot_truth": false,
+      "floor_to_8h": false
+    },
+    "carry_projection": {
+      "decision_group": "U3",
+      "native_functions_unchanged": true,
+      "funding_timestamp_seconds": "approved_rate_available_us / 1000000 exact",
+      "legacy_available_at_consumption": false,
+      "annualization_interval_seconds": 28800,
+      "annualization_factor": "1095",
+      "meaning": "8H_EQUIVALENT_SCENARIO_UNIT_NOT_ACTUAL_CALENDAR",
+      "cash_proration": false,
+      "native_sampling": "main_bar_open timestamp; signal available only at main_bar_close",
+      "example_utc": {
+        "source": "08:00:03",
+        "rate_available": "09:00:00",
+        "first_sample_bar_open": "12:00:00",
+        "first_signal_decision": "16:00:00"
+      },
+      "missing_native_carry": "NO_NEW_RISK_NO_FAKE_ZERO"
+    },
+    "approved_sensitivities": {
+      "F_HIGH": "fee 0.0015",
+      "F_REFERENCE": "fee 0.0005",
+      "S_HIGH": "slippage 10bps",
+      "L_EXTRA": "latency 3601s",
+      "Q_LOW": "participation 0.0001",
+      "M_SLOW": "MARK delay120s/max-age180s",
+      "T_FILL_FIRST": "all pre-existing fills before snapshot"
+    },
+    "no_cost_optimization": true,
+    "historical_exact_claim": false
+  },
+  "calendar": {
+    "timezone": "UTC",
+    "clock_unit": "integer_unix_microseconds",
+    "interval_convention": "half_open",
+    "warmup": {
+      "start_inclusive_utc": "2023-01-01T00:00:00Z",
+      "end_exclusive_utc": "2024-01-01T00:00:00Z",
+      "role": "indicators/covariance only; no account trades or model/scaler training"
+    },
+    "training": {
+      "start_inclusive_utc": "2024-01-01T00:00:00Z",
+      "end_exclusive_utc": "2025-01-01T00:00:00Z",
+      "role": "entry decision origins; both label_end and label_known strict 24h before 2025 boundary"
+    },
+    "validation": {
+      "start_inclusive_utc": "2025-01-01T00:00:00Z",
+      "end_exclusive_utc": "2026-01-01T00:00:00Z",
+      "role": "single full-year retrospective validation; no H1/H2 replacement, no refit or tuning"
+    },
+    "retrospective_audit": {
+      "start_inclusive_utc": "2026-01-01T00:00:00Z",
+      "end_exclusive_utc": "2026-10-01T00:00:00Z",
+      "role": "previously exposed; frozen-model descriptive temporal audit only, not pristine test"
+    },
+    "model_fit_asof_utc": "2025-01-01T00:00:00Z",
+    "actual_fit_time": {
+      "value": null,
+      "reason": "No fitting authorized or executed; asof is a simulated information boundary, not a historical deployment claim"
+    },
+    "minimum_embargo_us": 86400000000,
+    "strict_buffer_comparisons": true,
+    "purge": "Drop training samples whose closed decision-to-label-known intervals intersect any heldout information interval for either asset; preserve reasons and continuous economic state; no truncated episodes.",
+    "no_inner_tuning": "one fixed candidate; no hyperparameter or feature search. Any future tuning requires a newly approved training-only chronological inner plan and budget.",
+    "validation_labels": "2025 entry origins matured by 2026-01-01 boundary for primary fixed-window prediction score; late/open labels counted but not forced to mature. Economically retain live positions/account across boundary.",
+    "audit_label_tail": {
+      "start_inclusive_utc": "2026-10-01T00:00:00Z",
+      "end_exclusive_utc": "2026-10-01T02:00:00Z",
+      "allowed": "only derived pre-cutoff obligations/postings/finality from frozen inputs under approved U3; no new market data, queries, decisions or fills"
+    },
+    "prospective_candidate": {
+      "start_inclusive_utc": "2026-12-01T00:00:00Z",
+      "end_exclusive_utc": "2027-03-01T00:00:00Z",
+      "status": "PROPOSED_NOT_RESERVED_NOT_AUTHORIZED",
+      "freeze_deadline_utc": "2026-11-30T00:00:00Z",
+      "rule": "Only if user accepts D3, protocol/implementation/model frozen and no data/outcomes from the window inspected. Use same frozen weights; do not refit on exposed 2025/2026. If deadline missed or information exposed, seek a new concrete window before observation; no silent roll-forward.",
+      "adequacy": "90 calendar days is a bounded observation candidate, not evidence of sufficient independent episodes; stop at fixed end and report inconclusive if needed"
+    },
+    "approved_history_cutoff_unchanged": true,
+    "historical_windows_already_exposed": true
+  },
+  "models_and_budget": {
+    "status": "PROPOSED_NO_FITS",
+    "random_seed": 17,
+    "pooling": "one pooled two-asset model",
+    "candidate_count": 1,
+    "candidate_parameter_configurations": 1,
+    "hyperparameter_search_trials": 0,
+    "regression_recommended": {
+      "baseline": {
+        "kind": "training_target_mean",
+        "fit_count": 1
+      },
+      "preprocessor": {
+        "kind": "StandardScaler",
+        "with_mean": true,
+        "with_std": true,
+        "fit_count": 1
+      },
+      "candidate": {
+        "kind": "Ridge",
+        "alpha_candidates": [
+          1.0
+        ],
+        "fit_intercept": true,
+        "solver": "svd",
+        "fit_count": 1,
+        "objective": "sum squared errors + alpha*sum squared slopes; unpenalized intercept"
+      }
+    },
+    "binary_if_selected_instead": {
+      "baseline": {
+        "kind": "training_positive_class_prior",
+        "fit_count": 1
+      },
+      "preprocessor": {
+        "kind": "StandardScaler",
+        "fit_count": 1
+      },
+      "candidate": {
+        "kind": "LogisticRegression",
+        "C_candidates": [
+          0.2
+        ],
+        "penalty": "l2",
+        "solver": "lbfgs",
+        "max_iter": 500,
+        "random_state": 17,
+        "class_weight": null,
+        "fit_count": 1
+      }
+    },
+    "max_total_estimation_fit_calls": 3,
+    "counting": "Mean/prior estimation counts as one fit; scaler one; learned estimator one. Alternative replaces regression, never adds to it. Every failed started fit counts; no automatic retries.",
+    "calibrator_fits": 0,
+    "feature_selector_fits": 0,
+    "deep_learning_fits": 0,
+    "additional_asset_specific_fits": 0,
+    "refits_on_2025_or_2026": 0,
+    "post_validation_threshold_searches": 0,
+    "fixed_regression_gate": "allow candidate flat-entry only if predicted net episode return > 0; equality rejects; no fee subtraction again",
+    "fixed_binary_gate": "if D1 selects binary, positive-net probability > 0.5; equality rejects; no native long/short probability substitution",
+    "complexity_rationale": "12 predeclared features and one regularized linear candidate test a clear conditional-mean question. Independent episodes/overlap/regime information are not yet measured, so this is conditional on sample-precision readiness, not a claim that 51M trades are adequate samples.",
+    "deep_learning_condition": "A separately specified sequential/micro hypothesis and qualified continuous sequence inputs, measured independent episode/block information, and an approved comparison against this fixed baseline. Current aggregate hourly first task does not establish a need for sequence representation or independent-sample adequacy.",
+    "stop_rules": [
+      "No fitting without explicit fresh human confirmation",
+      "No accepted label export, unexplained input mismatch, information leakage or unsupported accounting: stop",
+      "Training target variance zero, missing asset support or insufficient dependence/precision evidence for approved criteria: stop with insufficient evidence, no fallback to legacy 1000-hourly-row gate",
+      "Nonfinite feature/target/coefficients or convergence failure: stop; no extra candidates",
+      "Validation primary predictive loss fails to beat its constant: record failure and do not search another threshold/model",
+      "Budget exhausted or prospective window exposed: stop and retain every attempt"
+    ]
+  },
+  "policy_comparison": {
+    "baseline": "ML_OFF original full policy",
+    "candidate": "same full policy with one additional learned flat-entry admission gate",
+    "gate_location": "after native signal/joint allocation/timing flat-entry proposal, before shared basket admission/reservation. Mask a rejected flat-entry leg, do not reweight other legs; admit remaining eligible basket atomically.",
+    "held_positions": "native adds, reductions, exits, risk/finality logic unchanged. A model result never overrides an exit.",
+    "exits_model": "Not part of first experiment. Entry natural-exit labels cannot identify optimal early exits; later held-state continuation/exit question needs a separate target and intervention plan.",
+    "activation_utc": "2025-01-01T00:00:00Z",
+    "state_initialization": "Both arms replay 2024 ML off with one 10000 genesis; activate gate only from 2025, carry open positions/cash/claims without reset.",
+    "minimum_future_pairs": [
+      "P0 ML_OFF vs P0 gated",
+      "F_HIGH ML_OFF vs F_HIGH gated with same P0-trained weights"
+    ],
+    "baseline_reuse": "Reuse an accepted exact source/config/scenario/state-matching full baseline if it exists; no rerun to reconfirm an accepted conclusion. Missing baseline is new label/policy work, requires a concrete approved run request.",
+    "new_paths_max_proposed": 4,
+    "learned_paths_max": 2,
+    "no_trade_row_deletion_counterfactual": true,
+    "do_not_pool_stress_labels_into_training": true,
+    "support_shift": "Gating changes shared budget, eligibility, future proposals and timing feedback; record new-state/feature support and skipped opportunities. Predictive accuracy on baseline episodes alone does not identify a policy effect.",
+    "future_shared_logic": "one pure causal feature/prediction/gate core for future replay and paper/live adapters after separate integration approval; no claim of identical fills"
+  },
+  "evaluation": {
+    "predictive_primary_regression": "paired mean squared error versus training mean on same eligible 2025 episodes",
+    "predictive_secondary": [
+      "MAE",
+      "bias",
+      "target/prediction dispersion",
+      "per-asset and calendar/regime breakdown; descriptive only"
+    ],
+    "binary_if_D1": "Brier score primary versus training prior; log loss/reliability secondary with fixed 10 probability bins; empty bins null, no fitted calibration",
+    "economic_primary": "difference in account equity change over 2025 between gated and ML-off arms divided by common 10000 genesis; include all modeled fee/funding/slippage and qualified terminal unrealized PnL; no averaging of independent asset returns",
+    "economic_secondary": [
+      "each arm net account return using period-opening E",
+      "max drawdown and recovery time",
+      "gross/net exposure, time in market, joint tail loss",
+      "shared margin/reserve utilization and basket budget rejections",
+      "turnover and fee/funding totals",
+      "entry/add/partial-fill/no-fill counts",
+      "episode loss rate, streak distribution/max losing run, and skipped baseline gains/losses",
+      "UNKNOWN time and unsupported/censored/insolvency episodes"
+    ],
+    "economic_invalidity": "If required E/costs or scoped outcomes unsupported, report null/noncomparable result and trace; do not drop bad periods or replace marks. Economic success cannot be asserted from a clean subset.",
+    "proposed_success_contract": {
+      "user_decision": "D3",
+      "selected": null,
+      "null_reason": "Normative effect/risk/precision preferences require user acceptance; numbers below are proposals, not calibrated from outcomes",
+      "useful_effect_delta_initial_capital_fraction": "0.01",
+      "meaning": "100 USDT additional 2025 account equity change per 10000 genesis",
+      "max_95pct_ci_halfwidth_initial_capital_fraction": "0.01",
+      "risk_constraint": "candidate maximum drawdown no worse than baseline on the common supported calendar; no unsupported/insolvent success claim",
+      "advance_rule": "Predictive primary loss improves; P0 economic point improvement>=delta and paired 95% lower bound>0, interval half-width<=w; F_HIGH paired effect nonnegative, no worse drawdown; all outcomes retained. Even a pass on exposed history is exploratory, not prospective confirmation or deployment approval."
+    },
+    "uncertainty": {
+      "paired": true,
+      "cross_asset_blocks": "Both coins and both policy arms retained jointly in UTC calendar blocks",
+      "block_length_seconds": null,
+      "null_reason": "Need training-only dependence/episode spans; no sample statistics computed",
+      "proposed_block_rule": "L=max(86400, ceil-to-days(training 95th percentile decision-to-known span), training daily joint-episode-net ACF decay lag in days). ACF decay = first lag 1..30 with |ACF|<0.1 for 3 consecutive lags; if absent or unsupported, no stable-precision claim. Report overlapping information components and residual dependence.",
+      "adjacent_lengths": "max(86400,L/2), L, 2L, fixed before validation outcomes; disclose all, use widest interval for precision gate; no favorable-length selection",
+      "bootstrap_replicates_per_length": 1000,
+      "max_resamples_total": 3000,
+      "random_seed": 17,
+      "interpretation": "Descriptive uncertainty on exposed outcomes, not 3000 independent trials or new account trajectories; no pristine-test p-value claim"
+    },
+    "comparison_family": {
+      "predictive_pairs": 1,
+      "economic_primary_pairs": 1,
+      "economic_stress_pairs": 1,
+      "formal_confirmatory_tests_this_round": 0,
+      "threshold_search": 0,
+      "model_selection": "single candidate can fail; no winner from many models"
+    },
+    "effective_information": "Report raw episodes, per-asset periods/status counts, temporal overlap clusters, regime coverage, training dispersion and dependence. Raw bars/trades/episodes/clusters are not automatically effective N; no universal minimum imposed.",
+    "known_exposure": "Prior 2023-2026 OHLCV, native-sizing outcomes and micro diagnostics have been examined. Old negative results and the corrected gap-affected sizing study remain disclosures; no new reenactment or renaming of seen history as untouched test."
+  },
+  "pending_evidence": {
+    "destination_role": "future training-readiness record associated with this plan; no file created now",
+    "artifact_path": null,
+    "artifact_path_null_reason": "Future writer/file claim and run approval not allocated",
+    "valid_episode_counts_by_asset_year": {
+      "value": null,
+      "reason": "No accepted label export for this binding"
+    },
+    "open_immature_censored_invalid_counts": {
+      "value": null,
+      "reason": "No accepted label export"
+    },
+    "label_duration_and_known_delay_distribution": {
+      "value": null,
+      "reason": "Not computed; requires approved new label-summary work"
+    },
+    "overlap_clusters_and_dependence": {
+      "value": null,
+      "reason": "Not computed; no raw-data rescan authorized"
+    },
+    "effective_sample_diagnostic": {
+      "value": null,
+      "reason": "Assumption-dependent; not inferred from trade counts"
+    },
+    "training_target_dispersion_and_precision_feasibility": {
+      "value": null,
+      "reason": "Requires approved training-only label statistics and D3"
+    },
+    "model_runner_commit": {
+      "value": null,
+      "reason": "No runner implemented"
+    },
+    "feature_matrix_identity": {
+      "value": null,
+      "reason": "No extraction performed"
+    },
+    "qd_label_path_correctness_evidence": {
+      "value": null,
+      "reason": "Await producer handoff; no assertion of full streaming acceptance"
+    },
+    "environment_versions": {
+      "value": null,
+      "reason": "No environment inspection/install required for this documentation task; record actual existing versions at an approved implementation/fit step"
+    }
+  },
+  "ready_gates": [
+    {
+      "id": "G0",
+      "status": "PENDING_D1_D2_D3",
+      "required": "Approve the concrete plan choices; approval is not fitting permission"
+    },
+    {
+      "id": "G1",
+      "status": "ACCEPTED_SOURCE_CONCLUSION_REUSED",
+      "required": "Use pinned QR008 hourly data and accepted scenario; no repeat OHLCV/source audit"
+    },
+    {
+      "id": "G2",
+      "status": "PENDING_LABEL_INPUT",
+      "required": "Correct label-producing shared-account path, actual required-query support/finality handling, mature labels and exclusions. Only required path correctness evidence; not all unrelated production/benchmark suites."
+    },
+    {
+      "id": "G3",
+      "status": "PENDING_NEW_ADAPTER",
+      "required": "Implement this research-local feature/label/model adapter and directly relevant new-code fixtures; no legacy direction-label substitution"
+    },
+    {
+      "id": "G4",
+      "status": "PENDING_ONCE_APPROVED_SUMMARY",
+      "required": "Training-only sample/dependence/precision summary and exact artifacts; any new research validation requires purpose/cost approval first"
+    },
+    {
+      "id": "G5",
+      "status": "NOT_AUTHORIZED",
+      "required": "Report readiness and obtain fresh explicit human authorization before mean/scaler/model/calibrator fitting"
+    },
+    {
+      "id": "G6_MICRO_CONDITIONAL",
+      "status": "REQUIRED_ONLY_IF_D2_SELECTS_MICRO_FIRST",
+      "required": "Qualified micro timing/coverage/features; cannot silently use a smaller hourly-only question"
+    }
+  ],
+  "user_decisions": [
+    {
+      "id": "D1",
+      "subject": "First task representation",
+      "recommended": "REGRESSION",
+      "choices": [
+        "REGRESSION",
+        "BINARY_POSITIVE_NET"
+      ],
+      "selected": null,
+      "null_reason": "Await human choice",
+      "impact": "Regression retains net economic magnitude; binary estimates positive-net probability and discards magnitude. Both keep original cash-settled labels and replace, not multiply, model budget.",
+      "basis": "QR006 continuous target and existing direction classifier mismatch"
+    },
+    {
+      "id": "D2",
+      "subject": "Role of microstructure in the first hypothesis",
+      "recommended": "HOURLY_BASELINE_FIRST_THEN_MICRO_INCREMENT",
+      "choices": [
+        "HOURLY_BASELINE_FIRST_THEN_MICRO_INCREMENT",
+        "MICRO_IS_REQUIRED_IN_FIRST_MODEL"
+      ],
+      "selected": null,
+      "null_reason": "Await human scope choice",
+      "impact": "First option establishes a comparable hourly baseline without claiming micro value. Second requires a separate approved continuous-data/clock plan before fitting; the one-month pilot cannot fill 2024/2025.",
+      "basis": "Natural-episode/hourly decision task; QR011/012 accepted limitations"
+    },
+    {
+      "id": "D3",
+      "subject": "Research success/precision and prospective observation contract",
+      "recommended": "PROPOSED_DELTA_1PP_W_1PP_NO_WORSE_DRAWDOWN_AND_CONDITIONAL_DEC_FEB_WINDOW",
+      "choices": [
+        "ACCEPT_PROPOSED_RESEARCH_CONTRACT",
+        "SPECIFY_EFFECT_PRECISION_RISK_OR_PROSPECTIVE_DATES"
+      ],
+      "selected": null,
+      "null_reason": "Human preferences cannot be inferred from historical performance",
+      "impact": "Delta=1pp of initial capital, w=1pp 95% interval half-width, no worse drawdown; future candidate 2026-12-01 to 2027-03-01 only if frozen before 2026-11-30 and unseen. These are interpretable candidate requirements, not evidence they are detectable or optimal.",
+      "basis": "QR006 requires useful effect/precision and genuinely prospective observation; previous years already exposed"
+    }
+  ],
+  "future_work_requests_not_authorized": [
+    {
+      "id": "NEW_CODE",
+      "purpose": "Research-local feature/label/regression adapter; exact known fixtures for ordering, units, missing data, eligibility and export schema only",
+      "maximum_wall_seconds": 60,
+      "maximum_rss_mib": 256,
+      "maximum_output_mib": 8,
+      "network_requests": 0,
+      "fits": 0,
+      "stop": "First semantic failure or cap; no old full suite or data scan. Development-test permission is narrower than research replication; exact implementation claim still needed."
+    },
+    {
+      "id": "NEW_LABEL_SUMMARY",
+      "purpose": "One read of newly delivered episode export for eligibility/status counts, train-only variation/dependence and feasible precision; no existing research conclusion retest",
+      "attempts": 1,
+      "maximum_wall_seconds": 300,
+      "maximum_rss_mib": 512,
+      "maximum_output_mib": 32,
+      "network_requests": 0,
+      "fits": 0,
+      "cost_note": "Planning ceiling; actual N/export not yet known. Seek approval before execution.",
+      "stop": "Schema/identity/causality problem, unsupported input, resource cap or insufficient information; retain partial report, no automatic rerun"
+    },
+    {
+      "id": "FIRST_FIT",
+      "purpose": "One training constant, one training scaler, one selected learned estimator on 2024; score fixed 2025 and descriptive 2026 only",
+      "maximum_estimation_fit_calls": 3,
+      "maximum_wall_seconds": 120,
+      "maximum_rss_mib": 512,
+      "maximum_output_mib": 32,
+      "maximum_uncertainty_resamples": 3000,
+      "network_requests": 0,
+      "approval": "Fresh explicit training confirmation after readiness; no calibration/selection fit",
+      "stop": "Any fit/convergence/nonfinite failure or cap; no retries/search"
+    },
+    {
+      "id": "POLICY_VALUE",
+      "purpose": "New complete-policy effect comparison P0 and F_HIGH, using accepted matching baselines without rerun; at most two new baselines only if absent and explicitly approved",
+      "maximum_new_paths": 4,
+      "maximum_wall_seconds_per_path": 900,
+      "maximum_total_wall_seconds": 3600,
+      "maximum_cpu_seconds_per_path": 600,
+      "maximum_rss_mib": 1024,
+      "maximum_output_mib_per_path": 512,
+      "maximum_total_output_mib": 2048,
+      "network_requests": 0,
+      "cost_note": "Worst-case bounded request, not a measured duration or granted extension of existing replay budgets. Reuse reduces starts; no budget reset.",
+      "stop": "First unsupported causal/accounting comparison or exhausted approved resource; no deletion/alternate favorable start/retry"
+    },
+    {
+      "id": "MICRO_INCREMENT_OR_PROSPECTIVE",
+      "purpose": "Separate future scoped request if D2 or D3 adopted; actual sources/storage and collection requirements must be priced before approval",
+      "resource_estimate": null,
+      "null_reason": "No selected micro archive scope or prospective feed allocated; current plan grants zero requests/collection/fits for these stages",
+      "authorized": false
+    }
+  ],
+  "current_task_execution": {
+    "raw_data_reads": 0,
+    "network_requests": 0,
+    "old_research_retests": 0,
+    "strategy_replays": 0,
+    "fits": 0,
+    "allowed_check": "one JSON parse/structural self-check only; no research validation",
+    "shared_logs_edited": false,
+    "main_edited": false,
+    "runtime_edited": false,
+    "qd_reassigned": false,
+    "new_agents": 0
+  }
+}
