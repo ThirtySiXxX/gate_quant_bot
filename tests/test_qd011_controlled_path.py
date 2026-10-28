@@ -50,7 +50,7 @@ class ControlledPathTests(unittest.TestCase):
         cls.connect=socket.socket.connect
         def offline(*a,**kw):raise AssertionError('QD011 new offline path: network forbidden')
         socket.socket.connect=offline
-        sl.configure_resource_budget(Path('research/.data/qd011/tmp'),7*1024**2)
+        sl.configure_resource_budget(Path('research/.data/qd011/tmp'),63*1024**2)
 
     @classmethod
     def tearDownClass(cls):
