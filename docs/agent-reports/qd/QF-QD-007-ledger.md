@@ -1,7 +1,7 @@
 # QF-QD-007-LEDGER: schema/API checkpoint
 
-Current status: **CODE_TESTED_CANDIDATE_PREPARATION**. Implementation milestone
-and current identities are appended after the preserved schema-review history.
+Current status: **CANDIDATE_READY_FOR_QR_INDEPENDENT_VALIDATION**. Implementation
+and candidate identities are appended after the preserved schema-review history.
 
 ## Resolved B1 dependency (history, 2026-10-28)
 
@@ -364,3 +364,107 @@ amendment. No shared runtime/contracts/journals, QR files, original main, frozen
 market evidence, live services or configuration changed. Candidate creation will
 write only ignored synthetic inputs/actual API outputs with exact code binding;
 the module itself has no writer. After publishing those identities, stop for QR.
+
+## Published synthetic candidate and final handoff
+
+Implementation commit: `69c8bf1d8a060ccdf0b103a3e3226c8f200dc960`.
+Final receipt correction / candidate code commit:
+`0ea2d51901689a351068bb9d33906c3240832afa`.
+The source/schema/test hashes immediately above match both committed bytes and
+the current worktree. The final report-only commit does not change that binding.
+
+Ignored local candidate root:
+`/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd007/candidate-r3/`.
+Manifest: `manifest.json`; SHA256:
+`e9b3745fb33fb63043033a005cd87240acece29ac1c1daef37e42cc4ba23b2a7`.
+The manifest binds exact code/schema/test hashes, QR schema review, B1 proposal,
+verification scope and every output file's byte length/SHA256. It does not hash
+itself or claim independent validation. These local files are deliberately
+ignored and are not transported by a Git checkout; QR must use this exact root
+read-only and verify its manifest before independently checking outputs.
+
+Eleven JSON artifacts (592656 bytes excluding manifest) contain complete bound
+synthetic configuration/source catalogue/records, explicit query inputs and
+actual public API receipts, snapshots, readiness and audit outputs. They are
+producer candidates, not financial oracles or market labels. Named scenarios:
+A11 literal cash/funding; R01 two future-fact catalogues; R02 whole-batch rejection;
+R03 causal proxy mark/late rate; R04 10/20/21/22 assertion heads; R06 cash with
+unknown T; B1 entry, exit, both unknown and partial-slice restoration/refunds.
+R05 and the remaining acceptance cases stay covered by producer tests; this
+candidate set does not claim exhaustive independent acceptance.
+
+| Artifact | SHA256 |
+| --- | --- |
+| `a11-literal-cash-and-funding.json` | `4522b2b8aaa5ab4c1a0fd54f47cdfade162f5afb1c236eda7b7a7e0012166c63` |
+| `b1-both-fees-unknown.json` | `5deff06decc403f6083d9b81ffad8a45afb28a832ff8a76d6416481e6f756d1c` |
+| `b1-entry-unknown-restore-refund.json` | `52ac277bdea68d945e1d572db69f5fe87a49ace6b61e74901f36a06ea8c513be` |
+| `b1-exit-unknown-restore-refund.json` | `804d8321d69dce82d4f6f5c6ef5eff202bde60e166674f1fa108b14579214f8a` |
+| `b1-partial-slices.json` | `0d426371c3366de52198b098b1f522a5f3c6aa0a7a184143b4376e40d4e923f0` |
+| `r01-future-a.json` | `44f368445f6041a70220c80908e6582e35f1ffc5d36c2ec228e65128a06a2881` |
+| `r01-future-b.json` | `0269e41a8c514c4496b17b0945501ab209a53d7650e591f66b7a4e5098b7e27c` |
+| `r02-atomic-cross-record-rejection.json` | `3bc91d6968cbecd45e49dee06ea21af673cc18cc4d091d04aec3ca12eef9840f` |
+| `r03-causal-mark-late-rate.json` | `24ecf01911d3207e92aa190e6428722d8b8df1add8217d7041347c0de290842c` |
+| `r04-current-assertion.json` | `8cc4388721b56bf7c8ca0c0dd953b84d2cbb16d8bac8daffd72f97c57462641c` |
+| `r06-known-cash-unknown-total.json` | `f008eced8209d43c4f328bfce521bc5f5085a89f196c7904a4fcae1838a8596f` |
+
+Generation/reproduction checks used only the existing read-only interpreter,
+standard library and own fixture constructors. Socket connects were blocked
+before imports. All cases were generated in memory before exclusive file
+creation; no prior candidate was overwritten. Each successful case replayed
+identically twice, then with its input order reversed (including receipt/audit).
+R01 snapshots at10 were identical across the two differently rehashed catalogues,
+while audit hashes differed. The invalid R02 case retained its precise failure
+receipt and unchanged committed state. Every saved file was re-read, hashed,
+parsed and replayed through the public API against its saved outputs. All checks
+passed. These are reproducibility checks, not an independent economic validator.
+
+Minimal artifact replay, from this worktree with the manifest hash checked first:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python - <<'PY'
+import hashlib, json, pathlib, socket
+def offline(*a, **k): raise AssertionError('QD007 offline only')
+socket.create_connection = socket.socket.connect = socket.socket.connect_ex = offline
+from research.qd007 import event_ledger as el
+root = pathlib.Path('research/.data/qd007/candidate-r3')
+raw = (root / 'manifest.json').read_bytes()
+assert hashlib.sha256(raw).hexdigest() == 'e9b3745fb33fb63043033a005cd87240acece29ac1c1daef37e42cc4ba23b2a7'
+manifest = json.loads(raw)
+for path, expected in manifest['source_sha256'].items():
+    assert hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest() == expected
+for item in manifest['artifacts']:
+    raw = (root / item['path']).read_bytes()
+    assert len(raw) == item['bytes']
+    assert hashlib.sha256(raw).hexdigest() == item['sha256']
+    candidate = json.loads(raw)
+    c, out = candidate['inputs'], candidate['outputs']
+    ledger = el.Ledger(c['config'])
+    try:
+        receipt = ledger.apply_batch(c['records'])
+    except el.LedgerError as error:
+        assert error.code == c['expected_error'] == out['error_code']
+        assert error.receipt == out['failure_receipt']
+    else:
+        assert c['expected_error'] is None
+        assert receipt == out['receipt']
+        assert [ledger.snapshot(t) for t in c['snapshot_at_us']] == out['snapshots']
+        assert [ledger.readiness(q['episode_id'], q['as_of_us'])
+                for q in c['readiness_queries']] == out['readiness']
+    assert ledger.audit() == out['audit']
+print('11 synthetic candidate artifacts reproduced; independent QR validation pending')
+PY
+```
+
+Final main preservation check again passed: HEAD
+`cae0d2395adf2cd3905e41cb1c16748c8247c32c`, staged binary-diff SHA256
+`c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce`, actual
+index-byte SHA256 `7b518de8325f6f420207fcd49f1821a8fddbe76ffc214fea922180b006c1cf80`.
+No main work, production trading rules, QR files or shared journals changed.
+
+QD implementation stops here. Coordinator can forward this exact code commit,
+schema and candidate identities for QR's independently authored validator. Await
+that result before any correction or next-stage work. No model/scaler fitting,
+market intake/replay, target export, service operation, push, merge or integration
+is authorized or implied by this candidate publication. Remaining gates and
+prototype limits above still apply. Shared journals remain paused for reviewed
+integration rather than concurrent edits.
