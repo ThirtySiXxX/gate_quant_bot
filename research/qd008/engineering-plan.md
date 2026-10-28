@@ -1,6 +1,26 @@
 # QD008 data-repair engineering preflight
 
-2026-10-28 Australia/Melbourne. **PLAN_ONLY; SOURCE_POLICY_NOT_FROZEN.**
+2026-10-28 Australia/Melbourne. **IMPLEMENTATION AUTHORIZED; JSONL CONTRACT FROZEN.**
+The original preflight below is preserved history. Dispatch
+`QF-DISPATCH-20261028-QD008-EXACT-CANDIDATE-1` supersedes its CSV/seconds
+proposal: use only QR commit `8b9e85e5c041fcf9167940520035693562f761ba`, spec
+SHA256 `cd0e123d019b428e7bd12754e553c0322d4aac5593537b07752bab777280bdc0`,
+closed exact JSONL rows and UTC integer microseconds. External source approval
+SHA256 `d3eeb12d0d5348f769a9493a215eb32e2f3be40c13ed4a0eb5607e7cef9effa0`
+binds the whole-row partition decision; QR's original proposal is not rewritten.
+
+Current implementation: `repair_history.py` with exact Fraction decimals, strict
+source readers, full catalogue and recomputed discrepancies, six canonical JSONL
+files with embedded direct-hourly lineage, producer checks and kernel no-replace
+directory publication. A permanent dedicated publication lock coordinates QD008
+writers. Only `exact-ohlcv-v3-candidate` and `exact-ohlcv-v3-reproducibility` under
+ignored `research/.data/qd008/` are full-build targets; retained failed attempts
+are not implicitly retried. Each build includes source freeze, derivation and disk
+verification within300s/512MiB; raw files are referenced, not copied. Candidate
+states remain PENDING_INDEPENDENT_REVIEW; unexecuted checker identities are null.
+No power-loss durability, network filesystem or native consumer claim is made.
+
+The following earlier proposals do not override that frozen contract.
 Dispatch `QF-DISPATCH-20261028-QD008-ENGINEERING-PREFLIGHT-1`; base
 `45bf3e036516b97570b3630cc19684af26713132`, branch `codex/qd-cache-safety`.
 This proposes a small offline candidate builder, not a choice of historical truth

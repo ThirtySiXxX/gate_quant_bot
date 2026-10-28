@@ -148,3 +148,81 @@ acceptance is inferred from the schema's generic checker-identity requirement.
 No network, funding/MARK transform, native adapter, replay/labels or fitting is
 part of this implementation. Subsequent sections will record actual code/tests,
 two-build resource usage, hashes, preservation and remaining independent gates.
+
+## Builder implementation and synthetic verification
+
+Implemented only allocated `research/qd008/repair_history.py` and
+`tests/test_qd_data_repair.py`, with current-contract notes prepended to the plan.
+Standard library only, no download/app/exchange/model imports. Raw/source hashes,
+full grids, whole-row selection, v2 lineage and independently recomputed4221-hour
+differences are checked before deriving exact hourly/4h/day closed-schema rows.
+Fraction arithmetic and plain canonical strings preserve fractional contracts;
+embedded ordered raw and direct-hourly parent references remain fully auditable.
+The input catalogue binds selected/shadow/corroborating objects and full request/
+response provenance available in the immutable receipts; unavailable historical
+arrival/revisions stay UNKNOWN. Canonical catalogue and per-row identity preimages
+follow the frozen spec, independent of the later output manifest.
+
+Both roots use a dedicated permanent publication lock and macOS RENAME_EXCL
+(Linux renameat2 RENAME_NOREPLACE supported but not target-tested), not an
+overwrite-capable rename. Files are exclusive, fsynced, manifest last; staged
+inventory/rows and exact bytes are reread against frozen-raw recomputation, and
+all148 input identities/spec/approval are rechecked before publication. Failures
+retain staging and publish no final candidate. Fixed two full-build destination
+names and retained-attempt rejection prevent an implicit third build/retry.
+No power-loss/full filesystem durability or network filesystem claim is made.
+
+Focused socket-blocked producer tests: **26 methods passed** (0.122s). They include
+literal3.555/21.33 aggregation, >2^53, >28-digit and129-digit sums, hostile Decimal
+context, true zero versus unknown, strict type/field/domain rejection, raw grid
+errors, row/hash preimages, complete whole-row close/volume conflicts and delta
+preservation, ordered direct-hourly lineage, cutoff availability, legal future raw
+mutation/full-catalog rehash with invariant past economic projection, rehashed
+value/lineage corruption, byte reproducibility, symlink/inventory rejection,
+concurrent publishers, kernel no-replace races, disk/input failure and process
+death before publication. All fixtures are small synthetic files; no full build
+is counted as a test. An initial synthetic failure found receipt lookup assumed
+unique hashes across instruments; matching source_id plus hash resolves it without
+changing source-ref schema. No failed test or source disagreement was suppressed.
+
+Exact implementation SHA256:
+`9e0d36333fc0951f5b7cc51eb10b2873a115f91239fba550bdfd8a178b244448`.
+Exact producer-test SHA256:
+`ec0306a8ceb3b1f846862097959f4f26e7e5096381bcee3633327abbed10bb0c`.
+The commit containing these bytes is the pre-build code identity; full candidate
+generation remains bounded to two attempts after that commit, not before it.
+
+Commands from this worktree:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python - <<'PY'
+import socket, unittest
+def offline(*a, **k): raise AssertionError('QD008 offline only')
+socket.create_connection = socket.socket.connect = socket.socket.connect_ex = offline
+result = unittest.TextTestRunner(verbosity=1).run(
+    unittest.defaultTestLoader.discover('tests', pattern='test_qd_data_repair.py'))
+raise SystemExit(not result.wasSuccessful())
+PY
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/qd005/run_offline_tests.py
+git diff --check
+git diff --cached --check
+```
+
+Pre-build preservation: all7 frozen main fingerprints match, including full
+`git status --porcelain --untracked-files=all` SHA
+`2a358fa935fea949c6c34fba46c5f07d6e08f6f1ed5066da7e6f12c570904649` /72 entries
+and unstaged binary-diff SHA
+`35d57c81948f2de4c2c6e56db9cda60a507b06e0aa39583585cdb30505d8fc2d`.
+An initial check using compact untracked-directory status differed in command
+format only; the exact full-status command matches the frozen baseline.
+All276 old evidence files (v1, both v2 roots, QD007 candidate and four QD007
+code/schema/test/report paths) have sorted path->SHA inventory fingerprint
+`cf6326f363b42995db505c55439c56ae6a1d013be0c4a87bb875fed526a340fc`.
+The inventory hash is SHA256 of compact sorted-key UTF-8 JSON, paths relative to
+the QD worktree. It will be rechecked after both builds. These read-only hashes
+are preservation evidence, not fresh market/ledger independent acceptance.
+
+Final full offline Python regression after the last test refinements:
+**288 passed in11.361s**, using the existing guarded socket-blocked runner above.
+Mock HTTP200/500 and injected disk-failure logs are fixtures, not real requests.
+No frontend/runtime code changed; no new JS run or old JS pass is claimed here.
