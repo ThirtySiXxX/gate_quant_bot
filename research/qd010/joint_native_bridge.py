@@ -42,7 +42,7 @@ def rows(ledger, view, component, maximum=512):
                                filter=dict(kind='all'), after=token, limit=64,
                                null_reasons={} if token else {'after': 'START_OF_COMPONENT'}))
         result.extend(page['items'])
-        if len(result) > maximum:
+        if maximum is not None and len(result) > maximum:
             raise InputGap('PROTOTYPE_PAGE_BOUND_EXCEEDED:' + component)
         token = page['next']
         if token is None:

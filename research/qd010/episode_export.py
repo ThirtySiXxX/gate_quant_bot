@@ -8,10 +8,11 @@ from .economic_inputs import INSTRUMENTS, InputGap, exact, text, finality_not_be
 from .joint_native_bridge import rows, fingerprint
 
 
-def export_episode(ledger, *, cutoff, episode_id, proposal, close_receipts):
+def export_episode(ledger, *, cutoff, episode_id, proposal, close_receipts, proposal_cutoff=None, scan_maximum=512):
     view = ledger.as_known(dict(cutoff=cutoff))
     ready = ledger.readiness(dict(episode_id=episode_id, cutoff=cutoff))
-    lots = [l for l in rows(ledger, view, 'lots') if l['episode_id'] == episode_id]
+    read=lambda component:rows(ledger,view,component,maximum=scan_maximum)
+    lots = [l for l in read('lots') if l['episode_id'] == episode_id]
     if not lots:
         raise InputGap('EPISODE_LOTS_MISSING')
     instrument = lots[0]['instrument_id']
@@ -26,17 +27,17 @@ def export_episode(ledger, *, cutoff, episode_id, proposal, close_receipts):
             or proposal['action'] != 'flat_entry' or proposal['flat_before'] is not True
             or not proposal['source_refs'] or proposal['side'] not in (-1, 1)):
         raise InputGap('QR014_PROPOSAL_BINDING_MISMATCH')
-    slices = [s for s in rows(ledger, view, 'closed_slices') if s['episode_id'] == episode_id]
-    bodies = [r['body'] for r in rows(ledger, view, 'events')]
+    slices = [s for s in read('closed_slices') if s['episode_id'] == episode_id]
+    bodies = [r['body'] for r in read('events')]
     opening_ids = {l['opening_fill_id'] for l in lots}
     closing_ids = {s['closing_fill_id'] for s in slices}
     fills = [b for b in bodies if b['record_type'] == 'Fill' and b['record_id'] in opening_ids | closing_ids]
     first = min(l['opened_at_us'] for l in lots)
     if proposal['decision_us'] > first or proposal['decision_us'] % 3_600_000_000:
         raise InputGap('PROPOSAL_CLOCK_AFTER_ENTRY_OR_NOT_HOURLY')
-    before = ledger.as_known(dict(cutoff=dict(at_us=proposal['decision_us'], slot=0)))
+    before = ledger.as_known(dict(cutoff=proposal_cutoff or dict(at_us=proposal['decision_us'], slot=0)))
     if proposal['pre_decision_state_ref'] != before['view_sha256'] or any(
-            l['instrument_id'] == instrument and l['remaining_contracts'] for l in rows(ledger, before, 'lots')):
+            l['instrument_id'] == instrument and l['remaining_contracts'] for l in rows(ledger, before, 'lots',maximum=scan_maximum)):
         raise InputGap('PROPOSAL_NOT_BOUND_TO_ACTUAL_FLAT_PREFIX')
     if proposal['side'] != (1 if lots[0]['direction'] == 'long' else -1):
         raise InputGap('PROPOSAL_SIDE_MISMATCH')
@@ -50,7 +51,7 @@ def export_episode(ledger, *, cutoff, episode_id, proposal, close_receipts):
         if not p or any(p.get(k) != b[k] for k in ('order_id', 'decision_id', 'instrument_id')) or (
             p.get('action') not in ('close', 'reduce') or p.get('decision_us') != b['decision_at_us']
             or not p.get('committed_audit_prefix') or not p.get('native_plan_sha256')
-            or p.get('decision_view_ref') != ledger.as_known(dict(cutoff=dict(at_us=b['decision_at_us'],slot=0)))['view_sha256']):
+            or p.get('decision_view_ref') != ledger.as_known(dict(cutoff=p.get('decision_cutoff') or dict(at_us=b['decision_at_us'],slot=0)))['view_sha256']):
             lineage = False
     snapshots = [b for b in bodies if b['record_type'] == 'FundingSnapshot'
                  and any(a['episode_id'] == episode_id for a in b['eligible_ranges'])]
