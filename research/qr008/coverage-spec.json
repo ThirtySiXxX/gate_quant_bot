@@ -1,0 +1,842 @@
+{
+  "acceptance": {
+    "G1_availability": {
+      "current": "2 full samples verified; 88 pending",
+      "pass": "90 fixed objects each complete SHA256/CRC verified, including 2 reuses; headers alone insufficient"
+    },
+    "G2_integrity_and_coverage": {
+      "current": "January samples have gaps; whole-range report pending",
+      "pass": "all objects strict schema/range/order/lineage valid; full tick gap/boundary and required-query reports produced; explicitly PASS_WITH_GAPS if gaps, never regular-minute completeness"
+    },
+    "G3_causality_and_economics": {
+      "current": "BLOCKED_PENDING_REVIEW_IMPLEMENTATION_AND_FULL_COVERAGE",
+      "pass": "named clocks/mapping/cost/volume choices approved; QD ledger independently accepted; all inputs gated by consumer time; required queries supported or explicitly unresolved with risk/label blocking; no silently deleted episodes or partial-path comparisons"
+    },
+    "G4_model_sufficiency": {
+      "current": "NOT_ASSESSED",
+      "pass": "full-state replay, natural episode settlement/finality, strict known/end plus 24h purge, dependence/selection audit, frozen feature and train/validation plan establish feasible test; 2026 stays exposed"
+    },
+    "fit_permission": "fresh explicit human confirmation after G1-G4; no scaler/model/calibrator fit now",
+    "training_ready": false
+  },
+  "acceptance_examples": [
+    {
+      "case": "scope enumeration",
+      "expected": {
+        "months": 45,
+        "network_attempt_ceiling": 98,
+        "new_get_objects": 88,
+        "objects": 90,
+        "reuse_objects": 2
+      },
+      "id": "C01"
+    },
+    {
+      "case": "timestamp 1672531244.376227 seconds",
+      "expected_us": 1672531244376227,
+      "id": "C02"
+    },
+    {
+      "case": "timestamp 1672531244.3762271 seconds",
+      "expected": "REJECT_SUB_MICROSECOND; no floor",
+      "id": "C03"
+    },
+    {
+      "case": "primary point source=0us, no successor, queries 59999999/60000000/120000000/120000001us",
+      "expected_supported": [
+        false,
+        true,
+        true,
+        false
+      ],
+      "id": "C04"
+    },
+    {
+      "case": "primary points source=0 and 70000000us; query=125000000us",
+      "expected": "NO_CAUSAL_FRESH_MARK; first stale and next not available",
+      "id": "C05"
+    },
+    {
+      "case": "same points; query=130000000us",
+      "expected_selected_source_us": 70000000,
+      "id": "C06"
+    },
+    {
+      "case": "funding source=08:00:03 UTC",
+      "expected": {
+        "assertion": "10:05:00 if natural exit 09:05:00 and all other completeness conditions hold",
+        "booking": "09:01:00 if causal mark supported",
+        "rate_available": "09:00:00",
+        "snapshot": "08:00:03"
+      },
+      "id": "C07"
+    },
+    {
+      "case": "funding source exactly 08:00:00 UTC",
+      "expected_rate_available": "09:00:00, never 08:00:00",
+      "id": "C08"
+    },
+    {
+      "case": "future mark/source/fee perturbation after query cutoff",
+      "expected": "same earlier selected point and economic state; audit identity may change",
+      "id": "C09"
+    },
+    {
+      "case": "ETH 2026-09-30 22UTC volume comparison",
+      "expected_difference_contracts": "0.2",
+      "expected_global_error_bound": null,
+      "expected_ohlc_equal": true,
+      "id": "C10"
+    },
+    {
+      "case": "any record/query needed for maturity at or beyond end_exclusive",
+      "expected": "not available for this scope; no October extension, no forced maturity",
+      "id": "C11"
+    },
+    {
+      "case": "one missing object, duplicate or out-of-order source row",
+      "expected": "no full-scope PASS; missing retained, malformed quarantined under stop policy",
+      "id": "C12"
+    }
+  ],
+  "authorization": {
+    "activation_requires": "QD/QR review and coordinator handoff; user decisions D01-D04 before market replay; fresh user confirmation before any fit",
+    "current_checkpoint": "documents_and_readonly_existing_public_evidence",
+    "execute_download_in_this_checkpoint": false,
+    "fit_authorized": false,
+    "scenario_approval_record": null,
+    "scope_user_selected": true
+  },
+  "base_qr_commit": "c4b1fdcb90427a6229bd75d8abbff66fcb795047",
+  "code_readonly_evidence": [
+    {
+      "path": "src/strategy_signals.py",
+      "sha256": "aa3b9e71512008ff43f49639d8d2cf113e81def7ab031e41676453def86e78dc",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/trend.py",
+      "sha256": "5234e1d35b7da34b8dd3429a6811b5ea5036d1e20a3af51fe70e34e56063a361",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/vol.py",
+      "sha256": "8ed00ac4df7b86ffd2abcf80bcf55c201a631f7ac31d1e786f8e7cf95713ed3a",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/execution_timing.py",
+      "sha256": "41d4593eaf345cdc8d26759605651e3e7bcfcb679604416b29fef80b821d9344",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/strategy_execution.py",
+      "sha256": "e1eaa17ea1292c7e906d4634b274fe72f2a415dfa409054674a33c22b9b1f5bb",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/crypto_ml.py",
+      "sha256": "63d0d9569cb261c83867b18cde03f9f74c7b54626172eeb5bb36eac09c19a7f6",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/backtest.py",
+      "sha256": "9183091e85c4354720118c53f0d97b72022f018afa03d9e9479f4929f5a8540c",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/carry.py",
+      "sha256": "81b370e9b84384be578db2163f7f4397b3edf41ebf78ffc56567522ead5e016f",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/indicators.py",
+      "sha256": "232a22a778a94eb0a101991474788a637078bea3f9832d8383683056878ef828",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/position_sizing.py",
+      "sha256": "e80773ec1bf0ec88fdf8128f368649cf123d3ad92b615b46d3ce3e754c20efad",
+      "worktree": "qr"
+    },
+    {
+      "path": "src/portfolio.py",
+      "sha256": "1837e2601c2255515644394b6934f45a933d11c758f93aafae926d9bb120397d",
+      "worktree": "qr"
+    },
+    {
+      "path": "research/qd005/canonical_history.py",
+      "sha256": "7f2e0a11b96c97d833437b2c4dcdf20337a56e2199b05f4e153ac5ec92263de5",
+      "worktree": "qd"
+    }
+  ],
+  "contract_scenario_prerequisite": {
+    "counterfactual_constant_multiplier_proposal": {
+      "BTC_USDT": "0.0001",
+      "ETH_USDT": "0.01"
+    },
+    "current_min_is_not_step": true,
+    "historical_multiplier_grid_min_max_verified": false,
+    "no_actual_tradeability_or_margin_claim": true,
+    "quantity_policy": "existing positive integer contract units for orders, not a volume precision assertion",
+    "status": "PENDING_USER_DECISION_D04_AND_REVIEW",
+    "unit": "base_asset_per_contract"
+  },
+  "cost_scenarios": {
+    "basis": "current public contract fields are observations after the research cutoff, used only as declared counterfactual scenario constants, not historical personal rates",
+    "formula": "fee_cash=-abs(filled_integer_contracts)*base_per_contract*actual_fill_price*signed_fraction; per fill, no leverage multiplier",
+    "high_cost_stress": {
+      "id": "TAKER_PUBLIC_15BPS_R1",
+      "signed_fraction": "0.0015"
+    },
+    "maker_rebate_assumed": false,
+    "primary": {
+      "id": "TAKER_PUBLIC_7P5BPS_R1",
+      "signed_fraction": "0.00075"
+    },
+    "retained_reference": {
+      "id": "TAKER_ANNOUNCEMENT_5BPS_REFERENCE",
+      "role": "accepted prior named scenario, retain for traceability, not select cheaper run as primary",
+      "signed_fraction": "0.0005"
+    },
+    "selection": "publish all preregistered outcomes; never choose cost assumption using validation PnL",
+    "slippage": "embedded once in fill price per QR006; numeric slippage/capacity/latency/cancel settings remain separate replay prerequisites, not inferred or changed here",
+    "status": "PROPOSED_USER_DECISION_D03"
+  },
+  "date": "2026-10-28",
+  "decisions_pending": [
+    {
+      "id": "D01",
+      "question": "Accept named archive mark clocks and source-t funding event proxy with delayed rate/booking/finality clocks?",
+      "recommended": "MARK_ARCHIVE_DELAY60_AGE120_R1 plus prespecified latency stress; funding proxy explicitly counterfactual; actual settlement mapping remains unknown"
+    },
+    {
+      "id": "D02",
+      "question": "Use a separately versioned price-only research feature projection and exclude unreliable volume-dependent features?",
+      "recommended": "Yes for minimum readiness path; retain original raw/v2 and keep native FEATURE_VERSION=1 unchanged"
+    },
+    {
+      "id": "D03",
+      "question": "Make 0.00075 primary and 0.0015 cost stress, retaining 0.0005 as reference?",
+      "recommended": "Yes; no claim these reconstruct historical personal rates"
+    },
+    {
+      "id": "D04",
+      "question": "Accept integer tickets with explicitly counterfactual constant multipliers, or require historical grid/conversion proof before replay?",
+      "recommended": "Named research scenario only; no actual-execution/risk-model approval implied"
+    }
+  ],
+  "dispatch_id": "QF-DISPATCH-20261028-QR007-COVERAGE-SPEC-1",
+  "economic_protocol_commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+  "evidence_files": [
+    {
+      "bytes": 504,
+      "path": "archive-availability-20261028-r1/202301-BTC_USDT.headers.txt",
+      "sha256": "44d2717bbe8ea027a6f9c410afe2f323fc49456c5a71aecee1f89573aa0c93a5"
+    },
+    {
+      "bytes": 503,
+      "path": "archive-availability-20261028-r1/202301-ETH_USDT.headers.txt",
+      "sha256": "29b21d1bf83730804ea86f3380f7925a08d80f89fa7c29cb6b87bdea66d10751"
+    },
+    {
+      "bytes": 533,
+      "path": "archive-availability-20261028-r1/202508-BTC_USDT.headers.txt",
+      "sha256": "ce497f2760242830d933e9e55c226f9f15647b097e38940bdafb0bf5bc3e6b58"
+    },
+    {
+      "bytes": 533,
+      "path": "archive-availability-20261028-r1/202508-ETH_USDT.headers.txt",
+      "sha256": "b99441395e100ad14a8fdfc317ef94da95d0fd88d707c938d0186b8eccab7155"
+    },
+    {
+      "bytes": 533,
+      "path": "archive-availability-20261028-r1/202604-BTC_USDT.headers.txt",
+      "sha256": "86eb4c920d512574cfedc8b540526814e572f2a2fd1772cee049519b97d3ca7c"
+    },
+    {
+      "bytes": 533,
+      "path": "archive-availability-20261028-r1/202604-ETH_USDT.headers.txt",
+      "sha256": "ef2e458a5c4b60477f624f8fee3fec1d346e7365bc54873a1d030d726f983456"
+    },
+    {
+      "bytes": 299,
+      "path": "archive-availability-20261028-r1/202610-BTC_USDT.headers.txt",
+      "sha256": "03be809de6273abbf8516f31be8ebe5866cb3e24eb3cb87760cf8d4344c6acaa"
+    },
+    {
+      "bytes": 299,
+      "path": "archive-availability-20261028-r1/202610-ETH_USDT.headers.txt",
+      "sha256": "b0e5301bcc0c4a6aa46d07abc59f9b508a2ba2f8e39cea9941394f4a4c75a81e"
+    },
+    {
+      "bytes": 333,
+      "path": "archive-availability-20261028-r1/amendment.json",
+      "sha256": "602432e1a7158becfe7fe162446a8347b88e9c10f40bd1f9a4da0115add1de36"
+    },
+    {
+      "bytes": 569,
+      "path": "archive-availability-20261028-r1/plan.json",
+      "sha256": "2873b17b383b4680746330b80d0a805ee9644dfdf05c4fa6d21438d10b4b7b00"
+    },
+    {
+      "bytes": 3319,
+      "path": "archive-availability-20261028-r1/result.json",
+      "sha256": "b8935626d5610ed7c7e0fca7708833f2a74ef3807b7db14a23607e30a98f793d"
+    },
+    {
+      "bytes": 2974328,
+      "path": "archive-sample-202301-r1/BTC_USDT-202301.csv.gz",
+      "sha256": "094e485b6c21b810964b678d75f16ccea69e2643b2febf38fd9d642931bd8ed9"
+    },
+    {
+      "bytes": 504,
+      "path": "archive-sample-202301-r1/BTC_USDT.headers.txt",
+      "sha256": "a7024beb5c2da913320bfe55982eb0ca283b189005452a959c7ee4ff1c0e84e9"
+    },
+    {
+      "bytes": 945831,
+      "path": "archive-sample-202301-r1/ETH_USDT-202301.csv.gz",
+      "sha256": "41480242c0e0b610b2fb5d557d36ab06bc3ee6385b74af7add9fabc0cfc308a7"
+    },
+    {
+      "bytes": 503,
+      "path": "archive-sample-202301-r1/ETH_USDT.headers.txt",
+      "sha256": "5e02949cb6e119d4c0115c08e83bd65b812fd807e7234133616e74826c403cc5"
+    },
+    {
+      "bytes": 933,
+      "path": "archive-sample-202301-r1/plan.json",
+      "sha256": "1b5845bfd29f1cc2ef25f6c3c13d43436d8f4a2ffebe6dc4fcec8102ff02472e"
+    },
+    {
+      "bytes": 1957,
+      "path": "archive-sample-202301-r1/result.json",
+      "sha256": "05245e966cd98a9ee006858820fde710f0e2b90a8bdd3f717c8605f4e124aa70"
+    },
+    {
+      "bytes": 663,
+      "path": "september-volume-probe-r1/BTC_USDT.headers.txt",
+      "sha256": "08ac716b555aa68bfa41b5afeac4d0b6d8e84e6c357d4d94c3bc102aaea76b5d"
+    },
+    {
+      "bytes": 219,
+      "path": "september-volume-probe-r1/BTC_USDT.json",
+      "sha256": "1664c2e8c84d12cbb919c47dcf3aa7d35fe957189672053a7e477554ec1935ca"
+    },
+    {
+      "bytes": 663,
+      "path": "september-volume-probe-r1/ETH_USDT.headers.txt",
+      "sha256": "c5e051af2cc93a1f9da440d9778c297709061ed38402ffd6a5902904907ee88d"
+    },
+    {
+      "bytes": 221,
+      "path": "september-volume-probe-r1/ETH_USDT.json",
+      "sha256": "d834c735f1819c735c8776b5290bd05da4cdb1d0bffa25341693f57c1fd7edff"
+    },
+    {
+      "bytes": 517,
+      "path": "september-volume-probe-r1/plan.json",
+      "sha256": "5d3e80d6b0e534c8238fa760995764dd1fbb5cf10fcfc8a79fdf870382914893"
+    },
+    {
+      "bytes": 2039,
+      "path": "september-volume-probe-r1/result.json",
+      "sha256": "87254438d9faa745b3eebf8d4fad2cef837f681969abf2fd5d2fce13c4fce43c"
+    },
+    {
+      "bytes": 1331,
+      "path": "public-probe-20261028-r1/01-metadata-BTC_USDT.body.json",
+      "sha256": "5e85a7f6b63f03cf619fcc5e6e359f968b7ec3d3b81af00402a6431c646f93e7"
+    },
+    {
+      "bytes": 664,
+      "path": "public-probe-20261028-r1/01-metadata-BTC_USDT.headers.txt",
+      "sha256": "8c1e3c3a7df98a73219bd8785df4f93e7f416814e266a4686c36efdf6037a84e"
+    },
+    {
+      "bytes": 1334,
+      "path": "public-probe-20261028-r1/02-metadata-ETH_USDT.body.json",
+      "sha256": "6a45166196d8df24b9f15ee363be98249b810bf36d765ff6f5ea6e449e4f33ca"
+    },
+    {
+      "bytes": 664,
+      "path": "public-probe-20261028-r1/02-metadata-ETH_USDT.headers.txt",
+      "sha256": "c3250c1552bd87f46ee23dd633003490853bbee19f20a0896b96005fbe937eb0"
+    },
+    {
+      "bytes": 220,
+      "path": "public-probe-20261028-r1/03-trade-tail-BTC_USDT.body.json",
+      "sha256": "80241676543a7e07643a5b2c7cfacb4d67b6293ff16af648e6cafa66a0ae6238"
+    },
+    {
+      "bytes": 663,
+      "path": "public-probe-20261028-r1/03-trade-tail-BTC_USDT.headers.txt",
+      "sha256": "5e08214af860a05ccc4cdabf99fecbc171b34e52d2408f887613b5b14b8e6f97"
+    },
+    {
+      "bytes": 222,
+      "path": "public-probe-20261028-r1/04-trade-tail-ETH_USDT.body.json",
+      "sha256": "084f6247443705a6eb40dfff0259486a653c7a23560e899eaa89e0d6fd59c4af"
+    },
+    {
+      "bytes": 663,
+      "path": "public-probe-20261028-r1/04-trade-tail-ETH_USDT.headers.txt",
+      "sha256": "cf7df2d879da02a8060454fe34f082d0e28d79b387568da71645252b9fc6b163"
+    },
+    {
+      "bytes": 11086,
+      "path": "public-probe-20261028-r1/05-mark-tail-BTC_USDT.body.json",
+      "sha256": "00e28965f2b1f28de1c392e3866cadf9f814afb57af2ad2a76ada8c870f08bb0"
+    },
+    {
+      "bytes": 665,
+      "path": "public-probe-20261028-r1/05-mark-tail-BTC_USDT.headers.txt",
+      "sha256": "55702ec473f4a4a0431102200cde813dcf38eb0746e19ef0f1af91ddf12e5e4d"
+    },
+    {
+      "bytes": 10849,
+      "path": "public-probe-20261028-r1/06-mark-tail-ETH_USDT.body.json",
+      "sha256": "f4fe734a7cfacb51fce04435580711146e4f3304f6062dad258df89f8119a339"
+    },
+    {
+      "bytes": 665,
+      "path": "public-probe-20261028-r1/06-mark-tail-ETH_USDT.headers.txt",
+      "sha256": "ef685f538a660730e8c484aa3606efeb8820758184b13441dc0645d5a6d1aa65"
+    },
+    {
+      "bytes": 111,
+      "path": "public-probe-20261028-r1/07-mark-early-BTC_USDT.body.json",
+      "sha256": "244bec6b614af6d2fc9a2907fbe8699ea8b9418aaeb4afa6e0d6a5f51bf76182"
+    },
+    {
+      "bytes": 424,
+      "path": "public-probe-20261028-r1/07-mark-early-BTC_USDT.headers.txt",
+      "sha256": "e1f835c32895ab9b55f4e27dbafa0a67b2ef16bfe70d8dc13374c21d1bcde1c3"
+    },
+    {
+      "bytes": 111,
+      "path": "public-probe-20261028-r1/08-mark-early-ETH_USDT.body.json",
+      "sha256": "244bec6b614af6d2fc9a2907fbe8699ea8b9418aaeb4afa6e0d6a5f51bf76182"
+    },
+    {
+      "bytes": 424,
+      "path": "public-probe-20261028-r1/08-mark-early-ETH_USDT.headers.txt",
+      "sha256": "cb6d46a1261e336a2e6397cdba8bd7c2407c312081daa431f7bcdbbfa0d1e251"
+    },
+    {
+      "bytes": 4656,
+      "path": "public-probe-20261028-r1/plan.json",
+      "sha256": "5ccfc1ede19464d1a5ae8e1c210ad027628727de558a2c66bc45a757824e3f04"
+    },
+    {
+      "bytes": 8404,
+      "path": "public-probe-20261028-r1/result.json",
+      "sha256": "e1799d0171b6eacd64dbfa87f7aa33229dc9e9ae4b755a6fa512f0b4db7def43"
+    }
+  ],
+  "evidence_root": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination",
+  "execution_summary": {
+    "existing_evidence_readonly": true,
+    "fits": 0,
+    "ledger_implementation_tests": 0,
+    "native_edits": 0,
+    "new_market_downloads": 0,
+    "new_market_http_requests": 0,
+    "new_market_labels": 0
+  },
+  "funding_proposal": {
+    "amount_available_us": "max(rate_available_us, qualified_mark_available_us); missing qualified mark leaves amount unresolved",
+    "asserted_and_known_us": "equal to finality_assertion_available_us in this declared synthetic clock",
+    "booking_known_and_available_us": "booking_us",
+    "booking_us": "amount_available_us + 60000000",
+    "calendar": "explicit observed event list under this named counterfactual; no 8h/4h interpolation or proration",
+    "calendar_duplicates_or_conflicts": "reject per instrument/source identity; no silent duplicate charges",
+    "calendar_visibility": "audit/config only; no future event or rate fields supplied to features/order logic; claims limited to declared observed-event universe, not proved exhaustive exchange calendar",
+    "carry_feature_warning": "native carry aligns source timestamps and constant funding_interval_sec; adapter must honor delayed rate availability. interval=0 is not an annualization divisor or evidence of zero carry. Cadence/rule inputs unresolved until QD/QR replay handoff; do not change native carry here",
+    "clock_stress": "one additional hour to rate availability; same subsequent +60s booking and +1h qualified assertion lag; full replay required",
+    "event_id": "SHA256 canonical JSON [instrument_id,raw_sha256,source_row]",
+    "expected_observed_rows_per_symbol": 4107,
+    "finality_assertion_available_us": "max(natural_exit_us, all required current revision/posting availability_us) + 3600000000; only when full origin scope/current references/P=0/no unresolved event conditions hold",
+    "historical_mapping_status": "UNPROVEN_NO_FLOOR",
+    "id": "FUNDING_SOURCE_T_PROXY_HOUR_KNOWLEDGE_R1",
+    "mark_scenario": "MARK_ARCHIVE_DELAY60_AGE120_R1",
+    "missing_calendar_or_time_mapping_without_scenario_approval": "snapshot unknown and affected economic validation blocked",
+    "nominal_exchange_settlement_us": null,
+    "rate_available_us": "(source_record_us // 3600000000 + 1) * 3600000000; strict next UTC hour, including source exactly on an hour",
+    "revision_policy": "later revision invalidates latest assertion; successor waits for current references and new postings then the same lag; no backdating",
+    "same_time_order": "snapshot_before_fills",
+    "source": "existing approved funding rows in range, immutable source lineage",
+    "source_record_us": "source_t_seconds * 1000000 exactly",
+    "source_timestamp_unit": "integer UTC seconds in current normalized source; preserve original precision and raw text",
+    "status": "PROPOSED_USER_DECISION",
+    "synthetic_snapshot_us": "source_record_us exactly, only after explicit scenario acceptance"
+  },
+  "mark_acquisition": {
+    "accept_encoding": "identity",
+    "auth": false,
+    "batch_deadline_seconds_including_inline_checks": 1200,
+    "concurrency": 1,
+    "connect_deadline_seconds": 10,
+    "count_partial_and_failed_download_bytes": true,
+    "enumeration_order": "month ascending, then BTC_USDT, ETH_USDT",
+    "expanded_files_persisted": false,
+    "fresh_output_root_required": true,
+    "head_requests": 0,
+    "host_allowlist": [
+      "download.gatedata.org"
+    ],
+    "immediate_stop_http": [
+      401,
+      403,
+      429
+    ],
+    "max_all_audit_bytes": 16777216,
+    "max_compressed_bytes_each": 67108864,
+    "max_compressed_bytes_total_including_reuse_and_all_attempts": 2147483648,
+    "max_consecutive_other_hard_failures": 2,
+    "max_csv_line_bytes": 1024,
+    "max_expanded_bytes_each": 268435456,
+    "max_header_bytes_each": 65536,
+    "max_network_attempts": 98,
+    "max_retries_per_object": 1,
+    "max_retries_total": 10,
+    "max_rows_each": 8000000,
+    "method": "GET",
+    "missing_http": [
+      404,
+      410
+    ],
+    "months": [
+      "202301",
+      "202302",
+      "202303",
+      "202304",
+      "202305",
+      "202306",
+      "202307",
+      "202308",
+      "202309",
+      "202310",
+      "202311",
+      "202312",
+      "202401",
+      "202402",
+      "202403",
+      "202404",
+      "202405",
+      "202406",
+      "202407",
+      "202408",
+      "202409",
+      "202410",
+      "202411",
+      "202412",
+      "202501",
+      "202502",
+      "202503",
+      "202504",
+      "202505",
+      "202506",
+      "202507",
+      "202508",
+      "202509",
+      "202510",
+      "202511",
+      "202512",
+      "202601",
+      "202602",
+      "202603",
+      "202604",
+      "202605",
+      "202606",
+      "202607",
+      "202608",
+      "202609"
+    ],
+    "normalized_point_table_written_by_download": false,
+    "object_count": 90,
+    "on_missing": "record object unavailable; no retry or replacement date/source; continue fixed queue within budget",
+    "on_schema_range_duplicate_order_crc_size_or_write_error": "stop batch, quarantine offending object, retain accepted prefix; no complete-success manifest",
+    "on_timeout_or_budget": "stop and publish partial audit only; no automatic restart or budget reset",
+    "overwrite_resume_or_symlink_roots_allowed": false,
+    "prior_reuse_policy": "read-only source references after full SHA256/CRC/schema/range/order verification; if either reuse fails stop and replan, do not add a replacement GET",
+    "read_chunk_bytes": 1048576,
+    "redirects": false,
+    "remaining_get_objects": 88,
+    "request_deadline_seconds": 30,
+    "required_free_bytes_at_start": 3221225472,
+    "retry_delay_seconds": 2,
+    "retry_statuses": [
+      500,
+      502,
+      503,
+      504
+    ],
+    "retry_transport_failures": [
+      "connection_reset",
+      "connection_timeout",
+      "read_timeout"
+    ],
+    "reuse": [
+      {
+        "compressed_bytes": 2974328,
+        "expanded_bytes": 8877200,
+        "first_timestamp_seconds": "1672531244.376227",
+        "gaps_gt60_seconds": 2,
+        "last_timestamp_seconds": "1675209570.251158",
+        "max_gap_seconds": "286.055879",
+        "month": "202301",
+        "path": "archive-sample-202301-r1/BTC_USDT-202301.csv.gz",
+        "rows": 202695,
+        "sha256": "094e485b6c21b810964b678d75f16ccea69e2643b2febf38fd9d642931bd8ed9",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "compressed_bytes": 945831,
+        "expanded_bytes": 2980760,
+        "first_timestamp_seconds": "1672531230.416276",
+        "gaps_gt60_seconds": 3,
+        "last_timestamp_seconds": "1675209583.064217",
+        "max_gap_seconds": "292.342187",
+        "month": "202301",
+        "path": "archive-sample-202301-r1/ETH_USDT-202301.csv.gz",
+        "rows": 72178,
+        "sha256": "41480242c0e0b610b2fb5d557d36ab06bc3ee6385b74af7add9fabc0cfc308a7",
+        "symbol": "ETH_USDT"
+      }
+    ],
+    "skip_other_existing_data": false,
+    "status": "PLAN_ONLY",
+    "url_template": "https://download.gatedata.org/futures_usdt/mark_prices/{month}/{symbol}-{month}.csv.gz",
+    "write_policy": "exclusive temp files, hash and CRC validate, publish immutable raw object and audit; preserve rejected/partial bytes separately within total budget"
+  },
+  "mark_gap_policy": {
+    "continuity_across_months": "validate adjacent accepted objects and carry only a causally available fresh prior-month point; no carry over missing object",
+    "expected_regular_tick_grid": false,
+    "gap_diagnostic_threshold_seconds": [
+      60,
+      120,
+      180
+    ],
+    "gaps_not_equal_missing_minute_bars": true,
+    "global_no_gaps_claim": false,
+    "missing_object_policy": "economic use in that month unavailable even if preceding point is within age limit; do not claim complete expected observations",
+    "no_resampling_interpolation_backfill_or_trade_price_fallback": true,
+    "report_by": [
+      "instrument",
+      "month"
+    ],
+    "report_fields": [
+      "rows",
+      "first_last_us",
+      "start_end_boundary_gap_us",
+      "all_gap_intervals_gt60_us",
+      "counts_gt60_gt120_gt180",
+      "max_gap_us",
+      "object_status",
+      "required_query_count",
+      "supported_query_count",
+      "unsupported_query_times_reasons"
+    ]
+  },
+  "mark_parser": {
+    "availability_basis": "archive_publication_and_historical_receipt_unknown",
+    "canonical_identity_encoding": "UTF-8 JSON, sorted object keys, separators comma/colon without spaces, ensure_ascii=False, no NaN, no terminal newline; timestamp integers and exact source strings",
+    "columns": [
+      "timestamp",
+      "index_price",
+      "mark_price",
+      "last_price"
+    ],
+    "conflicting_duplicate_timestamp": "quarantine and fail object",
+    "empty_file": "unavailable, never zero-valued history",
+    "exact_column_count": 4,
+    "identical_duplicate_timestamp": "quarantine and fail object, even if all prices agree",
+    "input": "gzip of UTF-8 headerless CSV",
+    "instrument_from": "fixed URL and manifest object identity; never inferred from price",
+    "lineage_persisted_in": "immutable raw object plus manifest; deterministic per-point references generated on read, required on every valuation output",
+    "max_price_digits": 128,
+    "max_price_fraction_digits": 64,
+    "missing_column_blank_row_header_bad_utf8_or_nonfinite_price": "quarantine and fail object",
+    "month_membership": "month_start_us <= timestamp_us < next_month_start_us, plus approved overall range",
+    "observed_available_at_us": null,
+    "out_of_order": "quarantine and fail object",
+    "point_fields": [
+      "namespace",
+      "schema_version",
+      "point_id",
+      "instrument_id",
+      "source_timestamp_text",
+      "source_fraction_digits",
+      "timestamp_us",
+      "index_price",
+      "mark_price",
+      "last_price",
+      "raw_sha256",
+      "source_id",
+      "source_row",
+      "source_url",
+      "retrieved_at_utc",
+      "observed_available_at_us",
+      "availability_basis"
+    ],
+    "point_identity": "SHA256 canonical JSON [instrument_id,raw_sha256,physical_source_row]",
+    "point_namespace": "qr008.mark-archive-observation",
+    "point_schema_version": 1,
+    "price_kind_for_valuation": "MARK only column index 2; index/last are audit fields, not replacements",
+    "price_type": "finite positive decimal string; no exponent or implicit float",
+    "price_unit": "USDT_per_base_asset",
+    "sort": "source rows must already be strictly increasing; no repair sorting",
+    "source_id": "SHA256 canonical JSON [instrument_id, YYYYMM, raw_sha256]",
+    "source_row": "one-based physical CSV line; all accepted lines contain exactly one point",
+    "timestamp_pattern": "^(0|[1-9][0-9]*)(\\.[0-9]{1,6})?$",
+    "timestamp_to_us": "exact decimal times 1000000; reject sub-microsecond precision or rounding",
+    "timestamp_unit": "UTC_unix_decimal_seconds"
+  },
+  "mark_scenarios": [
+    {
+      "available_lag_us": 60000000,
+      "id": "MARK_ARCHIVE_DELAY60_AGE120_R1",
+      "max_available_age_us": 60000000,
+      "max_source_age_us": 120000000,
+      "role": "primary",
+      "status": "PROPOSED"
+    },
+    {
+      "available_lag_us": 120000000,
+      "id": "MARK_ARCHIVE_DELAY120_AGE180_R1",
+      "max_available_age_us": 60000000,
+      "max_source_age_us": 180000000,
+      "role": "latency_stress",
+      "status": "PROPOSED"
+    }
+  ],
+  "mark_selection": {
+    "available_at_formula": "source_timestamp_us + scenario.available_lag_us",
+    "decision_query_us": "actual synthetic decision time",
+    "funding_missing_mark": "retain unresolved obligation; do not set funding zero, drop event, or later insert a previously unavailable proxy into old decision",
+    "funding_query_us": "declared synthetic snapshot_us",
+    "inclusive_age_equality": true,
+    "interpretation": "delayed archive observation scenario; neither instantaneous settlement mark nor 1m candle; no claim of historical delivery latency",
+    "no_candidate": "mark=null with NO_CAUSAL_FRESH_MARK; unknown valuation/liability propagates; block increased risk, retain reductions under separately supported fill policy",
+    "select": "latest source_timestamp_us with available_at_us <= query_us and 0 <= query_us-source_timestamp_us <= max_source_age_us",
+    "stress_comparison": "same source range and price kind; full-state replay per scenario, no choosing the better outcome",
+    "tie_resolution": "duplicates invalid upstream; never choose by price or PnL",
+    "unavailable_interval_after_point": "(point_us + max_source_age_us, next_point_us + available_lag_us) when positive; start/end and missing-object intervals also explicit"
+  },
+  "namespace": "qr008.economic-coverage-proposal",
+  "official_document_sources": [
+    {
+      "supports": "official futures_usdt mark_prices monthly path; no guarantee all object bodies complete",
+      "url": "https://www.gate.com/developer/historical_quotes",
+      "verified_on": "2026-10-28"
+    },
+    {
+      "supports": "headerless CSV timestamp,index_price,mark_price,last_price and funding_applies timestamp,rate",
+      "url": "https://www.gate.com/announcements/article/21688",
+      "verified_on": "2026-10-28"
+    }
+  ],
+  "protocol_id": "btc-eth-mark-archive-coverage-r1",
+  "required_artifacts_after_separate_handoff": [
+    "immutable raw audit manifest with per-attempt bytes/status/times/sha and explicit reused refs",
+    "strict object validation reports including failures and exact source rows",
+    "per-point lineage on every selected mark output",
+    "per-asset/month gaps, query-support and unresolved-event reports",
+    "scenario hashes and recorded decisions; no training-ready claim from this specification"
+  ],
+  "schema_version": 1,
+  "scope": {
+    "all_new_economic_and_consumer_times_must_be_less_than_end": true,
+    "end_exclusive_us": 1790812800000000,
+    "end_exclusive_utc": "2026-10-01T00:00:00Z",
+    "expected_4h_buckets_per_symbol": 8214,
+    "expected_daily_buckets_per_symbol": 1369,
+    "expected_hourly_buckets_per_symbol": 32856,
+    "exposed_development": [
+      1767225600000000,
+      1790812800000000
+    ],
+    "instruments": [
+      "gate:usdt:BTC_USDT",
+      "gate:usdt:ETH_USDT"
+    ],
+    "market": "USDT_linear_perpetual",
+    "no_automatic_finality_extension": true,
+    "october_excluded": true,
+    "start_inclusive_utc": "2023-01-01T00:00:00Z",
+    "start_us": 1672531200000000,
+    "symbols": [
+      "BTC_USDT",
+      "ETH_USDT"
+    ],
+    "training_design": [
+      1704067200000000,
+      1735689600000000
+    ],
+    "unseen_test": null,
+    "validation_design": [
+      1735689600000000,
+      1767225600000000
+    ],
+    "warmup": [
+      1672531200000000,
+      1704067200000000
+    ]
+  },
+  "status": "PROPOSED_NOT_ACTIVE",
+  "task_id": "QF-QR-007-READINESS",
+  "timezone": "Australia/Melbourne",
+  "volume": {
+    "activation": "USER_DECISION_D02",
+    "capacity_limitation": "cannot estimate participation/impact or prove fills from degraded volume; any volume-dependent execution model requires repaired data or separately approved assumptions",
+    "comparison_quantities": [
+      "paired_row_count",
+      "price_mismatch_count",
+      "volume_mismatch_count",
+      "absolute_difference_contracts",
+      "relative_difference_for_nonzero_reference",
+      "zero_reference_count",
+      "by_asset_month_and_source_format"
+    ],
+    "do_not_infer_bound_of_one_contract": true,
+    "excluded_future_features": [
+      "volume_relative_6h",
+      "volume_relative_24h",
+      "volume_relative_168h"
+    ],
+    "finding": "ETH September archive volume precision differs from decimal-header API in at least one checked hour",
+    "global_error_bound": null,
+    "integer_order_policy_separate": true,
+    "known_example": {
+      "archive_contracts": "2717072",
+      "decimal_api_contracts": "2717072.2",
+      "difference_contracts": "0.2",
+      "instrument": "ETH_USDT",
+      "ohlc_equal": true,
+      "timestamp_seconds": 1790805600
+    },
+    "later_required_invariance_test": "on approved synthetic fixed inputs with ML disabled, vary/drop volume while holding OHLC/funding fixed and compare signals, orders and state; no models/app launch during this document task",
+    "ml_off_static_assessment": "fixed BTC/ETH strategy_signals -> trend/carry/vol/timing -> strategy_execution uses OHLC/funding without volume on the inspected ML-off branch; not a runtime replay proof or a claim about scanner/liquidity APIs",
+    "native_feature_version_unchanged": 1,
+    "new_feature_profile_proposal": "qr-price-only-v1, not created or activated",
+    "no_zero_fill_or_silent_column_drop": true,
+    "options": [
+      {
+        "assessment": "sound if a complete authoritative decimal series is acquired and verified; requires new data spec/hash and aggregation tests; recent API cannot establish three-year repair, so not current critical path",
+        "id": "repair_new_version"
+      },
+      {
+        "assessment": "report exact paired checks and source strata; useful evidence but does not repair unobserved dates or approve volume features; no further requests in this checkpoint",
+        "id": "bounded_measurement"
+      },
+      {
+        "assessment": "recommended minimum: preserve frozen OHLC/lineage and uncertain volume in archive audit, exclude volume-dependent features/quality gates/capacity claims in a separately versioned research projection after review",
+        "id": "exclude_volume_research_projection"
+      }
+    ],
+    "recommendation": "exclude_volume_research_projection",
+    "unknown": "full affected dates, per-hour differences, truncation mechanism/bounds outside checked rows"
+  }
+}

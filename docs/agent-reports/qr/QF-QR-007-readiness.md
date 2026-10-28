@@ -1,7 +1,8 @@
-# QF-QR-007-READINESS 预检及 schema 审查
+# QF-QR-007-READINESS 预检、schema审查及经济覆盖规范
 
 日期：2026-10-28 Australia/Melbourne。角色：QR。
-当前结论：**SCHEMA_REVISE_REQUIRED（六项定点修订）**，详见末节。
+当前结论：**SCHEMA_REVISE_REQUIRED（六项定点修订）**，见schema审查记录。
+覆盖规范子步骤：**SPEC_READY_FOR_REVIEW / PROPOSED_NOT_ACTIVE**，见最新记录。
 预检结论仍为 PASS（仅文档/验收准备）；以下原预检记录保留。
 当前依赖：QD 修订精确 schema 后复核/负责人交接。实现验收未执行；训练就绪仍未达。
 Dispatch QF-DISPATCH-20261028-QR007-PREFLIGHT-1，补充 DECIMAL-SCOPE-1；
@@ -151,3 +152,77 @@ QD下一步给出六项修订的具体位置、选择的边界和正负例，负
 验证至9月末，经济验证范围截止2026-10-01 00:00UTC，10月待补证，原2024训练/
 2025验证划分暂不变。负责人另提供mark归档及9月volume差异证据目录，留待下一
 coverage任务精确核验；本次未读取/验收这些新归档，也不据其扩大六项schema审查。
+
+## 经济覆盖规范检查点：QF-DISPATCH-20261028-QR007-COVERAGE-SPEC-1
+
+本轮从干净QR commit `c4b1fdcb90427a6229bd75d8abbff66fcb795047` 继续同一任务。
+六项schema review已交QD，当前只推进独立覆盖文档；不修改ledger-review或创建
+validator。固定范围 `[2023-01-01,2026-10-01)` UTC，仅BTC/ETH，2023 warmup，
+2024/2025训练与验证设计暂不变，2026仍是已暴露开发资料；fit授权仍为否。
+
+### 完成内容与独占文件
+
+- 更新 `research/qr008/coverage-protocol.md`：当前可执行计划、四项待审情景选择、
+  分层验收；原预检保留为历史，旧10月/minute-REST方案明确失去当前效力。
+- 新增 `research/qr008/coverage-spec.json`：固定45个月/90对象清单规则、2份复用、
+  88次GET与最多10次重试；精确资源/类型/时间/缺口/停止规则、41份本地证据身份、
+  12份只读代码身份及12项具体验收案例。它是待审数据，不是采集器或账本实现。
+- 本报告。QR006、已提交ledger-review、QD源码、native代码与共享日志均不修改。
+
+### 本轮真实核验及结果
+
+1. 复核四个负责人证据目录的plan/result/amendment与原始文件hash。完整解压并逐行
+   核验202301两份MARK：共274873行，严格递增无重复、四列正价格、UTC小数秒精确
+   转us且在月范围内。BTC/ETH分别202695/72178行，最大gap286.055879/292.342187秒，
+   >60秒gap为2/3，>120秒各1。CRC与压缩/解压字节数匹配原记录。
+2. 核验8份HEAD记录；保留首个HEAD本地退出56的amendment。202508/202604的200
+   不替代完整对象验证，202610的404不进入固定清单。完整已有样本仅2/90。
+3. 重hash并逐行对照9月原始candles gzip与两份decimal API：ETH22UTC差0.2合约，
+   两币共四行OHLC相同，另三行volume相同。不是全历史修复或误差上界。
+4. 已有funding在新范围每币4107条；不把条数解释为真实完整8h日历。只读追踪
+   strategy_signals/trend/vol/timing/execution/carry/crypto_ml/backtest等代码依赖。
+   固定币种ML-off路径未见volume使用；FEATURE_VERSION=1的ML路径明确使用volume。
+   原QD canonical_history.py要求整数volume并按int聚合，故decimal修复需要新数据版本。
+5. 重新核验两个官方文档页，确认月度MARK路径和四列格式；未请求任何行情接口。
+   所有新市场下载、回放、标签、模型/scaler/校准拟合均0。没有应用导入或执行。
+
+### 推荐与未决项
+
+下载提案上限98市场尝试、单压缩64MiB、全批2GiB（含复用及失败bytes）、单解压流
+256MiB、串行、单请求30秒、全批20分钟。缺失/部分/拒绝保留；不改日期直到返回
+好数据。采集计划经负责人评审交接可独立推进，本轮不执行。
+
+需在市场回放前记录的四项选择（当前均未生效）：
+
+- D01：MARK源时间+60秒、source age<=120秒为主情景；+120/<=180秒延迟压力。
+  source t原样作命名合成funding snapshot、下一整点rate可用、再+60秒booking、
+  完整条件成立后+1h assertion。真实settlement/publication未知，不能称historical-exact。
+- D02：推荐独立研究版本暂不使用volume相关特征/质量门/容量估计，保留v1/v2及旧
+  模型schema。删除volume特征改变特征含义，需要新身份与用户选择；本轮没有激活。
+- D03：推荐0.00075为主成本、0.0015为压力，0.0005保留命名参考；不按收益选便宜值。
+- D04：整数票据配明确反事实恒定乘数，或另补历史grid/转换依据；当前min不是step，
+  成交量精度问题与整数执行政策分开。无实际历史交易/保证金有效性结论。
+
+后续还需QD回放适配延迟funding、明确carry年化cadence及已接受的执行数值参数，
+不能直接送入按source timestamp对齐的native carry后声称因果时钟已一致。
+
+### 验证、限制和交接
+
+对JSON做严格解析/无重复key/有限数/清单和预算/UTC边界/整数us/独立时钟字面算例/
+来源hash/文件范围检查：**96项文档/spec断言通过**，包括41份证据和12份只读代码
+身份，主仓七项保护字段/72条目及5份QR006文件保持基线。git diff --check通过。
+这不是96个市场回放或账本测试。完整MARK市场coverage尚未产生；
+规范PASS、两份样本PASS、全量完整性、因果经济可用性、模型充分性是不同状态。
+新模型还需schema/账本验收、全量覆盖、命名情景冻结、完整状态回放及标签/依赖审计。
+
+按本dispatch独立提交这三份文件后停止，等待负责人转交QD修订schema；不写validator，
+不发起新下载或自动调度，不合并/push或改主仓/NAS/Windows。达到训练条件后再报告，
+开始任何fit前仍需用户确认。
+
+本覆盖检查点 `coverage-protocol.md` SHA256：
+`27475a730b62f929ea8d429dd333fe5fab6e28bdd611d11d1f3f175f7127f675`；
+`coverage-spec.json` SHA256：
+`bed49515f4b27b0e46d112c0c313826f243053f6cc54c9a813d165de7fc8e08f`。
+报告本身由最终commit及另列hash识别。随后收到schema复核交接
+`QF-DISPATCH-20261028-QR007-SCHEMA-RECHECK-1`：先独立提交本覆盖检查点，再另一个
+提交只复核QD六项修订；不把覆盖选择D01–D04自动批准或加入schema依赖。
