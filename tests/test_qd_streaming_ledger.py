@@ -54,7 +54,9 @@ def jsonl(path,rows):
 
 
 def config(records=(),instruments=(BTC,),fee='0.0005',cash='10000',multiplier='0.001',calendar=None,tie='snapshot_before_fills'):
-    legacy,_=b.bind(records,instruments=instruments,fee=fee,calendar=calendar,tie=tie)
+    if calendar is None:calendar=[dict(instrument_id=r['instrument_id'],event_id=r['record_id'],snapshot_at_us=r['snapshot_at_us'],mapping_rule_id=b.rid('funding',r['instrument_id'])) for r in records if r['record_type']=='FundingSnapshot']
+    # Rule construction must not prematurely admit deliberately invalid bodies.
+    legacy,_=b.bind([],instruments=instruments,fee=fee,calendar=calendar,tie=tie)
     c={k:deepcopy(v) for k,v in legacy.items() if k not in ('namespace','schema_version','source_manifest','expected_funding_snapshots')}
     c.update(initial_cash_usdt=cash,knowledge_end_exclusive_us=12000,expected_snapshots=deepcopy(legacy['expected_funding_snapshots']),
              ingestion_mode='reference_import',adapters=[],initial_adapter_states=[],schedule=[],fact_schemas=[],
@@ -394,7 +396,7 @@ def case_tape(id,variant=0):
         if id in ('S06.06','S06.07'):
             r=b.posting('bad','fee:open','-0.1',20)
             if id=='S06.06':r['corrects_posting_id']='bad';r['null_reasons']={}
-            else:r['revision']=2
+            else:r['revision']=1
         return [f,r],{}
     if id=='S10.01':
         rs=[b.fill(),b.posting('late','fee:open','-0.1',10)];rs[1]['available_at_us']=20;rs[1]['booking_known_at_us']=20;return rs,{}
@@ -593,7 +595,9 @@ def run_case(id,parent,variant=0):
             rejects={'S01.06':'LATE_ORIGIN_UNSUPPORTED','S01.07':'FUTURE_PROXY_MARK','S05.03':'AMBIGUOUS_FILL_SEQUENCE','S06.03':'REFERENCE_SCOPE_MISMATCH','S06.04':'ALLOCATION_MISMATCH','S06.05':'REVISION_GAP','S06.06':'DEPENDENCY_CYCLE','S06.07':'UNSUPPORTED_POSTING_RESTATEMENT'}
             if id=='S01.10' and variant==0:rejects[id]='ID_SCOPE_CONFLICT'
             if id in rejects:
-                before=f.ledger.head.copy();expect(rejects[id],lambda:f.advance(end));must(f.ledger.head==before,'semantic failure atomic')
+                before=f.ledger.head.copy();request=f.request_at(end)
+                if id=='S06.07':request['imported'][-1]['body']['revision']=2
+                expect(rejects[id],lambda:f.ledger.advance(request));must(f.ledger.head==before,'semantic failure atomic')
             else:
                 f.advance(max(20,end));x=f.balance(max(20,end))
                 if id in ('S01.01','S01.04','S01.08','S01.11'):compare_reference(f,records,max(20,end));checks.append('exact r3 expanded financial values')
@@ -628,7 +632,7 @@ def source_plan(id,variant):
     if id in ('S10.08','S10.09'):
         c,facts=qg_config(1 if id=='S10.08' else 2);return dict(case_id=id,variant=variant,config=c,records=[],facts=facts)
     records,kw=case_tape(id,variant)
-    return dict(case_id=id,variant=variant,records=[body(r) for r in records],config=kw.get('c',config(records,cash='1000')),construction='run_case closed source above; request mutations/checks frozen by test sha256')
+    return dict(case_id=id,variant=variant,records=[body(r) for r in records],config=kw['c'] if 'c' in kw else config(records,cash='1000'),construction='run_case closed source above; request mutations/checks frozen by test sha256')
 
 
 def identities():
