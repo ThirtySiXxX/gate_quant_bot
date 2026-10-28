@@ -1,10 +1,12 @@
 # QF-QR-007-READINESS 预检、schema审查及经济覆盖规范
 
 日期：2026-10-28 Australia/Melbourne。角色：QR。
-当前结论：**SCHEMA_ACCEPTED_DESIGN_ONLY（r2六项闭合）**，见最新schema复核记录。
+当前结论：**PREPARED_NOT_EXECUTED**，独立验证器23项自身测试通过；21项producer用例未执行。
+r2设计接受记录保留；B1修订待QD精确schema/profile交接，尚未接受实现。
 覆盖规范子步骤：**SPEC_READY_FOR_REVIEW / PROPOSED_NOT_ACTIVE**，见最新记录。
 预检结论仍为 PASS（仅文档/验收准备）；以下原预检记录保留。
-当前依赖：负责人交接有界实现与独立验证。实现验收未执行；训练就绪仍未达。
+当前依赖：负责人交接B1与producer的确切commit/hash；可靠成交量和新精度/聚合版本仍待验收。
+训练就绪仍未达；模型、scaler、校准器拟合均为0，开始拟合前仍须用户确认。
 Dispatch QF-DISPATCH-20261028-QR007-PREFLIGHT-1，补充 DECIMAL-SCOPE-1；
 CAPACITY-1只恢复同一任务，没有改模型或扩大范围。
 
@@ -251,3 +253,89 @@ causal MARK公式时钟、assertion入库/充分性分离、全局逻辑ID所有
 
 下一步负责人可基于精确r2交接QD有界实现与QR独立验证器任务；本轮按要求独立提交
 复核后停止。源主仓/索引和QR006继续受保护，不合并、不下载、不拟合、不自动调度。
+
+## 独立验证器准备中的即时交接记录
+
+当前派单 `QF-DISPATCH-20261028-QR007-VALIDATOR-1` 已授权编写QR验证器及角色测试。
+在没有精确producer候选commit前只准备、自检并独立提交，不读取或轮询QD实现文件。
+
+负责人转达人类选择 `QF-CONTROL-20261028-QR007-USER-VOLUME-GATE-1`：D02选择
+**先补齐成交量精度再研究**，price-only路线被拒绝；D01+D04接受明确标注的研究
+情景；D03为0.00075主/0.0015压力、0.0005参考。coverage文件按本轮边界冻结，
+由后续明确任务更新。市场回放/标签/模型研究必须等可靠volume来源及精度/聚合
+新版本验收；不能以小差值、容差或删特征绕过。拟合仍未授权。
+
+B1最小修订意见已追加ledger-review：ClosedSlice两侧费用独立D|null，原因仅
+UNKNOWN_OBLIGATION_TOTAL；当前fee总额/net派生未知，账户沿用R06，原始Fill/Leg
+与已知Posting/C/B不回写。给出entry/exit对称、两侧未知、部分片段和恢复退款的
+正反例。等待QD schema所有者落版精确身份；本轮不擅自修改已批准schema或代码接口。
+负责人MARK采集在首个异常对象停止的情况仅作为背景依赖，未切换到采集审查。
+
+## VALIDATOR-1 完成报告 — PREPARED检查点
+
+本轮起点 `4d2f57a65456c299bb7d05a64e119d01a251a2b9`，工作树与分支同上。
+结果提交标题 `Prepare QR007 independent ledger validator without executing producer`；
+确切commit由本次Git提交返回并随交接报告传递，不以自引用方式写入提交内容。
+
+完成四文件独占变更：
+
+- `research/qr007/validate_event_ledger.py`：标准库独立检查器、21项producer用例、
+  34项标准阶段映射、字面/Fraction oracle、递归输出与来源对账、显式身份绑定、
+  单A11结果文件检查、无覆盖原子报告输出、B1待决执行门。
+- `tests/qr_research/test_qr007_ledger.py`：23项检查器自身测试，不导入QD实现。
+- `research/qr007/ledger-review.md`：B1最小修订建议、准备结果与阶段限制。
+- 本报告：最新人类选择、数据依赖进展和交接要求；旧证据按历史保留。
+
+代码SHA256 `a2d9a00f07c5d058c8b36fab78e5b3f780302fb40c87ef46718e547aa43f1d1c`；
+自身测试SHA256 `e07c982375051145972188cdc475186f20e72536a67ac158fb93004d4c7a17ae`。
+
+在QR工作树执行下列命令：**23 tests，OK**。
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python - <<'PY'
+import socket, unittest
+def offline(*args, **kwargs):
+    raise AssertionError('Network disabled during offline verification')
+socket.create_connection = offline
+socket.socket.connect = offline
+socket.socket.connect_ex = offline
+suite = unittest.defaultTestLoader.loadTestsFromName('tests.qr_research.test_qr007_ledger')
+result = unittest.TextTestRunner(verbosity=1).run(suite)
+raise SystemExit(not result.wasSuccessful())
+PY
+```
+
+另执行真实CLI并解析其JSON输出：
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/qr007/validate_event_ledger.py --prepare
+```
+
+结果为21 prepared / 0 producer passed / 0 failed / 21 not executed，
+`PREPARED_NOT_EXECUTED`、target=null、producer_executed=false。没有市场请求、
+下载、标签生产或任何fit。所有21项是预备验收用例，不能把23项检查器自测当成
+QD实现通过；完整回放、最终性/标签、purge切分和历史真值仍未获验收。
+
+保护检查：源main的HEAD、分支、staged diff、原始index字节、unstaged diff、完整
+porcelain status及72行数量均与既有基线一致（7/7）。QR006五份文件及冻结coverage
+protocol/spec共7份SHA256匹配；未修改源索引、共享文档、native代码或用户工作。
+只暂存这四份授权文件；提交前完成工作树及暂存区diff检查。没有合并或推送。
+
+负责人新交接 `QF-CONTROL-20261028-QR007-B1-RECORDED-DATA-EVIDENCE-1`：B1建议
+已冻结为协调区 `qr007-b1-reviewed-proposal.txt`，SHA256
+`8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1`，交QD落版。
+本轮按派单自测后提交PREPARED，不等待或读取QD动态producer。
+
+以下仅记录负责人提供的依赖进展，**QR本轮未独立复核这些资料**：固定8请求获得
+2025-12-01—2026-10-01 BTC/ETH各7296小时decimal-enabled原始数据；ETH4106小时
+有小数。对原v2，BTC70/ETH4151条volume有差异，BTC另有1条close差异。4个固定
+单小时复查与批量逐字段一致，仍不能确定REST/归档何者是真值。90份旧小时归档每币
+32856小时与本地归一结果一致、原始volume均整数，报告指出不是本地额外截断。
+MARK 202310 BTC有5个相邻完全相同四字段重复行，无降序；采集隔离停止，未去重恢复。
+证据名称为协调区 `volume-precision-recovery-proposal-r1`、
+`volume-discrepancy-fixed-confirmation-r1`、`mark-archive-intake-through-september-r1`。
+
+下一步由负责人依用户成交量优先要求安排有界数据修复审查；不允许以容差或price-only
+替代来源一致性/精度验收。同时等待QD的B1精确schema及producer commit/hash，用另一个
+明确交接执行合成实现验收。本检查点后停止，不增加币种，不自行改覆盖协议、获取数据、
+启动市场回放或拟合。达到训练条件后先报告证据，再取得用户训练确认。

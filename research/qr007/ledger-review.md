@@ -1,14 +1,15 @@
 # QR007 账本独立验收预检
 
 2026-10-28 Australia/Melbourne。任务 QF-QR-007-READINESS。
-当前状态：**SCHEMA_ACCEPTED_DESIGN_ONLY**；r2六项复核见末节。保留原REVISE记录，账本尚未实现/验收。
+当前状态：**PREPARED_NOT_EXECUTED**；独立验证器及23项自身测试已完成，21项producer用例未执行。
+r2设计复核记录保留；B1费用未知值修订等待QD精确schema/profile交接，尚无实现验收结论。
 QR 起点 52ce1ebeb054abd49c41fc4acbb4c7b7eb41c762。
 语义基线 QR006 c7e9a2492247fa31e216035f87e8bb20cca6e6ad；对应 QD006
 9bb3c0ec2b57e7154a51e56d795645c273c1308d 接受 34 项设计标准。
 用户已授权继续 BTC/ETH 训练准备；旧文档的“等待实现批准”不阻止此授权内的普通工作。
 模型、scaler、校准器拟合仍需训练前确认；本检查点不产生市场标签。
 
-## 独占边界及下一交付
+## 原预检阶段独占边界及下一交付（历史记录；当前边界见末节）
 
 QR 允许编辑本文件、research/qr007/validate_event_ledger.py、
 tests/qr_research/test_qr007_ledger.py、research/qr008/coverage-protocol.md
@@ -301,3 +302,75 @@ QD工作树与提交字节一致；`qd007-synthetic-r2`精确身份：
 
 覆盖D01–D04仍待负责人持具体方案与用户决策，与本合成schema ACCEPT分开。
 当前不写validator或QD代码；提交此复核后停止等待实现交接。没有启动任何fit。
+
+## B1 — 费用总额未知时的当前切片归属（实现准备发现，待QD落版）
+
+`QF-CONTROL-20261028-QR007-FEE-NULL-B1-1`。r2允许fee ObligationRevision将T变为
+null/UNKNOWN_AMOUNT，但ClosedSlice两个fee字段仍是D，无法表示当前未知归属。
+QR同意下列最小修订建议，**不替QD编辑schema**，等待精确修订commit/hash后更新
+验证器的schema绑定；r2原六项设计ACCEPT记录保留，不把新问题算成已通过的实现。
+
+建议精确文字：`ClosedSlice.entry_fee_cash_usdt`与`exit_fee_cash_usdt`改为`D|null`。
+在当前查询cutoff，若其对应entry/exit fee obligation的最新可用T未知，该字段为null，
+该切片本地null_reasons的同名字段必须为UNKNOWN_OBLIGATION_TOTAL。两侧分别判定；
+另一侧已知费用、funding（若已知）、数量、时间、归属ID、realized_price_pnl保留。
+后续已知累计修订按已接受FIFO历史关闭路径恢复当前精确归属，不能重记现金；旧
+cutoff的已知归属保持不可变。不得用旧值或0替代当前未知值。
+
+独立最小轨迹：开10张，m=.001，entry49900/exit50100；entry费-.2495、exit费-.2505，
+gross2，无funding，原费用均已Posting，C10001.5。
+
+| 当前可用修订/Posting | entry_fee | exit_fee | 当前净切片派生值 | 现金与其他状态 |
+| --- | --- | --- | --- | --- |
+| 原已知两侧 | -.2495 | -.2505 | 1.5 | C10001.5，gross2 |
+| entry fee revision2：T=null | null/UNKNOWN_OBLIGATION_TOTAL | -.2505 | null | C仍10001.5，entry B仍-.2495；P/A/L未知，聚合A/L/E/budget按R06未知 |
+| entry fee revision3：T=-.2 | -.2 | -.2505 | 1.5495 | C仍10001.5；entry A=.0495，E10001.5495，旧未知cutoff仍未知 |
+| 独立refund Posting +.0495 | -.2 | -.2505 | 1.5495 | C10001.5495，A0；不能因恢复归属先行改现金 |
+
+对exit费做对称案例，另测两侧同时未知；未知条件仅影响对应字段。部分平仓时同一
+费用义务影响的所有已关闭片段都应未知，不能只清最后一片；恢复后分摊仍合计为
+精确累计费用，旧记录不可回写。错误负例包括null缺原因、已知T却返回null、未知T
+返回旧数/0、清空另一侧已知费用、错误传播到gross/数量、恢复T时自动退款。
+
+连带传播：S1没有新增episode净额字段，不需发明字段或新状态枚举。独立检查器若
+派生切片fee总额/net，当任一必需费用/funding归属未知时结果也是null；不得忽略null
+求和。账户T/B/P与aggregate A/L/E/budget继续执行已有R06。原Fill/Leg描述原始成交
+费的审计值仍保留已知原值，不作为当前修订归属；已知Posting/C/B不随归属未知而
+消失。此补丁不改输入手续费公式、已观察现金或标签目标定义。
+
+## VALIDATOR-1 — 独立验证器准备检查点
+
+基线 `4d2f57a65456c299bb7d05a64e119d01a251a2b9`，分支
+`codex/qr-validation-baseline`。本轮仅四个独占文件：本文件、
+`research/qr007/validate_event_ledger.py`、`tests/qr_research/test_qr007_ledger.py`
+和QR007角色报告；coverage两文件、QR006、native/QD代码、共享日志均冻结。
+
+验证器绑定已接受r2 schema commit `a183e40ed27b2250f7030ce3babbe5d579dc268b`、
+SHA256 `6e5fea553aedcdf6d800ced8a2ba5d0d49b5abd0b60cf931417fd6dff78408b7`、
+profile `qd007-synthetic-r2`。这不代表B1已落版；代码保留原r2字段类型，并通过
+`PENDING_CONTRACTS`拒绝任何producer执行。负责人已冻结B1提案，SHA256
+`8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1`，交QD编辑；
+QR仅记录交接身份，未读取动态producer，也未认定其实现已通过。
+
+新模块只使用标准库。21个已准备用例覆盖精确费用与返佣、正负资金费、累计总额
+与独立现金Posting、FIFO分批/加仓/反手、未知传播、事件可用时钟、未来事实污染、
+成熟断言失效/接替、双币归属、重复/冲突/原子失败、深复制、覆盖缺失、保守预算、
+同刻资格及as-known/restated。34项A标准逐项保留本阶段与后续覆盖/回放/标签范围。
+期望金额由字面常量和独立Fraction恒等式提供；不调用QD helper计算期望值。
+
+输出检查包括递归封闭字段/类型、null原因、输入来源hash、现金源逐笔与FIFO价格
+盈亏对账、T/B/P和分开汇总A/L、预算、单位守恒。`--snapshot`只检查显式给定的
+A11单状态文件；重新计算输出hash仍不能掩盖协调篡改C/E/budget或T/B。它不对
+producer签发PASS，也不完成市场回放。实际实现入口仅接受显式文件、commit、
+SHA256和schema，并核对精确提交字节；不搜索候选文件。输出只写新路径，原子发布，
+拒绝覆盖和符号链接。Python socket guard不是任意代码的操作系统沙箱。
+
+验证结果：**23项自身测试通过**，含成熟度未来时点/阻断状态负例；CLI `--prepare`
+返回 `PREPARED_NOT_EXECUTED`，21 prepared / 0 passed / 0 failed / 21 not executed，
+producer_executed=false、target=null、market_requests=0、model_fits=0。
+测试临时路径显式resolve，避免macOS `/var`别名触发预期外的符号链接拒绝；真正的
+符号链接负例仍被拒绝。这是测试fixture修正，不是producer问题。
+
+下一步：负责人交接QD的B1精确schema/profile与已提交producer身份后，另行更新
+绑定、补B1对称未知/恢复用例，再执行真实producer独立验收。当前提交是PREPARED，
+不是S1实现通过、市场就绪或训练批准。用户选择的成交量精度前置条件继续有效。
