@@ -1,0 +1,219 @@
+{
+  "approval_sha256": "d3eeb12d0d5348f769a9493a215eb32e2f3be40c13ed4a0eb5607e7cef9effa0",
+  "artifacts": {
+    "exact_final": {
+      "bytes": 37551,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr008/verification-exact-2/result.json",
+      "sha256": "aad4e77c78d226d809c6634db773e75f3f541c15c3c650562d792a799210f774"
+    },
+    "exact_initial": {
+      "bytes": 209,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr008/verification-exact-1/result.json",
+      "sha256": "ac8aee53ff56763e7cf55ddc277e0ebcfbbbf7420d434109974bf425ca60e262"
+    },
+    "exact_initial_diagnosis": {
+      "bytes": 693,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr008/verification-exact-1/diagnosis.json",
+      "sha256": "2085a40c4ecfe4eb503aff2cb6860780fd5e53fb50198597e0336dbdbab20c07"
+    },
+    "mark_final": {
+      "bytes": 114506,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr008/verification-mark-1/result.json",
+      "sha256": "47d54127387b51ac7044bdabfd5d9228576c2ad8f4fba86042611fe11ea60e61"
+    },
+    "preservation": {
+      "bytes": 2485,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr008/verification-preservation-1/result.json",
+      "sha256": "680bf31c7bc84b3f248e67e5c8f957f2ce1ddaac6e51e65960f11e686c766d32"
+    },
+    "selftests": {
+      "bytes": 7998,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr008/verification-selftests-1/result.json",
+      "sha256": "2291b4e7cba0472d831d483ee2e7b8879546c76dfa35598e5060686b26686102"
+    }
+  },
+  "base_commit": "e2211a20bb0919b77506328e68867ff9357ec6c3",
+  "branch": "codex/qr-validation-baseline",
+  "criteria": {
+    "VR01": {
+      "evidence": "148 pinned source/evidence hashes, 90 archive and 8 bulk/4 confirmation raw parses, source rows and original grids; no producer parser imports",
+      "status": "PASS"
+    },
+    "VR02": {
+      "approval_sha256": "d3eeb12d0d5348f769a9493a215eb32e2f3be40c13ed4a0eb5607e7cef9effa0",
+      "evidence": "Whole-record fixed cutover, explicit BTC close conflict; frozen spec null approval remains historical",
+      "status": "PASS_USER_APPROVED_POLICY_A"
+    },
+    "VR03": {
+      "evidence": "All canonical closed row schemas, decimal types/units, independent identity preimages, proxy availability and UNKNOWN observed arrival",
+      "status": "PASS"
+    },
+    "VR04": {
+      "evidence": "Both roots, six complete grids each, 84878 rows per root, every raw/parent ref, 1h/4h/day and nested totals",
+      "status": "PASS"
+    },
+    "VR05": {
+      "evidence": "Recomputed full archive/REST/v2 tuples and deltas, including BTC79513.6->79509.9; no tolerance or field mixing",
+      "fields": 4222,
+      "hours": 4221,
+      "status": "PASS"
+    },
+    "VR06": {
+      "evidence": "9 byte-identical payloads, manifests differ only created_at; exact/huge arithmetic, rehashed negatives, future raw/catalog projection tests",
+      "not_reexecuted": "Producer atomic publication-failure tests; no third producer build authorized. QR checker never writes candidate datasets.",
+      "status": "PASS_DELIVERED_DATA_REPRODUCIBILITY"
+    },
+    "VR07": {
+      "evidence": "Only six new QR-owned files and fresh ignored audits; no source/native writes",
+      "frozen_files": 15,
+      "not_claimed": "QD broader276-file inventory was not independently rerun; never counted as QR verification",
+      "old_evidence_files_rehashed": 148,
+      "raw_mark_objects_crc_verified": 90,
+      "source_fingerprints": 7,
+      "status": "PASS_WITH_STATED_VERIFICATION_SCOPE"
+    },
+    "VR08": {
+      "remaining": [
+        "Frozen R3 decision/funding query plan and independent MARK support audit",
+        "Full-state economic replay and mature cost-aware labels",
+        "Dependency/purge/split and training plan validation",
+        "Fresh user confirmation before any model/scaler/calibrator fit"
+      ],
+      "required_queries": "NOT_EVALUATED",
+      "status": "OPEN"
+    }
+  },
+  "date": "2026-10-28",
+  "dispatch_id": "QF-DISPATCH-20261028-QR008-EXACT-DATA-REVIEW-1",
+  "economic_query_gate": "OPEN",
+  "exact": {
+    "discrepancies": {
+      "fields": 4222,
+      "full_tuple_file": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/source-discrepancies.jsonl",
+      "hours": 4221,
+      "sha256": "80215db0e251a700c7fe3d5c20eb07ec24191204b3d3474e40a507077a5f5ba5"
+    },
+    "input_catalog_sha256": "05b91231c6ff6214ec50b9dddd595f7fd1fa4184571f0518fe0f2752db150aa9",
+    "manifest_sha256": [
+      "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+      "c93557759de54a879aab582b196c8de36c99919712c439f810ab7f1d56e6e8a8"
+    ],
+    "payloads_identical": 9,
+    "symbols": {
+      "BTC_USDT": {
+        "decimal_suffix_rows": 7296,
+        "exact_volume_sum": "487594990078",
+        "fractional_volume_hours": 0,
+        "hourly_rows": 32856,
+        "source_prefix_rows": 25560
+      },
+      "ETH_USDT": {
+        "decimal_suffix_rows": 7296,
+        "exact_volume_sum": "147845325893.4",
+        "fractional_volume_hours": 4106,
+        "hourly_rows": 32856,
+        "source_prefix_rows": 25560
+      }
+    }
+  },
+  "exact_status": "PASS_WITH_DISCLOSED_RETROSPECTIVE_SOURCE_LIMITATIONS",
+  "execution": {
+    "actual_market_queries_executed": 0,
+    "candidates_verified": 2,
+    "exact_final_seconds": 9.544,
+    "exact_initial_status": "REVISE_CHECKER_SCOPE_ERROR_RESOLVED",
+    "exact_real_executions": 2,
+    "exact_selftests": 25,
+    "mark_physical_rows": 56585147,
+    "mark_raw_objects": 90,
+    "mark_real_executions": 1,
+    "mark_real_seconds": 135.499,
+    "mark_selftests": 22,
+    "market_requests": 0,
+    "model_fits": 0,
+    "producer_builds_executed_by_qr": 0,
+    "producer_test_suites_executed_by_qr": 0,
+    "rows_per_candidate": 84878,
+    "selftest_status": "PASS",
+    "total_selftests": 47
+  },
+  "fit_authorized": false,
+  "limitations": [
+    "Retrospective selected snapshots, not historical point-in-time truth; first availability and revision history UNKNOWN.",
+    "Raw MARK completeness plus synthetic freshness checks is not actual query support or economic replay acceptance.",
+    "No source/native integration, signal/features/market labels, fit, activation, trading or service operation.",
+    "QR007 accepted synthetic ledger remains frozen; not rerun or generalized to market labels in this task."
+  ],
+  "mark": {
+    "alias_groups": 6,
+    "all_gaps_gt60": 74,
+    "amendment_sha256": "0b33bf4272bbb87bb33d1e19fe27ab7e5a7765ddd2b98baf4a4678530bc17ece",
+    "by_symbol": {
+      "BTC_USDT": {
+        "alias_rows": 6,
+        "canonical_observations": 28549018,
+        "compressed_bytes": 397623903,
+        "objects": 45,
+        "physical_rows": 28549024,
+        "within_month_gaps_gt120": 26,
+        "within_month_gaps_gt180": 21,
+        "within_month_gaps_gt60": 34,
+        "within_month_max_gap_us": 2529124186
+      },
+      "ETH_USDT": {
+        "alias_rows": 0,
+        "canonical_observations": 28036123,
+        "compressed_bytes": 320772891,
+        "objects": 45,
+        "physical_rows": 28036123,
+        "within_month_gaps_gt120": 24,
+        "within_month_gaps_gt180": 19,
+        "within_month_gaps_gt60": 40,
+        "within_month_max_gap_us": 2547948272
+      }
+    },
+    "compressed_bytes": 718396794,
+    "cross_month_connections": 88,
+    "cross_month_max_gap_us": 45679966,
+    "handoff_sha256": "30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce",
+    "normalized_points_written": false,
+    "plan_sha256": "19cd063f596746696efb2cfdd308205c8fad040763d55ea02ce7a622e1531ce5",
+    "required_queries": "NOT_EVALUATED",
+    "result_sha256": "3f601ebf45b2e97825b9c701234060a3348e47e508c28211b98572ed38f5a21e"
+  },
+  "mark_raw_status": "PASS_WITH_GAPS",
+  "namespace": "qr008.independent-exact-data-review",
+  "next_step": "Coordinator supplies explicit frozen R3 query/replay plan for separate review. This checkpoint stops after owned commits; do not start fitting.",
+  "producer_commit": "383c5acccbaee652c5d9f5c84e936b7cedfa7070",
+  "producer_report_commit": "887d19629726c384a7cb88e9c9de1ff66534ee92",
+  "producer_sha256": "9e0d36333fc0951f5b7cc51eb10b2873a115f91239fba550bdfd8a178b244448",
+  "schema_version": 1,
+  "source_spec_commit": "8b9e85e5c041fcf9167940520035693562f761ba",
+  "source_spec_sha256": "cd0e123d019b428e7bd12754e553c0322d4aac5593537b07752bab777280bdc0",
+  "task_id": "QF-QR-008-EXACT-DATA-REVIEW",
+  "training_ready": false,
+  "validator_commit": "9cae8458fb85e474a047fc1793abe0458cd83ab3",
+  "validator_files": {
+    "research/qr008/validate_exact_history.py": {
+      "bytes": 31353,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/qr008/validate_exact_history.py",
+      "sha256": "324ab2d1b4cc1b529f253ac75b12aeb7b30670f75ed1d7941ca53b3ace9c483f"
+    },
+    "research/qr008/validate_mark_raw.py": {
+      "bytes": 18497,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/qr008/validate_mark_raw.py",
+      "sha256": "1e7e03344f5418f696409243f4d43379bd5fb2dbf6286552300e8627556c9e06"
+    },
+    "tests/qr_research/test_qr008_exact_history.py": {
+      "bytes": 13580,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/tests/qr_research/test_qr008_exact_history.py",
+      "sha256": "c279a0608b20270eb3fa3e9feabf6ea821a80dba156eab0c58da5a8ffe9dba63"
+    },
+    "tests/qr_research/test_qr008_mark_raw.py": {
+      "bytes": 9968,
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/tests/qr_research/test_qr008_mark_raw.py",
+      "sha256": "3a8e0479bd71aeec50dcfc9a2f29fe4c3276788886c76acb957ff87d1d5141df"
+    }
+  },
+  "worktree": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot"
+}
