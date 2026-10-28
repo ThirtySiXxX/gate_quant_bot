@@ -1,0 +1,269 @@
+{
+  "approval_sha256": "d3eeb12d0d5348f769a9493a215eb32e2f3be40c13ed4a0eb5607e7cef9effa0",
+  "builder_sha256": "9e0d36333fc0951f5b7cc51eb10b2873a115f91239fba550bdfd8a178b244448",
+  "builds": [
+    {
+      "bytes": 134212899,
+      "elapsed_seconds_including_verify": 20.226740333018824,
+      "manifest_sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+      "root": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate",
+      "status": "PENDING_INDEPENDENT_REVIEW"
+    },
+    {
+      "bytes": 134212899,
+      "elapsed_seconds_including_verify": 20.15161733306013,
+      "manifest_sha256": "c93557759de54a879aab582b196c8de36c99919712c439f810ab7f1d56e6e8a8",
+      "root": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-reproducibility",
+      "status": "PENDING_INDEPENDENT_REVIEW"
+    }
+  ],
+  "candles": [
+    {
+      "bytes": 37635437,
+      "first_bar_open_us": 1672531200000000,
+      "instrument_id": "gate:usdt:BTC_USDT",
+      "interval_seconds": 3600,
+      "last_bar_close_us": 1790812800000000,
+      "last_bar_open_us": 1790809200000000,
+      "last_bar_usable_before_cutoff": false,
+      "path": "candles/BTC_USDT-3600s.jsonl",
+      "rows": 32856,
+      "sha256": "1f14794a992d2551df6046752e433ecf53103a7411e36a026122133f9398ffaf"
+    },
+    {
+      "bytes": 17175047,
+      "first_bar_open_us": 1672531200000000,
+      "instrument_id": "gate:usdt:BTC_USDT",
+      "interval_seconds": 14400,
+      "last_bar_close_us": 1790812800000000,
+      "last_bar_open_us": 1790798400000000,
+      "last_bar_usable_before_cutoff": false,
+      "path": "candles/BTC_USDT-14400s.jsonl",
+      "rows": 8214,
+      "sha256": "c491a1cb77c299b3abb484f9887c63886161454b5527a76012119e76112466bd"
+    },
+    {
+      "bytes": 10008996,
+      "first_bar_open_us": 1672531200000000,
+      "instrument_id": "gate:usdt:BTC_USDT",
+      "interval_seconds": 86400,
+      "last_bar_close_us": 1790812800000000,
+      "last_bar_open_us": 1790726400000000,
+      "last_bar_usable_before_cutoff": false,
+      "path": "candles/BTC_USDT-86400s.jsonl",
+      "rows": 1369,
+      "sha256": "b39bba407556238c07cf3d38ccf5a20ac06a2faf3d79cfc4d6af53155ab2e662"
+    },
+    {
+      "bytes": 37576141,
+      "first_bar_open_us": 1672531200000000,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "interval_seconds": 3600,
+      "last_bar_close_us": 1790812800000000,
+      "last_bar_open_us": 1790809200000000,
+      "last_bar_usable_before_cutoff": false,
+      "path": "candles/ETH_USDT-3600s.jsonl",
+      "rows": 32856,
+      "sha256": "58e0f909b02c431adaa59305dcffcd9c037f6c1ee1bfd67cfcd389ed5aaa10b4"
+    },
+    {
+      "bytes": 17160132,
+      "first_bar_open_us": 1672531200000000,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "interval_seconds": 14400,
+      "last_bar_close_us": 1790812800000000,
+      "last_bar_open_us": 1790798400000000,
+      "last_bar_usable_before_cutoff": false,
+      "path": "candles/ETH_USDT-14400s.jsonl",
+      "rows": 8214,
+      "sha256": "750fe1caf131e8d488af7c2e17b0e214a3b919c6ee27eeb462f55997b628ba99"
+    },
+    {
+      "bytes": 10006464,
+      "first_bar_open_us": 1672531200000000,
+      "instrument_id": "gate:usdt:ETH_USDT",
+      "interval_seconds": 86400,
+      "last_bar_close_us": 1790812800000000,
+      "last_bar_open_us": 1790726400000000,
+      "last_bar_usable_before_cutoff": false,
+      "path": "candles/ETH_USDT-86400s.jsonl",
+      "rows": 1369,
+      "sha256": "bd1bbecbc41c890518cfbe17195bea31627d0f8b202cedbcabf27df78791035f"
+    }
+  ],
+  "catalog_source_roles": {
+    "CORROBORATION_ONLY": 4,
+    "SELECTED_ARCHIVE_PREFIX": 70,
+    "SELECTED_DECIMAL_REST_SUFFIX": 8,
+    "SHADOW_ARCHIVE_SUFFIX": 20
+  },
+  "checks": {
+    "different_fields": 4222,
+    "different_hours": 4221,
+    "fractional_hourly_volume_rows": {
+      "gate:usdt:BTC_USDT": 0,
+      "gate:usdt:ETH_USDT": 4106
+    },
+    "full_period_volume_contracts": {
+      "gate:usdt:BTC_USDT": {
+        "14400": "487594990078",
+        "3600": "487594990078",
+        "86400": "487594990078"
+      },
+      "gate:usdt:ETH_USDT": {
+        "14400": "147845325893.4",
+        "3600": "147845325893.4",
+        "86400": "147845325893.4"
+      }
+    },
+    "historical_first_availability": "UNKNOWN",
+    "historical_revision_history": "UNKNOWN",
+    "independent_candidate_validation": "NOT_EXECUTED",
+    "independent_checker_commit": null,
+    "independent_checker_sha256": null,
+    "model_fits": 0,
+    "native_activation": false,
+    "network_requests": 0,
+    "row_counts": {
+      "candles/BTC_USDT-14400s.jsonl": 8214,
+      "candles/BTC_USDT-3600s.jsonl": 32856,
+      "candles/BTC_USDT-86400s.jsonl": 1369,
+      "candles/ETH_USDT-14400s.jsonl": 8214,
+      "candles/ETH_USDT-3600s.jsonl": 32856,
+      "candles/ETH_USDT-86400s.jsonl": 1369
+    },
+    "status": "PASS_PRODUCER_RECOMPUTATION_ONLY"
+  },
+  "code_commit": "383c5acccbaee652c5d9f5c84e936b7cedfa7070",
+  "files": [
+    {
+      "bytes": 896,
+      "path": "candidate-checks.json",
+      "sha256": "6611d13a09d1306c290e30405e09d3d1552c43ddef154083d7845c1d26d3afbc"
+    },
+    {
+      "bytes": 17175047,
+      "path": "candles/BTC_USDT-14400s.jsonl",
+      "sha256": "c491a1cb77c299b3abb484f9887c63886161454b5527a76012119e76112466bd"
+    },
+    {
+      "bytes": 37635437,
+      "path": "candles/BTC_USDT-3600s.jsonl",
+      "sha256": "1f14794a992d2551df6046752e433ecf53103a7411e36a026122133f9398ffaf"
+    },
+    {
+      "bytes": 10008996,
+      "path": "candles/BTC_USDT-86400s.jsonl",
+      "sha256": "b39bba407556238c07cf3d38ccf5a20ac06a2faf3d79cfc4d6af53155ab2e662"
+    },
+    {
+      "bytes": 17160132,
+      "path": "candles/ETH_USDT-14400s.jsonl",
+      "sha256": "750fe1caf131e8d488af7c2e17b0e214a3b919c6ee27eeb462f55997b628ba99"
+    },
+    {
+      "bytes": 37576141,
+      "path": "candles/ETH_USDT-3600s.jsonl",
+      "sha256": "58e0f909b02c431adaa59305dcffcd9c037f6c1ee1bfd67cfcd389ed5aaa10b4"
+    },
+    {
+      "bytes": 10006464,
+      "path": "candles/ETH_USDT-86400s.jsonl",
+      "sha256": "bd1bbecbc41c890518cfbe17195bea31627d0f8b202cedbcabf27df78791035f"
+    },
+    {
+      "bytes": 237103,
+      "path": "input-catalog.json",
+      "sha256": "9cae44ac524d2665cb738ad52713b9e961636438436a2f931fc5df806db20766"
+    },
+    {
+      "bytes": 4407180,
+      "path": "source-discrepancies.jsonl",
+      "sha256": "80215db0e251a700c7fe3d5c20eb07ec24191204b3d3474e40a507077a5f5ba5"
+    }
+  ],
+  "full_build_attempts": 2,
+  "independent_candidate_checker": {
+    "commit": null,
+    "sha256": null,
+    "status": "NOT_EXECUTED"
+  },
+  "input_catalog_sha256": "05b91231c6ff6214ec50b9dddd595f7fd1fa4184571f0518fe0f2752db150aa9",
+  "labels": 0,
+  "limitations": [
+    "Retrospective source snapshot; historical first availability/revisions UNKNOWN.",
+    "Bar-close research proxy, not historical PIT evidence.",
+    "Source segmentation explicitly approved; provider historical truth unproved.",
+    "No funding/MARK transform, query-coverage acceptance, ledger acceptance or label/training readiness."
+  ],
+  "mark_execution": false,
+  "mark_owner_design_review_commit": "2cd485b5f8ae8cce07a6b4d3e89e37a036b14540",
+  "market_replays": 0,
+  "model_fits": 0,
+  "namespace": "qd008.exact-ohlcv-candidate-summary",
+  "native_activation": false,
+  "network_requests": 0,
+  "preservation": {
+    "all_matched": true,
+    "old_evidence_files": 276,
+    "old_evidence_inventory_sha256": "cf6326f363b42995db505c55439c56ae6a1d013be0c4a87bb875fed526a340fc",
+    "source": {
+      "branch": "main",
+      "head": "cae0d2395adf2cd3905e41cb1c16748c8247c32c",
+      "index_sha256": "7b518de8325f6f420207fcd49f1821a8fddbe76ffc214fea922180b006c1cf80",
+      "staged_diff_sha256": "c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce",
+      "status_entry_count": 72,
+      "status_sha256": "2a358fa935fea949c6c34fba46c5f07d6e08f6f1ed5066da7e6f12c570904649",
+      "unstaged_diff_sha256": "35d57c81948f2de4c2c6e56db9cda60a507b06e0aa39583585cdb30505d8fc2d"
+    }
+  },
+  "producer_test_sha256": "ec0306a8ceb3b1f846862097959f4f26e7e5096381bcee3633327abbed10bb0c",
+  "reproducibility": "All nine payload files byte-identical; manifests differ only in created_at_utc.",
+  "schema_version": 1,
+  "scope": {
+    "end_exclusive_us": 1790812800000000,
+    "end_exclusive_utc": "2026-10-01T00:00:00Z",
+    "expected_rows_per_instrument": {
+      "14400": 8214,
+      "3600": 32856,
+      "86400": 1369
+    },
+    "extra_instruments": false,
+    "instruments": [
+      "gate:usdt:BTC_USDT",
+      "gate:usdt:ETH_USDT"
+    ],
+    "market": "USDT_linear_perpetual",
+    "market_requests_authorized": 0,
+    "model_fits_authorized": 0,
+    "start_inclusive_utc": "2023-01-01T00:00:00Z",
+    "start_us": 1672531200000000,
+    "total_rows_both_instruments": 84878
+  },
+  "source_differences": {
+    "btc_close_conflict": {
+      "old_close": "79513.6",
+      "selected_close": "79509.9",
+      "selection": "complete REST row by approved fixed segment",
+      "timestamp_raw_seconds": 1787925600
+    },
+    "fields": 4222,
+    "hours": 4221,
+    "sha256": "80215db0e251a700c7fe3d5c20eb07ec24191204b3d3474e40a507077a5f5ba5",
+    "volume_sum_delta_contracts": {
+      "BTC_USDT": "1226933",
+      "ETH_USDT": "1802138.4"
+    }
+  },
+  "specification_commit": "8b9e85e5c041fcf9167940520035693562f761ba",
+  "specification_sha256": "cd0e123d019b428e7bd12754e553c0322d4aac5593537b07752bab777280bdc0",
+  "status": "PENDING_INDEPENDENT_REVIEW",
+  "tests": {
+    "focused_seconds": 0.122,
+    "frontend": "NOT_RERUN_NO_FRONTEND_CHANGE",
+    "offline_python_seconds": 11.361,
+    "offline_python_tests_passed": 288,
+    "producer_methods_passed": 26
+  },
+  "total_new_output_bytes": 268425798
+}

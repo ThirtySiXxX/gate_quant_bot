@@ -1,6 +1,6 @@
 # QF-QD-008-DATA-REPAIR: engineering preflight
 
-2026-10-28 Australia/Melbourne. **IMPLEMENTATION_IN_PROGRESS; MARK_DESIGN_ACCEPT.**
+2026-10-28 Australia/Melbourne. **PENDING_INDEPENDENT_REVIEW; MARK_DESIGN_ACCEPT.**
 Current dispatch `QF-DISPATCH-20261028-QD008-EXACT-CANDIDATE-1` authorizes
 the exact JSONL/UTC-microsecond builder and two bounded offline candidate builds.
 Earlier preflight statements below are preserved history, superseded by the
@@ -226,3 +226,95 @@ Final full offline Python regression after the last test refinements:
 **288 passed in11.361s**, using the existing guarded socket-blocked runner above.
 Mock HTTP200/500 and injected disk-failure logs are fixtures, not real requests.
 No frontend/runtime code changed; no new JS run or old JS pass is claimed here.
+
+## Two exact candidates published — final handoff and stop
+
+Pre-build implementation commit:
+`383c5acccbaee652c5d9f5c84e936b7cedfa7070`.
+MARK owner design ACCEPT checkpoint:
+`2cd485b5f8ae8cce07a6b4d3e89e37a036b14540`.
+Code/test hashes above remain exact. Only metadata/report changes follow these
+two actual full builds; no third build or new source intake occurred.
+
+| Build | Ignored root under `research/.data/qd008/` | Seconds including validation | Bytes including manifest | Manifest SHA256 |
+| --- | --- | ---: | ---: | --- |
+| 1 | `exact-ohlcv-v3-candidate` | 20.226740333018824 | 134212899 | `c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91` |
+| 2 | `exact-ohlcv-v3-reproducibility` | 20.15161733306013 | 134212899 | `c93557759de54a879aab582b196c8de36c99919712c439f810ab7f1d56e6e8a8` |
+
+Absolute candidate root:
+`/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate`.
+Reproduction root is its sibling `exact-ohlcv-v3-reproducibility`.
+Both final inventories have exactly10 files: six candles JSONL, input catalogue,
+all source discrepancies, producer checks and manifest. All nine payload files
+are byte-identical between roots; manifests differ only in created_at_utc. Each
+root is below512MiB, each build below300s; total new bytes268425798 <1GiB.
+No failed staging root remains. Raw objects were referenced read-only, not copied.
+Local ignore rule and zero-byte permanent publication lock are supporting files
+outside the two candidate roots; neither is committed or an extra dataset build.
+
+Sanitized tracked handoff: `research/qd008/results/candidate-summary.json`, SHA256
+`c46aec4353a8d21842fbe5d7de562b3c868aca6a0e01b0a52defd210aa249d1a`.
+It contains all nine file identities, six row counts/ranges, code/spec/approval
+identities, resource results, exact test counts and preservation fingerprints.
+Canonical input-catalogue identity (hash excludes file LF):
+`05b91231c6ff6214ec50b9dddd595f7fd1fa4184571f0518fe0f2752db150aa9`.
+Actual catalogue file SHA (includes LF):
+`9cae44ac524d2665cb738ad52713b9e961636438436a2f931fc5df806db20766`.
+Discrepancy file SHA:
+`80215db0e251a700c7fe3d5c20eb07ec24191204b3d3474e40a507077a5f5ba5`.
+
+Per instrument:32856 hourly/8214 four-hour/1369 daily, total84878 rows. Canonical
+rows have exact UTC microsecond clocks and explicit historical-first-availability
+null/reason. The complete terminal bars closing at cutoff are stored; their
+research availability makes them unusable for decisions strictly before cutoff.
+Direct hourly-to-day and six-four-hour-to-day values agree, with direct24-hour
+parent lineage saved. Exact total volume is487594990078 contracts for BTC and
+147845325893.4 for ETH at all three periods. ETH retains4106 fractional hourly
+volumes; this does not change executable ticket quantities or multiplier policy.
+
+Catalogue roles are70 selected prefix archives,20 shadow suffix archives,8 selected
+decimal REST and4 corroborations. All4221 differing hours/4222 fields retain both
+complete OHLCV tuples plus old v2 values/locations and raw/archive/REST references.
+The BTC close79513.6→79509.9 is selected with the complete approved REST row, not
+combined with archive fields. Net volume differences versus old data are1226933
+BTC and1802138.4 ETH contracts. Source-discrepancy `timestamp` retains the pinned
+raw-audit UTC-seconds convention; canonical candle clocks are microseconds. Exact
+source strings remain in immutable raw, resolved by full source refs/catalogue.
+Neither provider history nor original publication/revision timing is proved.
+
+Historical invocation record (two separate existing-interpreter processes, same
+code and inputs, one destination per invocation; **do not rerun existing roots**):
+
+```python
+import signal, socket
+from pathlib import Path
+def offline(*a, **k): raise AssertionError('QD008 full build network forbidden')
+socket.create_connection = socket.socket.connect = socket.socket.connect_ex = offline
+signal.alarm(300)
+from research.qd008 import repair_history as r
+coord = Path('/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination')
+# invocation1 destination: research/.data/qd008/exact-ohlcv-v3-candidate
+# invocation2 destination: research/.data/qd008/exact-ohlcv-v3-reproducibility
+result = r.build(
+    '/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/qr008/volume-recovery-spec.json',
+    coord / 'qr008-source-policy-approval.json', destination,
+    '383c5acccbaee652c5d9f5c84e936b7cedfa7070')
+```
+
+Every build reread/recomputed staged rows, source references, exact data bytes,
+hashes and complete inventory before publication. The separate final handoff
+check only read/hashes/compares both published trees and old fingerprints; it did
+not derive/build a third candidate. All7 main fingerprints and the276-file old
+evidence inventory again exactly matched the pre-build values above. QD007,
+QD004/005, source main/index/user work, native runtime and shared journals stay
+unchanged. Whitespace and final exact allocated-file checks pass before commit.
+
+Both manifests explicitly state PENDING_INDEPENDENT_REVIEW; candidate checker
+execution is NOT_EXECUTED with null commit/hash. Normative QR spec/oracle identities
+are separately bound and never represented as candidate acceptance. QR now needs
+its own independent parser/aggregation/lineage/clock/source validation against this
+exact code/catalogue/data, not another producer verification run. No acceptance
+claim is made for funding/MARK transformation or required queries, QD007 ledger,
+market replay, economic labels, features/splits/statistics or training readiness.
+Fresh user authorization remains necessary before any fit. Stop here; no cross-
+chat reply, merge/push/integration, app/engine, Windows/NAS or scheduling action.

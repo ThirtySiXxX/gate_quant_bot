@@ -20,6 +20,14 @@ verification within300s/512MiB; raw files are referenced, not copied. Candidate
 states remain PENDING_INDEPENDENT_REVIEW; unexecuted checker identities are null.
 No power-loss durability, network filesystem or native consumer claim is made.
 
+Implementation commit `383c5acccbaee652c5d9f5c84e936b7cedfa7070` now has26 passing
+producer tests and288 passing offline Python regressions. Both authorized full
+builds succeeded and are PENDING_INDEPENDENT_REVIEW; all nine payload files are
+byte-identical. Exact manifests, timings/bytes, preservation evidence and remaining
+gates are recorded in `results/candidate-summary.json` and the QD008 role report.
+The two-build allowance is consumed. No new build or implementation continuation
+is inferred; stop for QR independent candidate acceptance.
+
 The following earlier proposals do not override that frozen contract.
 Dispatch `QF-DISPATCH-20261028-QD008-ENGINEERING-PREFLIGHT-1`; base
 `45bf3e036516b97570b3630cc19684af26713132`, branch `codex/qd-cache-safety`.
