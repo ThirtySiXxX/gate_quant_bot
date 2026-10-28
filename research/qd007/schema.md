@@ -1,6 +1,6 @@
 # QD007 synthetic event ledger: typed API checkpoint
 
-Status: **READY_FOR_QR_SCHEMA_REVIEW**. Proposal `qd007-synthetic-r1`,
+Status: **READY_FOR_QR_SCHEMA_REVIEW**. Proposal `qd007-synthetic-r2`,
 2026-10-28 Australia/Melbourne. No implementation exists at this checkpoint.
 QD sole implementation editor; QR financial reviewer and independent validator.
 Parent QD: `9bb3c0ec2b57e7154a51e56d795645c273c1308d`.
@@ -92,6 +92,21 @@ an obligation revision is never a posting revision. Same business key/content is
 an idempotent no-op. Different content under the same key quarantines; source
 row, record export ID or entry ID cannot make a duplicate cash transition.
 
+**R05 global ownership restriction:** within a ledger, each logical entity's ID
+has one owner `(instrument_id,trajectory_id,scenario_id)`, independent of revision.
+The logical kinds are fill, funding event, obligation, posting, assertion,
+valuation, reserves, episode, lot and leg. Different kinds may reuse text, but
+within a kind the same ID cannot belong to both coins. Register derived IDs and
+Fill-created fee obligations under these rules too; later obligation revisions
+refer to that existing owner. Conflicting owners reject ID_SCOPE_CONFLICT before
+any batch transition. Thus BTC fill f1 and ETH fill f1 reject, whereas BTC f_btc
+and ETH f_eth with distinct obligations/derived IDs work in one account. Bare
+episode_id in readiness is unambiguous under this restriction. Every origin,
+lot/range, obligation, posting/corrects and assertion reference must additionally
+match the referring record's instrument/trajectory/scenario and expected kind;
+unique text alone is not proof of a valid cross-reference. Order/decision IDs
+remain instrument-scoped repeated references, not globally dereferenced entities.
+
 ## 3. Immutable ledger configuration
 
 `LedgerConfig` has exactly:
@@ -107,6 +122,18 @@ row, record export ID or entry ID cannot make a duplicate cash transition.
 | rules | list[Rule], defined below, IDs unique |
 | expected_funding_snapshots | list[{instrument_id:Inst,event_id:ID,snapshot_at_us:T,mapping_rule_id:ID}], sorted by instrument/time/event; explicit complete synthetic event list, may be empty |
 | source_manifest | SourceManifest below, complete immutable literal-fixture catalogue |
+
+**R01 two identities:** full `config_sha256` hashes this entire canonical config,
+including source_manifest. `source_manifest_sha256` hashes that entire catalogue;
+both belong only to Audit. Separately, `causal_policy_sha256` hashes the canonical
+config with **source_manifest removed**, with no source row/content/catalogue hashes
+substituted. Its initial cash, IDs, immutable rules, allocation precision, declared
+range and complete *synthetic policy calendar* are all declared by initial_at.
+These are predeclared scenario assumptions, not later observed event facts.
+Changing an initial policy may change causal state identity; changing only a future
+fact and rehashing its catalogue/all source_refs must not. The exact causal state
+preimage is the Snapshot object in section 6 without state_sha256, containing
+causal_policy_sha256 but none of the full audit identities or source_refs.
 
 Rule keys: `rule_id:ID`, `kind:fee/funding/multiplier/valuation/sequence/booking/finality`,
 `instrument_id:Inst`, `valid_from_us:T`, `valid_to_exclusive_us:T|null`,
@@ -178,6 +205,20 @@ already captured eligibility snapshot or earlier processed fill rejects
 LATE_ORIGIN_UNSUPPORTED; this profile does not repair uncertain late fill tapes.
 Late **fee/funding revisions or cash** after close are fully supported.
 
+**R02 whole-candidate admission guard:** use the fixed expected_funding_snapshots,
+not just snapshots already submitted. For every candidate Fill F and expected
+snapshot S on that instrument, if F's inventory effect would precede S under
+economic time/tie policy but `F.available_at_us > S.snapshot_at_us`, reject
+LATE_ORIGIN_UNSUPPORTED. A strict earlier fill precedes S under either tie rule;
+an equal-time fill precedes S only for fills_before_snapshot. Also reject a
+decreasing fill economic/sequence order when fills are sorted by availability
+(including committed fills). These are admission guards before economic inventory
+sorting, independent of batch input order or grouping. No restated reconstruction
+is offered for a rejected origin. F filled=7/available=9 and expected S at8 rejects
+in [F,S], [S,F] or F alone; if S already committed, later F stops without changing
+S. F filled=available=7 followed by S at8 is supported. Legitimate same-economic-
+time tie-policy tests remain separate and do not license future inventory.
+
 The Fill atomically creates its original fee obligation revision 1, total
 `T=-abs(q)*multiplier*fill_price*fee_fraction`, allocated by filled quantities
 between closing/opening legs. It does **not** post that fee to C. An explicit
@@ -244,20 +285,33 @@ Allocation is exactly `{allocation_id:ID,episode_id:ID,lot_id:ID,
 unit_start:I,unit_end:I+,signed_cash_usdt:D}`. It references the original fill
 leg or snapshot range, including closed units. Per parent, ranges cannot overlap,
 all eligible units are covered, and signed amounts sum exactly to T. allocation_id
-is SHA256 of `[obligation_id,lot_id,unit_start,unit_end]`, unchanged across amount
-revisions. A zero parent may have empty allocations only if eligibility is empty.
+is SHA256 of the exact canonical array
+`[ledger_id,trajectory_id,scenario_id,instrument_id,obligation_id,lot_id,
+unit_start,unit_end]`, unchanged across amount revisions. A zero parent may have
+empty allocations only if eligibility is empty.
 Allocation ordering is FIFO economic opening order, then unit_start; closing
 leg precedes a reversal's opening leg. There is no netting unrelated obligations.
+R05 ownership validation applies to each reference before allocation arithmetic.
 
 Calculation is either `{kind:"authoritative_total"}` (a literal synthetic billed
 total/correction, not proof of rate-to-amount valuation) or exactly
 `{kind:"funding_formula",signed_contracts:Q,multiplier:D+,mark_price:D+,
 final_rate:D,valuation_at_us:T,valuation_available_at_us:T,
 rate_available_at_us:T,valuation_rule_id:ID,multiplier_rule_id:ID}`.
-For formula proof, quantity equals signed eligible units, rules/multiplier match,
-valuation is not later than snapshot and is fresh under the valuation rule, both
-input availability times are <=revision.available_at, and T equals funding_cash
-exactly. Known T requires a nonnull Calculation; authoritative_total is a tagged
+For formula proof, quantity equals signed eligible units, and rules/multiplier
+apply at the snapshot. **R03 this formula is a causal last-available MARK proxy:**
+`valuation_at_us <= valuation_available_at_us <= snapshot_at_us`, and age is
+`snapshot_at_us-valuation_at_us <= max_age_us`. `known_at_us` on the revision
+is knowledge of all calculation inputs: it must be >=snapshot_at_us,
+valuation_available_at_us and rate_available_at_us, then <=revision.available_at_us.
+Final rate availability may be later than snapshot; recognition waits for the
+revision's consumer availability. T must equal funding_cash exactly. Snapshot80,
+mark79/available90, rate95 and revision100 rejects FUTURE_PROXY_MARK; mark79/
+available79, rate95, known95/available100 passes (99 still unknown,100 recognized).
+An earlier known billed total uses authoritative_total instead of pretending its
+later calculation inputs were already known. This profile does not admit a new
+posthoc-settlement-mark scenario or a trade-price primary proxy.
+Known T requires a nonnull Calculation; authoritative_total is a tagged
 nonnull object. Only unknown T allows null calculation/UNKNOWN_AMOUNT. Missing/stale mark
 cannot be silently replaced with trade price. Later coverage work must separately
 establish actual marks/mappings; formula literals prove only arithmetic here.
@@ -287,7 +341,9 @@ match eligible origin ranges, sum to signed amount, and retain old lot/episode
 identity after close. A separately evidenced refund/surcharge is a new Posting
 with its own clocks, optional corrects link and exact signed amount. Missing
 corrects target rejects. Posting does not change T. An available established b
-changes C and B by b, pending by -b, so E is unchanged absent another event.
+always changes C and B by b, even if T is unknown. Only when pending levels are
+known before and after may its numeric pending delta=-b and E-invariance be
+reported; unknown levels/deltas/E stay null under R06 below.
 Identical redelivery has no extra entry; changing amount under the same posting
 identity conflicts even if an outer export ID/source row is new.
 
@@ -305,15 +361,33 @@ nonnull authority rejects UNPROVEN_FINALITY_AUTHORITY. Initial supersedes is
 null/NOT_APPLICABLE. Chains and duplicates follow the independent assertion key;
 asserted<=known<=available, predecessor knowledge/use clocks cannot move backward.
 
-The half-open origin scope must cover entry and **natural exit**, including exit
-fees, and all applicable kinds collectively. It also covers every referenced
-obligation's linked postings/corrections outside the origin interval. Refs must
-equal the current accepted obligation/posting revision set at the queried
-consumer cutoff, with P=0 and no unresolved expected events. Missing coverage,
-pending amount or later available revision invalidates latest completeness;
-old as-known assertions remain preserved. A later successor is effective only at
-its available_at, never at its coverage end, issuance, receipt or export time.
+**R04 admission and sufficiency are separate.** Admission checks shape, registered
+nonnull authority (or explicitly allowed null), chain, clocks, ownership and
+existence/type of referenced origins/revisions in the candidate/committed set.
+It does not require refs to be the latest revision, P=0, or complete episode
+coverage. A legal old/incomplete assertion is stored evidence, not an integrity
+failure; appending a valid later obligation revision or booking never latches
+the run merely because that assertion becomes stale.
+
+At query cutoff t select only available assertion heads (highest available
+revision of each assertion_id); superseded versions remain audit-only. Sufficiency
+then requires the half-open origin union to cover entry and **natural exit**,
+all relevant event kinds, and every linked posting/correction outside the interval.
+Refs must equal the available current obligation/posting set, P=0 and no unresolved
+expected events. Missing coverage, old refs, pending amount or a later available
+revision makes current readiness immature, not INTEGRITY_STOPPED. A successor
+becomes effective only at its available time. A null-authority head can make
+readiness invalid; after a valid registered-authority successor replaces it,
+the superseded null head cannot permanently contaminate the current query.
+Missing assertions alone are immature. Unregistered nonnull authority and hard
+identity/ref conflicts remain atomic integrity failures.
 Stage 1 returns coverage/readiness diagnostics, not an EpisodeLabel or target.
+
+For this rev1-only FundingSnapshot profile, mapping_rule_id=null is a legal but
+**permanently unqualified** snapshot in that instance. Later totals/postings do
+not prove its mapping or remove its coverage issue. It blocks affected readiness
+and increases in risk; resolution requires a new independently approved fixture/
+instance with an established mapping, not a hidden snapshot mutation.
 
 ### 4.6 Valuation and Reserves
 
@@ -371,14 +445,30 @@ determines which closed slices receive funding; units closed before snapshot
 receive none. Late corrections create new attribution versions, not edits to
 previously observed slice snapshots. No account cash is debited a second time.
 
+Accepted S02 fixed literals (positive/negative are independent cases):
+
+| Inputs / path | Result |
+| --- | --- |
+| total=0.02, weights=[6,6,6,2], quantum=0.01 | Prefix 0.01 each, residual -0.01: reject whole allocation ALLOCATION_QUANTUM_TOO_COARSE |
+| total=-0.02, same weights/quantum | Opposite residual +0.01: same whole-allocation rejection |
+| total=0, weights=[6,6,6,2] | [0,0,0,0] |
+| total=0, weights=[]; nonzero total, weights=[]; any zero/negative weight | First returns []; other cases reject, even with total zero for invalid weights |
+| Lot total +/-0.01,3 units, quantum=0.0001; closes1/1/1 | +/-[0.0033,0.0034,0.0033], each step uses remaining amount/units |
+| Same lot closes2/1 | +/-[0.0067,0.0033]; do not demand another closing path's per-unit rounding |
+| Close1/1/1, cumulative total revised -0.01 to -0.02 | Latest attribution [-0.0067,-0.0066,-0.0067]; total correction -0.01, cash change0 without Posting |
+
+For every later amount revision, recompute the **current attribution version** by
+the same original FIFO closing path with the new cumulative total; do not add a
+new total to old slices. Earlier as-known attribution is immutable.
+
 LotState exactly: `{lot_id,episode_id,instrument_id,opening_fill_id,opened_at_us,
 direction:long|short,initial_contracts:I+,remaining_contracts:I,
 entry_price:D+,multiplier:D+,live_ranges:list[UnitRange],closed_slice_ids:list[ID]}`.
 ClosedSlice exactly: `{slice_id,lot_id,episode_id,closing_fill_id,closed_at_us,
 unit_start:I,unit_end:I+,realized_price_pnl_usdt:D,entry_fee_cash_usdt:D,
-exit_fee_cash_usdt:D,funding_cash_usdt:D|null,attribution_revision:I+}`;
-unknown funding carries reason in the containing snapshot's null_reasons map,
-keyed by `closed_slices/<slice_id>/funding_cash_usdt`.
+exit_fee_cash_usdt:D,funding_cash_usdt:D|null,attribution_revision:I+,
+null_reasons:object}`. Unknown funding uses that slice's own
+`funding_cash_usdt:UNKNOWN_OBLIGATION_TOTAL` or UNRESOLVED_SNAPSHOT_COVERAGE.
 Closed lots/slices remain addressable. No averaged-entry division is necessary.
 
 BalanceSnapshot exactly: `{as_of_us:T,view:as_known|restated,
@@ -392,6 +482,17 @@ E=C+A-L+U, budget=C-L+min(U,0)-reserves, never add A/unrealized gains. Flat
 instruments have U=0 without a mark; held lots need a fresh causal mark and
 unchanged scenario multiplier. Missing/stale U, unresolved scheduled funding,
 unknown liabilities/reserves/rules yield null budget and new_risk_supported=false.
+R06 aggregation is exact: if any due expected snapshot is missing/unqualified,
+receivables_usdt and liabilities_usdt are both null, with
+UNRESOLVED_SNAPSHOT_COVERAGE; there is no invented zero obligation. If coverage
+is resolved but any obligation T is unknown, both aggregates are null with
+UNKNOWN_OBLIGATION_TOTAL. Otherwise sum per-obligation A and L separately.
+economic_equity_usdt is null whenever A/L or U is unknown, and budget is null
+whenever its required balances/reserves/coverage are unknown; use the same
+underlying reason (or STALE_VALUATION / UNKNOWN_RESERVES as applicable).
+cash_usdt and each known B remain numeric. Flat U=0 does not make unknown A/L/E
+known. Unknown receivables are not silently dropped, even though known A never
+enters spendable budget. A due expected event is one whose snapshot_at<=cutoff.
 Known budget<=0 also means false; positive budget alone is not an order approval.
 Actual margin is always null/NOT_MODELED. Reductions are supported when the
 position inventory is internally valid; unknown costs do not erase exits.
@@ -411,10 +512,12 @@ Ledger.audit() -> Audit
 No hidden wall clock, filesystem, global patch, API key or environment variable.
 Construction validates immutable config and catalogue; snapshots never change
 records. Batch input order is not an exchange sequence. Normalize/check complete
-batch, resolve existing/in-batch origins and revision dependencies, then evaluate
-on a private candidate state before one commit. Semantic event order is declared
-economic time/sequence for fill/snapshot inventory, and consumer available time
-for obligations/postings. Equal-time inventory uses the fixed scenario tie rule;
+batch, resolve existing/in-batch origins and revision dependencies, apply the R02
+whole-candidate/calendar availability guards, then evaluate on a private candidate
+state before one commit. Information visibility advances by available_at first;
+inventory calculations at each visible cutoff use economic time/sequence of
+**only available** fills/snapshots. Economic sorting never admits an unavailable
+fill to an earlier eligibility calculation. Equal-time inventory uses the fixed scenario tie rule;
 dependencies precede dependents at equal available time, with stable record keys
 only as serialization tiebreakers for independent events. Cycles, dangling origins,
 backward revision clocks and late origins affecting captured eligibility reject.
@@ -424,7 +527,7 @@ or their hash on failure. Exact duplicate transactions succeed as no-ops; new
 corroborating provenance is audit-only. Conflicting identities or other invalid
 records cause an atomic rejection with `LedgerError(code, json_pointer,
 recoverable_identity, input_sha256|null, incumbent_sha256|null,
-committed_sha256, disposition:reject|quarantine)`.
+committed_sha256, disposition:reject|quarantine, null_reasons)`.
 The engine retains a separate **run-integrity failure receipt**, with no financial
 transition. It then refuses further apply/snapshot/readiness with INTEGRITY_STOPPED;
 audit remains available. There is no reset or last-write-wins recovery API: use
@@ -439,20 +542,43 @@ duplicate_keys:list[Key],corroborated_keys:list[Key],entries:list[LedgerEntry],
 committed_before_sha256:H,committed_after_sha256:H}`. Key is
 `{instrument_id,record_type,record_id,revision}` within this ledger config.
 LedgerEntry exactly: `{entry_id:H,source_key:Key,transition:fee_claim|funding_claim|
-cash_posting|realized_pnl,allocation_id:H|null,episode_id:ID|null,
+cash_posting|realized_pnl,obligation_id:ID|null,allocation_id:H|null,episode_id:ID|null,
 economic_at_us:T,available_at_us:T,cash_delta_usdt:D,
-receivable_delta_usdt:D,liability_delta_usdt:D,realized_pnl_usdt:D}`.
-Null allocation/episode is allowed only for an empty-eligibility zero claim,
-with null reasons supplied by the receipt's normalized source record context.
-Unknown obligation totals produce no numeric entry. Delta splits of A/L handle
-sign changes without netting independent obligations. Entry ID hashes source key,
-transition and allocation; an arbitrary entry_id cannot bypass input deduplication.
+pending_delta_usdt:D|null,receivable_delta_usdt:D|null,
+liability_delta_usdt:D|null,realized_pnl_usdt:D,null_reasons:object}`.
+For each claim revision or Posting emit one **per-obligation balance entry**, not
+one copy of the cash per allocation. allocation_id is null/AGGREGATE_OBLIGATION;
+episode_id is its unique owning episode, or null/AGGREGATE_OBLIGATION if a reversal
+fee spans episodes. Per-lot attribution stays in the source allocations/slices.
+Realized PnL emits one row per FIFO closed slice: obligation_id=null/NOT_APPLICABLE,
+allocation_id and episode_id known, cash_delta=realized_pnl, and pending/A/L
+deltas exactly 0 because it has no obligation effect. Entry identity hashes source
+key, transition and obligation_id or realized allocation_id. Empty-eligibility
+funding and unknown-to-unknown claims create no numeric balance entry; their
+normalized source observations remain in the committed journal.
+
+**R06 conditional deltas:** for an obligation transition, numeric delta is
+after-before only if that balance is known at both ends. Otherwise the affected
+pending/A/L delta is null, never 0: UNKNOWN_PRIOR_BALANCE for unknown->known,
+UNKNOWN_CURRENT_BALANCE for known->unknown, UNKNOWN_OBLIGATION_TOTAL when both
+are unknown. A Posting always emits its known cash_delta=b and realized_pnl=0;
+with unknown T it still advances C/B and has null pending/A/L deltas. A revision
+always has cash_delta=0 and realized_pnl=0; first known levels after an unknown
+claim are visible in ObligationState but their deltas remain null. Initial known
+fee claim starts from absent-obligation zero and has numeric deltas; a qualified
+nonempty funding snapshot starts with unknown levels, not zero. Never assert a
+numeric E-invariance proof while E is unknown. Sign changes of known A/L use
+their actual per-obligation before/after levels; unrelated claims are not netted.
 
 snapshot(t) includes only record/revision inputs available<=t and economic
 origins<=t; no future fields or final totals leak into C, P, inventory or U.
-State hash excludes future journal contents and export timestamps. It includes
-the fixed scenario/config identity (provenance, not a model feature). Changing a
-future revision cannot change any past decision snapshot. Unsupported late origin
+The exact state hash preimage is the Snapshot object below without state_sha256.
+It includes only causal_policy_sha256, available economic state and its cutoff;
+never full config/source/journal hashes, source_refs, record content hashes,
+unavailable facts or export timestamps. Full identities stay in Audit. Two fixtures
+with identical initial policy and available prefix but future T changed/rehash of
+catalogue and all source_refs have identical snapshot(t) and state_sha256, while
+their audit identities differ. Unsupported late origin
 reconstruction rejects; the later replay adapter must separately address fills
 and pending orders under its approved execution policy.
 
@@ -462,20 +588,26 @@ view, allowing late-discovered postings. It never overwrites snapshot(e).
 Restated budget is null/RESTATED_VIEW and new_risk_supported=false: this API is
 for audit only and cannot feed order budgets or historical decision features.
 
-Snapshot exactly: `{namespace,schema_version,profile:"qd007-synthetic-r1",
+Snapshot exactly: `{namespace,schema_version,profile:"qd007-synthetic-r2",
 ledger_id,trajectory_id,scenario_id,view,as_of_us,knowledge_cutoff_us,
+causal_policy_sha256:H,
 balances:BalanceSnapshot,lots:list[LotState],closed_slices:list[ClosedSlice],
-obligations:list[ObligationState],state_sha256:H}`. ObligationState exactly:
+obligations:list[ObligationState],coverage_issues:list[CoverageIssue],
+null_reasons:object,state_sha256:H}`. CoverageIssue exactly:
+`{instrument_id:Inst,event_id:ID,reason_code:MISSING_EXPECTED_SNAPSHOT|
+UNRESOLVED_SNAPSHOT_MAPPING}`. Missing due events need no fabricated obligation
+row; this list makes their unknown coverage explicit. ObligationState exactly:
 `{instrument_id,obligation_id,kind:fee|funding,origin_id,latest_revision:I+|null,
 T_usdt:D|null,B_usdt:D,P_usdt:D|null,A_usdt:D0|null,L_usdt:D0|null,
 allocation_refs:list[H],posting_refs:list[Key],null_reasons:object}`.
-Snapshot also requires null_reasons:object for nested output null paths.
-state_sha hashes the snapshot without state_sha256. Lists sort by business keys,
+Snapshot has no directly nullable fields, so its own null_reasons must be `{}`.
+Each nested output owns its own immediate nullable-field reason map; no duplicate
+root path annotations. Lists sort by business keys,
 except FIFO lots/slices which sort by opening/closing economic key then unit_start.
 
 Readiness exactly: `{episode_id,as_of_us,natural_exit_at_us:T|null,
 status:open|immature|complete|invalid,complete_at_us:T|null,
-assertion_refs:list[Key],blocking_reasons:list[str]}`. complete is **synthetic
+assertion_refs:list[Key],blocking_reasons:list[ID],null_reasons:object}`. complete is **synthetic
 cash/coverage readiness**, not an emitted valid training label. It requires
 natural flat, latest available revision refs, all relevant kinds/exit covered,
 P=0 and no unresolved expected events. complete_at is max of exit and required
@@ -484,7 +616,45 @@ invalid readiness and is unusable;
 unregistered asserted authority is an integrity rejection. Supersession never
 rewrites earlier readiness. Censoring/targets/fold train eligibility remain stage 4.
 
-Audit exactly: `{namespace,schema_version,profile,ledger_id,config_sha256:H,
+R04 query precedence/state table (no row except hard admission failure latches):
+
+| Condition at cutoff, current available assertion heads only | Status / known fields |
+| --- | --- |
+| Hard rejected/conflicting input | INTEGRITY_STOPPED exception; inspect audit only |
+| Applicable current assertion has authority=null | invalid; complete_at=null/INVALID_ASSERTION_AUTHORITY; a valid successor can replace this head |
+| Episode still has exposure | open; natural_exit/complete_at null with OPEN_EPISODE |
+| Natural flat, due expected event missing or mapping=null | immature; complete_at null/UNRESOLVED_SNAPSHOT_COVERAGE |
+| Natural flat, nonempty eligibility with unknown T | immature; complete_at null/UNKNOWN_OBLIGATION_TOTAL |
+| Natural flat, known P!=0 | immature; complete_at null/UNSETTLED_OBLIGATION |
+| Natural flat, no assertion, stale revision refs or insufficient scope | immature; complete_at null/UNRESOLVED_FINALITY; stale legal assertion is not a hard conflict |
+| Natural flat, all current input/ref/scope conditions satisfied and P=0 | complete; complete_at is max required consumer availability |
+
+Empty declared calendar proves only absence of scheduled events, not that an
+existing nonempty obligation has known/zero T. Old superseded assertion heads are
+ignored for current sufficiency, while historical queries still see their own
+then-current head. Fixed oracle: A1 at10 covers T1=-0.05/B=-0.05; T2=-0.08 at20
+makes readiness immature/P=-0.03; Posting -0.03 at21 settles P but A1 is stale;
+A2 at22 covers T2/all postings and restores complete_at22. At10 complete_at10
+remains unchanged. Same complete candidate batch or availability-ordered batches
+must give those same queries without an integrity stop.
+
+Output field types without repeated annotations inherit the identically named
+input/config types (IDs, Inst, T, namespace/version constants); `view` is
+as_known|restated. Every output object is closed: missing, extra or wrongly typed
+fields are invalid, including float/bool numeric stand-ins and null without its
+reason. Local output null_reasons maps contain exactly their directly null fields.
+For ObligationState, latest_revision=null uses UNKNOWN_AMOUNT; T/P/A/L null use
+UNKNOWN_OBLIGATION_TOTAL, B stays D. For Readiness, natural_exit is null iff no
+actual natural exit exists, with OPEN_EPISODE even if a null-authority head also
+makes status invalid; complete_at reasons are in the table. ClosedSlice/BalanceSnapshot/
+LedgerEntry maps follow their tables above. Output-only reason codes supplement
+section 2 with UNKNOWN_OBLIGATION_TOTAL, UNKNOWN_PRIOR_BALANCE,
+UNKNOWN_CURRENT_BALANCE, UNRESOLVED_SNAPSHOT_COVERAGE, AGGREGATE_OBLIGATION,
+OPEN_EPISODE, UNSETTLED_OBLIGATION, UNRESOLVED_FINALITY,
+INVALID_ASSERTION_AUTHORITY. No unknown-zero coercion or additional balance field
+is accepted as a substitute for these exact nullable values.
+
+Audit exactly: `{namespace,schema_version,profile:"qd007-synthetic-r2",ledger_id,config_sha256:H,
 source_manifest_sha256:H,committed_sha256:H,committed_state:object,
 integrity:clean|stopped,failure_receipts:list[object]}`. committed_state exactly
 `{config:LedgerConfig,records:list[normalized records],derived_entries:list[LedgerEntry],
@@ -493,8 +663,13 @@ covers this full committed representation. Source provenance additions may chang
 committed_sha while leaving every financial snapshot state_sha unchanged.
 All returned structures are deep copies; mutation by a checker cannot mutate
 the ledger. Full audit reveals future fixture inputs; it is never a feature API.
-Each corroborating_source_refs object is exactly `{key:Key,source_ref:SourceRef}`;
-each failure_receipt has exactly the LedgerError fields specified above.
+Each corroborating_source_refs object is exactly `{key:Key,source_ref:SourceRef}`.
+FailureReceipt is exactly `{code:ID,json_pointer:str,recoverable_identity:Key|null,
+input_sha256:H|null,incumbent_sha256:H|null,committed_sha256:H,
+disposition:reject|quarantine,null_reasons:object}`. Nullable fields use respectively
+UNKNOWN_INPUT_IDENTITY, NONCANONICAL_INPUT and NO_INCUMBENT when unavailable;
+nonnull values have no null reason. These are audit-only output reasons. Every
+failure_receipt contains these fields; LedgerError exposes this same typed receipt.
 
 ## 7. Stage-1 acceptance and explicit deferrals
 
