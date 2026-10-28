@@ -1,8 +1,8 @@
-"""Finite, offline QD009 producer fixtures; no app, exchange or real data.
+"""Offline QD009 repair candidate and selected development tests.
 
-CLI --freeze DIR writes immutable case/input/environment identities. --formal DIR
-executes the one finite producer functional attempt. --benchmark DIR N REP runs
-one fixed ladder attempt, refuses overwriting evidence. Development uses unittest.
+Historical harness functions are retained for evidence compatibility. The repair
+CLI disables freeze/formal/benchmark operations under the human validation gate.
+Use an explicitly selected, directly relevant unittest; no app or market data.
 """
 from copy import deepcopy
 from pathlib import Path
@@ -20,6 +20,7 @@ import tempfile
 import time
 import traceback
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from research.qd009 import streaming_ledger as sl
@@ -29,7 +30,7 @@ _spec.loader.exec_module(b)
 BTC,ETH=sl.INSTRUMENTS
 INPUT_SCHEMA={'name':'qd009-synthetic-input-v1','fields':'slot slot_id causal_policy_sha256 permitted_facts before economic_inputs peer_states previous_invocation prior_state causal_config'.split()}
 OUTPUT_SCHEMA={'name':'qd009-synthetic-output-v1','fields':'outcome events decisions orders order_transitions reserve_dependencies next_state'.split()}
-STATE_SCHEMA={'name':'qd009-synthetic-state-v1','fields':'adapter_id contract_sha256 tracked_episode_ids value state_sha256'.split(),'value_fields':['invocations','spent','decision','order','ranges']}
+STATE_SCHEMA={'name':'qd009-synthetic-state-v1','fields':'adapter_id contract_sha256 tracked_episode_ids value state_sha256'.split(),'value_fields':['invocations','spent','decision','order','ranges','initializations','facts','peer_seen','facts_count']}
 INTENT_SCHEMA={'name':'qd009-synthetic-intent-v1','action':['open','reduce','close']}
 COUNTS=(12,5,7,8,5,7,3,11,7,9,9,7)
 REPLICAS={'S01.06':3,'S01.10':2,'S03.01':2,'S03.02':2,'S03.06':2,'S03.07':2,'S04.07':3,'S05.01':2,'S05.02':2,'S05.04':2,'S08.08':2,'S08.09':2,'S08.11':2,'S09.01':2,'S09.02':2,'S09.03':2,'S11.02':2,'S11.04':2,'S11.05':2,'S11.08':2,'S11.09':3,'S12.02':2,'S12.03':2,'S12.04':2,'S12.06':2}
@@ -44,12 +45,15 @@ socket.socket.connect_ex=offline
 
 
 def body(record):return {k:deepcopy(v) for k,v in record.items() if k not in sl.TRANSPORT}
-def dump(path,obj):Path(path).write_bytes(sl.canonical_bytes(obj)+b'\n')
+def dump(path,obj):sl._atomic(Path(path),obj)
 def jsonl(path,rows):
     h=hashlib.sha256();size=count=0
     with Path(path).open('xb') as f:
         for row in rows:
-            raw=sl.canonical_bytes(row)+b'\n';f.write(raw);h.update(raw);size+=len(raw);count+=1
+            raw=sl.canonical_bytes(row)+b'\n'
+            budget=sl._budget_for(path)
+            if budget:budget.issue(path,size+len(raw),len(raw))
+            f.write(raw);h.update(raw);size+=len(raw);count+=1
     return dict(relative_path=Path(path).name,sha256=h.hexdigest(),bytes=size,rows=count)
 
 
@@ -149,7 +153,7 @@ def benchmark_tape(n):
 
 class StreamingLedgerDevelopment(unittest.TestCase):
     def setUp(self):
-        self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name).resolve()
+        unit_root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');unit_root.mkdir(parents=True,exist_ok=True);self.tmp=SimpleNamespace(name=tempfile.mkdtemp(dir=unit_root));self.root=Path(self.tmp.name).resolve()
     def fixture(self,*args,**kw):
         f=Fixture(self.root/('fixture'+str(len(list(self.root.iterdir())))),*args,**kw);self.addCleanup(f.close);return f
 
@@ -224,7 +228,7 @@ class SyntheticPort:
     def validate_output(self,r):
         sl.shape(r,'outcome events decisions orders order_transitions reserve_dependencies next_state');self.validate_state(r['next_state'])
     def validate_state(self,s):
-        sl.shape(s,'adapter_id contract_sha256 tracked_episode_ids value state_sha256');sl.need(type(s['value']) is dict and set(s['value'])<=set(('invocations','spent','decision','order','ranges')),'INPUT_BINDING_MISMATCH')
+        sl.shape(s,'adapter_id contract_sha256 tracked_episode_ids value state_sha256');sl.need(type(s['value']) is dict and set(s['value'])<=set(('invocations','spent','decision','order','ranges','initializations','facts','peer_seen','facts_count')),'INPUT_BINDING_MISMATCH')
         sl.need(s['state_sha256']==sl.digest({k:v for k,v in s.items() if k!='state_sha256'}),'INPUT_BINDING_MISMATCH')
     def evaluate(self,p):
         at=p['slot']['at_us'];cfg=p['causal_config'];mode=cfg['mode'];state=deepcopy(p['prior_state']);value=state['value'];value['invocations']=value.get('invocations',0)+1
@@ -254,6 +258,11 @@ class SyntheticPort:
                 result['events'].append(f);result['order_transitions'].append(dict(order_id=intent['order_id'],at=p['slot'],status='filled' if abs(q)==o['remaining_contracts'] else 'partially_filled',fill_keys=[sl.key_of(f)],reason='synthetic'))
                 if cfg.get('cancel_remainder') and abs(q)<o['remaining_contracts']:result['order_transitions'].append(dict(order_id=intent['order_id'],at=p['slot'],status='cancelled',fill_keys=[],reason='synthetic-cancel'))
             result['outcome']='emit' if result['events'] else 'noop'
+        elif mode=='context':
+            value['initializations']=value.get('initializations',0)+(p['previous_invocation'] is None)
+            value['facts']=deepcopy(p['permitted_facts'])
+        elif mode=='copy_peer':
+            value['peer_seen']=p['peer_states'][0]['value']['invocations']
         elif mode=='mark_from_context':
             values=[x['value'] for sel in p['economic_inputs'] for x in sel['items'] if x['kind']=='query_status' and x['value']['key']['purpose']=='valuation']
             if values and values[0]['status']=='SUPPORTED':
@@ -324,7 +333,7 @@ def qg_config(which):
 
 
 class ControllerDevelopment(unittest.TestCase):
-    def setUp(self):self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name).resolve()
+    def setUp(self):unit_root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');unit_root.mkdir(parents=True,exist_ok=True);self.tmp=SimpleNamespace(name=tempfile.mkdtemp(dir=unit_root));self.root=Path(self.tmp.name).resolve()
     def make(self,c,facts=()):
         f=Fixture(self.root/'fixture',c=c,facts=facts);self.addCleanup(f.close);return f
     def test_partial_cancel_peer_state_restart(self):
@@ -348,7 +357,7 @@ class ControllerDevelopment(unittest.TestCase):
 
 def compare_reference(f,records,t,fee='0.0005',instruments=(BTC,),calendar=None,tie='snapshot_before_fills'):
     c,rs=b.bind(records,fee=fee,instruments=instruments,calendar=calendar,tie=tie)
-    c['initial_cash_usdt']=f.config['initial_cash_usdt']
+    c['initial_cash_usdt']=f.config['initial_cash_usdt'];c['allocation_quantum_usdt']=f.config['allocation_quantum_usdt'];c['rules']=deepcopy(f.config['rules'])
     for rule in c['rules']:
         if rule['kind']=='multiplier':rule['parameters']['base_per_contract']=next(x['parameters']['base_per_contract'] for x in f.config['rules'] if x['rule_id']==rule['rule_id'])
     ref=b.el.Ledger(c);ref.apply_batch(rs);expected=ref.snapshot(t);actual=f.balance(t)
@@ -767,4 +776,304 @@ def main():
     unittest.main(argv=[sys.argv[0]]+remaining)
 
 
-if __name__=='__main__':main()
+
+
+# Repair-r1 concrete fixtures. These are defined before CLI entry (moved below)
+# and will be serialized in full before any new formal attempt.
+def repair_b1(long_form=False):
+    records=[zero_reserve()];affected=[]
+    for j,start in enumerate((1,8,15)):
+        op=f'b1-open:{j}';c1=f'b1-close:{j}:1';c2=f'b1-close:{j}:3'
+        records.extend((one_fill(op,start,4),one_fill(c1,start+1,-1),one_fill(c2,start+2,-3)))
+        targets=([('fee:'+op,op,start,b.unit(op,0,4,op))] if j==0 else [('fee:'+c1,c1,start+1,b.unit(op,0,1,op)),('fee:'+c2,c2,start+2,b.unit(op,1,4,op))])
+        if j==2:targets.append(('fee:'+op,op,start,b.unit(op,0,4,op)))
+        affected+=targets
+    for oid,origin,econ,u in affected:
+        records.extend((b.revision(oid,origin,'-0.25',18,econ,2,'fee',u),b.posting('initial:'+origin,oid,'-0.25',19,u),b.revision(oid,origin,None,20,econ,3,'fee',u)))
+        if long_form:
+            records.extend((b.revision(oid,origin,'-0.2',30,econ,4,'fee',u),b.posting('refund:'+origin,oid,'0.05',40,u)))
+        else:
+            records.extend((b.revision(oid,origin,'-0.25',21,econ,4,'fee',u),b.revision(oid,origin,'-0.2',22,econ,5,'fee',u),b.posting('refund:'+origin,oid,'0.05',23,u),b.revision(oid,origin,'-0.3',24,econ,6,'fee',u),b.posting('surcharge:'+origin,oid,'-0.1',25,u)))
+    if long_form:
+        for i in range(128-len(records)):records.append(b.mark(f'b1-corroborating:{i}',17,'100'))
+    return records,primitive_config(records)
+
+
+def repair_readiness():
+    records=[zero_reserve(),one_fill('open',1,10),one_fill('close',9,-10)]
+    a=b.assertion(10,payments=());a['scope']['event_kinds']=['fill','fee'];a['obligation_revision_refs']=[dict(obligation_id='fee:open',revision=1),dict(obligation_id='fee:close',revision=1)]
+    rev=b.revision('fee:open','open','-0.1',20,1,2,'fee',b.unit('open',0,10));pay=b.posting('settle','fee:open','-0.1',21,b.unit('open',0,10))
+    a2=deepcopy(a);a2.update(available_at_us=22,asserted_at_us=22,known_at_us=22,revision=2,supersedes_revision=1,null_reasons={});a2['scope']['event_kinds']=['fill','fee','posting'];a2['obligation_revision_refs'][0]['revision']=2;a2['posting_refs']=[dict(posting_id='settle',revision=1)]
+    records.extend((a,rev,pay,a2));return records,primitive_config(records)
+
+
+def repair_many_live():
+    records=[one_fill(f'live:{i}',10+i,2) for i in range(128)]
+    for i in range(128):records.append(b.snapshot(f'fund:{i}',10+i,[b.unit(f'live:{j}',0,2,'live:0') for j in range(i+1)]))
+    for i in range(128):
+        snap=records[128+i];rev=b.revision('ob:fund:'+str(i),'fund:'+str(i),'-0.01',10+i,10+i)
+        # Independent pinned reference public allocation arithmetic, not the
+        # candidate's allocation wrapper, constructs the literal source rows.
+        amounts=b.el.allocate_pro_rata('-0.01',[2]*(i+1),'0.000001')
+        rev['allocations']=[b.allocation(rev['record_id'],amount,u) for amount,u in zip(amounts,snap['eligible_ranges'])];records.append(rev)
+    records.extend(b.mark(f'live-mark:{i}',138+i,'100') for i in range(126))
+    records.extend((one_fill('oldest-reduce',264,-1),b.revision('fee:live:0','live:0','-0.1',264,10,2,'fee',b.unit('live:0',0,2,'live:0'))))
+    c=primitive_config(records,tie='fills_before_snapshot');c['allocation_quantum_usdt']='0.000001';assert len(records)==512
+    return records,c
+
+
+def context_fixture(variant=0,unresolved=False):
+    facts=[]
+    for id,econ,available,price in [('a',1,2,'100'),('b',7,None if unresolved else 8,'101'),('equal',9,10,'102'),('future',19,20,'500' if variant else '103')]:
+        facts.append(dict(fact_key=id,instrument_id=BTC,schema_id='closed',economic_at_us=econ,scenario_available_at_us=available,observed_first_available_at_us=None,
+            cells=[dict(name='price',cell=dict(tag='known',type='D+',value=price))],raw_refs=[],null_reasons={'observed_first_available_at_us':'HISTORICAL_FIRST_AVAILABILITY_UNKNOWN',**({'scenario_available_at_us':'UNRESOLVED_AVAILABILITY'} if available is None else {})}))
+    c=primitive_config();c['initial_at_us']=10;c['initial_context']=dict(mode='closed_fact_prefix',from_us=0,schemas=['closed'])
+    c['fact_schemas']=[dict(schema_id='closed',kind='price',view_kind='closed_bar',interval_us=1,fields=[dict(name='price',type='D+',unit='USDT_per_base')])]
+    d=port_definition('P','policy',dict(mode='context'));d['fact_selectors']=[dict(selection_id='prefix',schema_id='closed',instruments=[BTC],mode='available_prefix')]
+    return install_ports(c,[d],[tick(10,'P'),tick(20,'P')]),facts
+
+
+REPAIR_CASE_IDS=set(UNIMPLEMENTED)|{'S05.04','S10.06','S11.09'}
+_OLD_RUN_CASE=run_case
+
+def _repair_run_case(id,parent,variant=0):
+    parent=Path(parent);fixture=None;created=0;checks=[]
+    def make(records=(),c=None,facts=None):
+        nonlocal fixture,created
+        created+=1;fixture=Fixture(parent/'fixture0',records,c or primitive_config(records),facts);return fixture
+    def check(ok,label):assert ok,label;checks.append(label)
+    def step(t):return fixture.advance(t,[i for i,r in enumerate(fixture.records) if r['available_at_us']<=t and fixture.ledger.state.get('events',list(sl.wire_key(r))) is None])
+    try:
+        if id=='S01.03':
+            records=[zero_reserve(),b.fill('long',5,10,'50000','0'),b.fill('short',25,-20,'50000','0')]
+            for i,t in enumerate((10,20,30,40)):
+                u=b.unit('long' if i<2 else 'short',0,10,'long' if i<2 else 'short');snap=b.snapshot('settlement:'+str(t),t,[u]);total=('-0.05','0.05','0.05','-0.05')[i]
+                rev=b.revision('ob:settlement:'+str(t),snap['record_id'],total,t+1,t,1,units=u)
+                rev['calculation']=dict(kind='funding_formula',signed_contracts=10 if i<2 else -10,multiplier='0.001',mark_price='50000',final_rate='0.0001' if i%2==0 else '-0.0001',valuation_at_us=t-1,valuation_available_at_us=t-1,rate_available_at_us=t+1,valuation_rule_id=b.rid('valuation'),multiplier_rule_id=b.rid('multiplier'))
+                records.extend((b.mark('funding-mark:'+str(t),t-1,'50000'),snap,rev))
+            f=make(records,config(records,fee='0',cash='1000'));step(41)
+            obs={o['obligation_id']:o['T_usdt'] for o in f.page(41,'obligations')};check([obs['ob:settlement:'+str(t)] for t in (10,20,30,40)]==['-0.05','0.05','0.05','-0.05'],'four funding signs/no proration');compare_reference(f,records,41,fee='0')
+        elif id=='S01.05':
+            op=one_fill('old',5,10);rev=one_fill('reverse',20,-16);op['fee_fraction']=rev['fee_fraction']='0.00025'
+            snap=b.snapshot('old-fund',10,[b.unit('old',0,10,'old')]);claim=b.revision('ob:old-fund','old-fund','-0.05',11,10,1,units=b.unit('old',0,10,'old'))
+            records=[zero_reserve(),op,snap,claim,rev];c=config(records,fee='0.00025',cash='1000',multiplier='1');f=make(records,c);step(11);past=f.view(11);step(20)
+            closed=f.page(20,'closed_slices')[0];check((closed['entry_fee_cash_usdt'],closed['exit_fee_cash_usdt'],closed['funding_cash_usdt'])==('-0.25','-0.25','-0.05'),'reversal old10/new6 fee .25/.15, funding stays old');check(f.view(11)==past,'old view immutable');check([l['remaining_contracts'] for l in f.page(20,'lots')]==[0,6],'new short6');compare_reference(f,records,20,fee='0.00025')
+        elif id in ('S01.09','S10.03'):
+            records,c=repair_readiness();f=make(records,c)
+            for t,status in ((10,'complete'),(20,'immature'),(21,'immature'),(22,'complete')):
+                step(t);r=f.ledger.readiness(dict(episode_id='episode:open',cutoff=dict(at_us=t,slot=0)));check(r['status']==status,'readiness '+str(t))
+                if t==10:old=f.view(10);check(r['complete_at_us']==10,'original complete10')
+                if t==22:check(r['complete_at_us']==22,'no inherited complete time')
+            check(f.view(10)==old,'earlier completeness immutable')
+        elif id in ('S01.12','S07.03'):
+            records,c=repair_b1(id=='S07.03');f=make(records,c);step(20);old=f.view(20);cp=f.checkpoint();f.restore(cp)
+            unknown=f.page(20,'closed_slices');byep={j:[x for x in unknown if x['episode_id']==f'episode:b1-open:{j}'] for j in range(3)}
+            check(all(x['entry_fee_cash_usdt'] is None and x['exit_fee_cash_usdt']=='0' for x in byep[0]),'entry unknown local')
+            check(all(x['entry_fee_cash_usdt']=='0' and x['exit_fee_cash_usdt'] is None for x in byep[1]),'exit unknown local')
+            check(all(x['entry_fee_cash_usdt'] is None and x['exit_fee_cash_usdt'] is None for x in byep[2]),'both unknown local')
+            end=40 if id=='S07.03' else 25;step(end);check(f.view(20)==old,'fold/checkpoint immutable old unknown');check(f.balance(end)['cash_usdt']==('998.8' if id=='S07.03' else '998.2'),'refund/top-up exact cash');compare_reference(f,records,end,fee='0')
+            if id=='S07.03':check(len(records)==128,'exact128 bodies across fold20/30/40')
+        elif id=='S07.02':
+            records,c=repair_many_live();f=make(records,c);f.advance(137,range(384));cp=f.checkpoint();f.restore(cp);f.advance(264,range(384,512))
+            check(len(f.page(264,'lots',limit=64))==128,'all128 live/original lots paged');check(f.ledger.state.location('lots','lot:live:0')['remaining_contracts']==1,'oldest partial exit');check(f.balance(264)['liabilities_usdt']=='1.38','128 unpaid claims plus late fee');check(f.page(264,'closed_slices')[0]['entry_fee_cash_usdt']=='-0.05','old lot exact split')
+            compare_reference(f,records,264,fee='0')
+        elif id.startswith('S03.'):
+            c,facts=context_fixture(variant if id in ('S03.01','S03.07') else 0,id=='S03.04')
+            if id=='S03.04':expect('FUTURE_DEPENDENCY',lambda:make(c=c,facts=facts));check(True,'unresolved required context rejected before initialization')
+            else:
+                f=make(c=c,facts=facts);context=f.ledger.state.meta('context_receipt');check(context['fact_count']==2,'original availability2/8 admitted exactly once')
+                if id=='S03.06' and variant==0:cp=f.checkpoint();f.restore(cp)
+                f.advance(10,[]);states=f.page(10,'adapter_states',1);check(states[0]['value']['initializations']==1 and len(states[0]['value']['facts'])==3,'equality10 is first ordinary release; initialize once');check(f.balance(10,1)['cash_usdt']=='1000','context never finance')
+                if id=='S03.06' and variant==1:cp=f.checkpoint();f.restore(cp)
+                if id=='S03.05':
+                    witness=preview_witness(f,20);w=deepcopy(witness);w[0]['reads'].append(dict(kind='fact',fact_key='a',field='scenario_available_at_us',cell=dict(tag='known',type='T',value=10),raw_refs=f.rows[0]['raw_refs']));request=f.request_at(20,[]);request['generated']=w;expect('INPUT_BINDING_MISMATCH',lambda:f.ledger.advance(request));check(True,'altered original-clock packet rejected')
+                else:
+                    before=f.view(10,1);f.advance(20,[]);check(f.view(10,1)==before,'past packet/state remains fixed');check(f.page(20,'adapter_states',1)[0]['value']['initializations']==1,'no fold reinitialization')
+                    # Per-replica fingerprints are compared by the finite driver.
+                    dump(parent/'comparison.json',dict(past=before,context=context,registry=f.page(10,'registry',1)))
+        elif id in ('S04.01','S04.02','S04.03','S04.04','S04.05'):
+            c=controlled_config();f=make(c=c,facts=[]);f.advance(10,[]);g=preview_witness(f,20);proposed=deepcopy(g)
+            if id=='S04.01':
+                # Add a genuinely frozen future fact, not a fabricated hash.
+                raise AssertionError('future-fact fixture needs construction before formal')
+            elif id=='S04.02':proposed[0]['result']['events'][0]['signed_contracts']=2;proposed[0]['result_sha256']=sl.digest(proposed[0]['result'])
+            elif id=='S04.03':
+                read=next(x for x in proposed[1]['reads'] if x['kind']=='ledger' and x['item_kind']=='live_lot');read['value']['value']['live_ranges']=[]
+            elif id=='S04.04':
+                read=next(x for x in proposed[0]['reads'] if x['kind']=='ledger' and x['item_kind']=='order');read['value']['value']['remaining_contracts']=2
+            else:proposed[0]['reads']=[x for x in proposed[0]['reads'] if x['kind']!='state']
+            for entry in proposed:
+                entry.pop('entry_sha256');entry['entry_sha256']=sl.digest(entry)
+            request=f.request_at(20,[]);request['generated']=proposed;before=f.ledger.head.copy();expect('ADAPTER_RESULT_MISMATCH' if id=='S04.02' else 'INPUT_BINDING_MISMATCH',lambda:f.ledger.advance(request));check(f.ledger.head==before,'forged witness cannot change prefix')
+        elif id=='S05.04':
+            records=[one_fill('accepted',10),one_fill('backdated',19)];f=make(records);f.advance(20,[0]);old=f.ledger.head.copy()
+            if variant==0:expect('PAST_AVAILABILITY',lambda:f.advance(30,[1]));check(f.ledger.head==old,'new19 behind seal20 rejected')
+            else:f.advance(30,[0]);check(len(f.page(30,'events'))==1,'exact duplicate under new outer identity has no effect')
+        elif id=='S10.06':
+            records=[zero_reserve(expires=11),one_fill('open',10),b.mark('m',10,'100'),one_fill('backdated',11)];c=primitive_config(records)
+            for r in c['rules']:
+                if r['kind']=='valuation':r['parameters']['max_age_us']=1
+            c['expected_snapshots']=[dict(instrument_id=BTC,event_id='due',snapshot_at_us=11,mapping_rule_id=b.rid('funding'))]
+            f=make(records,c);f.advance(10,[0,1,2]);f.advance(11,[]);check(f.ledger.head['cutoff']==dict(at_us=11,slot=0),'actual non-tick11 seals')
+            b11=f.balance(11);check(b11['unrealized_usdt']=='0' and b11['reserved_margin_usdt'] is None and b11['receivables_usdt'] is None,'true freshness/expiry/due coverage equality');expect('PAST_AVAILABILITY',lambda:f.advance(12,[3]))
+        elif id=='S11.09':
+            snap=b.snapshot();snap.update(source_t_seconds=0,source_record_at_us=0);snap['null_reasons']={'snapshot_sequence':'UNKNOWN_SEQUENCE'}
+            if variant==1:snap['mapping_rule_id']='wrong-mapping'
+            if variant==2:snap['mapping_rule_id']=None;snap['null_reasons']['mapping_rule_id']='UNKNOWN_MAPPING'
+            records=[b.fill(),snap];c=config(records,cash='1000');c['expected_snapshots'][0]['mapping_rule_id']=b.rid('funding');f=make(records,c)
+            if variant==0:
+                request=f.request_at(10);request['imported'][1]['body']['source_record_at_us']=1;expect('CLOCK_CONTRADICTION',lambda:f.ledger.advance(request))
+            elif variant==1:expect('SNAPSHOT_MAPPING_MISMATCH',lambda:f.advance(10))
+            else:f.advance(10);check(f.balance(10)['receivables_usdt'] is None,'unqualified mapping remains unresolved coverage')
+        else:raise AssertionError('repair fixture not implemented: '+id)
+        return dict(status='PASS',fixtures=created,checks=checks,metrics=dict(bodies=len(fixture.records) if fixture else 0))
+    finally:
+        if fixture:fixture.close()
+
+
+def preview_witness(f,t):
+    ledger=f.ledger;ledger.index.db.commit();ledger.index.db.execute('SAVEPOINT witness_preview');state=sl.State(ledger.index,ledger.config,ledger.state.roots)
+    try:return ledger._stage(f.request_at(t,[]),state)['generated']
+    finally:
+        ledger.index.db.execute('ROLLBACK TO witness_preview');ledger.index.db.execute('RELEASE witness_preview');ledger.index.cache.clear();ledger.index.size=0
+
+
+def run_case(id,parent,variant=0):
+    if id in REPAIR_CASE_IDS:return _repair_run_case(id,parent,variant)
+    return _OLD_RUN_CASE(id,parent,variant)
+
+class RepairCheckpointTests(unittest.TestCase):
+    def setUp(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        self.root=Path(tempfile.mkdtemp(prefix='checkpoint-',dir=root)).resolve()
+    def make(self,records=None,c=None,facts=None):
+        records=basic_tape() if records is None and c is None else records or ()
+        f=Fixture(self.root/'fixture',records,c,facts);self.addCleanup(f.close);return f
+    def test_typed_inventory_and_forged_component(self):
+        f=self.make();f.advance(10);cp=f.checkpoint();components={r['component'] for r in cp['files']}
+        self.assertTrue({'config','raw_catalogue','facts','adapters','schedule','context','calendar','projection','ownership','dedup','revisions','journal','cursors','control'}<=components)
+        f.restore(cp)
+        target=next(r for r in cp['files'] if r['component']=='ownership');path=f.path/'store'/target['relative_path'];rows=path.read_bytes().splitlines(keepends=True);path.write_bytes(b''.join(rows[1:]));target.update(bytes=path.stat().st_size,rows=len(rows)-1,sha256=hashlib.sha256(path.read_bytes()).hexdigest());cp['checkpoint_sha256']=sl.digest({k:v for k,v in cp.items() if k!='checkpoint_sha256'})
+        expect('STORE_INTEGRITY_FAILURE',lambda:f.restore(cp))
+    def test_cursor_membership_and_failure_audit_paging(self):
+        c,facts=context_fixture();f=self.make(c=c,facts=facts);f.advance(10,[]);cp=f.checkpoint();bad=deepcopy(cp);bad['adapter_cursors'][0]['last_invocation']=None;bad['checkpoint_sha256']=sl.digest({k:v for k,v in bad.items() if k!='checkpoint_sha256'});expect('CHECKPOINT_MISMATCH',lambda:f.restore(bad))
+        request=dict(view_sha256=f.view(10,1)['view_sha256'],component='lots',filter=dict(kind='all'),after=None,limit=257,null_reasons={'after':'START_OF_COMPONENT'})
+        expect('RESOURCE_EXHAUSTED_READ',lambda:f.ledger.scan(request));rows=[];after=0
+        while True:
+            p=f.ledger.audit(dict(after_audit_seq=after,limit=1));rows+=p['rows'];after=p['next_after_audit_seq']
+            if after is None:break
+        self.assertTrue(any(r['kind']=='failure' and r['error']['code']=='RESOURCE_EXHAUSTED_READ' for r in rows));self.assertEqual(f.ledger.current_head()['status'],'ACTIVE')
+    def test_quota_prevents_sqlite_write_before_cap(self):
+        f=self.make([one_fill()],primitive_config([one_fill()]));budget=f.ledger.budget;old_head=f.ledger.head.copy();original_stage=f.ledger._stage
+        def exhaust(*args,**kw):
+            budget.limit=budget.total+budget.book.stat().st_size+budget.reserve+2048
+            return original_stage(*args,**kw)
+        with patch.object(f.ledger,'_stage',side_effect=exhaust):
+            error=expect('RESOURCE_EXHAUSTED',lambda:f.advance(10))
+        self.assertEqual(f.ledger.head,old_head);self.assertEqual(f.ledger.current_head()['status'],'RESOURCE_STOPPED')
+        actual=sum(p.stat().st_size for p in (f.path/'store').rglob('*') if p.is_file());self.assertLessEqual(actual,budget.limit)
+        f.reopen();self.assertEqual(f.ledger.current_head()['status'],'RESOURCE_STOPPED')
+
+
+class RepairFifoTests(unittest.TestCase):
+    def test_multi_lot_snapshot_and_close_share_one_episode(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='fifo-',dir=root));units=[b.unit('a',0,1,'a'),b.unit('b',0,1,'a')]
+        snapshot=b.snapshot('snapshot',3,units);revision=b.revision('ob:snapshot','snapshot','0',5,3);revision['allocations']=[b.allocation('ob:snapshot','0',u) for u in units]
+        records=[one_fill('a',1),one_fill('b',2),snapshot,one_fill('close',4,-2),revision]
+        f=Fixture(parent/'fixture',records,primitive_config(records));self.addCleanup(f.close);f.advance(5)
+        self.assertEqual([x['episode_id'] for x in f.page(5,'lots')],['episode:a','episode:a'])
+        self.assertEqual([x['remaining_contracts'] for x in f.page(5,'lots')],[0,0]);self.assertEqual(len(f.page(5,'closed_slices')),2)
+        self.assertEqual(f.balance(5)['liabilities_usdt'],'0')
+
+
+def _repair_cli():
+    # The human validation gate supersedes the earlier automatic formal dispatch.
+    # New full/benchmark runs need a separately approved scope; this candidate
+    # deliberately exposes only selected development unit checks by default.
+    if any(flag in sys.argv for flag in ('--formal','--benchmark','--freeze')):
+        raise SystemExit('USER_VALIDATION_APPROVAL_REQUIRED: full validation disabled for repair-r1 candidate')
+    if len(sys.argv)==1:raise SystemExit('Select one directly relevant development test; no automatic full run')
+    unittest.main()
+
+
+
+
+class RepairAdmissionTests(unittest.TestCase):
+    def test_late_origin_precedes_snapshot_eligibility_for_failed_orders(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='late-',dir=root))
+        for variant in (0,1):
+            records,kw=case_tape('S01.06',variant);f=Fixture(parent/str(variant),records,kw['c']);self.addCleanup(f.close)
+            before=f.ledger.head.copy();expect('LATE_ORIGIN_UNSUPPORTED',lambda:f.advance(10));self.assertEqual(f.ledger.head,before)
+    def test_sqlite_size_hint_is_rejected_before_allocation(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='hint-',dir=root));f=Fixture(parent/'fixture',[],primitive_config());self.addCleanup(f.close)
+        path=f.path/'store/cache.sqlite3';size=path.stat().st_size;pointer,info=next(iter(sl._VFS_FILES.items()));target=sl.ctypes.c_int64(f.ledger.budget.limit+1)
+        rc=sl._FC(info[1].control)(pointer,5,sl.ctypes.cast(sl.ctypes.pointer(target),sl.ctypes.c_void_p));self.assertEqual(rc,13);self.assertEqual(path.stat().st_size,size)
+        f.ledger.budget.last_error=None;f.ledger.budget.emergency=False
+        if f.ledger.budget.parent:f.ledger.budget.parent.emergency=False
+
+
+
+
+class RepairGuardTests(unittest.TestCase):
+    def test_unpublished_semantic_stop_stays_blocked_across_reopen(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='guard-',dir=root));f=Fixture(parent/'fixture',[one_fill()],primitive_config([one_fill()]));self.addCleanup(f.close)
+        request=f.request_at(10);request['imported'][0]['body']['fill_price']='bad';control=f.ledger._control
+        def stop_failure(kind,*args,**kwargs):
+            if kind=='integrity_stop':raise OSError('injected stop publication failure')
+            return control(kind,*args,**kwargs)
+        with patch.object(f.ledger,'_control',side_effect=stop_failure):expect('COMMIT_OUTCOME_UNKNOWN',lambda:f.ledger.advance(request))
+        f.reopen();self.assertEqual(f.ledger.current_head()['status'],'COMMIT_UNKNOWN')
+        result=f.ledger.resolve_commit(dict(request_id=request['request_id'],request_sha256=sl.digest(request)))
+        self.assertEqual(result['outcome'],'not_committed');self.assertEqual(result['head']['status'],'INTEGRITY_STOPPED');self.assertEqual(result['head']['committed_seq'],0)
+    def test_omitted_live_range_witness_is_rejected_without_commit(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='witness-',dir=root));result=_repair_run_case('S04.03',parent);self.assertEqual(result['status'],'PASS')
+
+
+
+
+class RepairVfsFailureTests(unittest.TestCase):
+    def test_native_callback_io_error_reaches_guarded_advance(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='vfs-fault-',dir=root));f=Fixture(parent/'fixture',[one_fill()],primitive_config([one_fill()]));self.addCleanup(f.close)
+        before=f.ledger.head.copy();budget=f.ledger.budget;issue=budget.issue
+        def fail_sqlite(path,end,amount=0):
+            if str(path).endswith(('.sqlite3','-journal')):raise OSError('injected VFS prewrite I/O failure')
+            return issue(path,end,amount)
+        with patch.object(budget,'issue',side_effect=fail_sqlite):expect('COMMIT_OUTCOME_UNKNOWN',lambda:f.advance(10))
+        self.assertEqual(f.ledger.head,before);self.assertEqual(f.ledger.current_head()['status'],'COMMIT_UNKNOWN');self.assertIsNotNone(f.ledger.control['guard'])
+
+
+
+
+class RepairCorroborationTests(unittest.TestCase):
+    def test_new_source_reference_updates_audit_root_without_repeating_fill(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='corroboration-',dir=root));records=[one_fill(),one_fill()];f=Fixture(parent/'fixture',records,primitive_config(records));self.addCleanup(f.close)
+        f.advance(10,[0]);key=list(sl.wire_key(f.records[0]));before=f.ledger.state.get('_dedup',key);past=f.view(10)
+        f.advance(11,[1]);after=f.ledger.state.get('_dedup',key);self.assertNotEqual(before['audit_refs_root'],after['audit_refs_root']);self.assertEqual(after['first_commit'],1)
+        self.assertEqual(len(f.page(11,'events')),1);self.assertEqual(f.balance(11)['cash_usdt'],'1000');self.assertEqual(f.view(10),past)
+        cp=f.checkpoint();f.restore(cp);self.assertEqual(f.ledger.state.get('_dedup',key),after)
+
+
+
+
+class RepairOrphanControlTests(unittest.TestCase):
+    def test_validated_orphan_is_preserved_and_resolved_without_importing_tail(self):
+        root=Path('research/.data/qd009/stream-repair-r1/tmp/unit-dev');root.mkdir(parents=True,exist_ok=True)
+        parent=Path(tempfile.mkdtemp(prefix='orphan-control-',dir=root));f=Fixture(parent/'fixture',[one_fill()],primitive_config([one_fill()]));self.addCleanup(f.close)
+        request=f.request_at(10);atomic=sl._atomic
+        def failed_pointer(path,value):
+            if Path(path).name=='CONTROL' and value['control_seq']==2:raise OSError('after validated row, before CONTROL pointer')
+            return atomic(path,value)
+        with patch.object(sl,'_atomic',side_effect=failed_pointer):expect('COMMIT_OUTCOME_UNKNOWN',lambda:f.ledger.advance(request))
+        row=f.path/'store/control-00000002.json';original=row.read_bytes();f.reopen()
+        resolved=f.ledger.resolve_commit(dict(request_id=request['request_id'],request_sha256=sl.digest(request)))
+        self.assertEqual(resolved['outcome'],'not_committed');self.assertEqual(resolved['head']['committed_seq'],0);self.assertEqual(row.read_bytes(),original)
+        self.assertTrue((f.path/'store/journal-00000001.json').exists(),'orphan financial data remains evidence')
+
+if __name__=='__main__':_repair_cli()

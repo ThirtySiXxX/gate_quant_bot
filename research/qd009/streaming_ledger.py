@@ -21,6 +21,11 @@ import sys
 import threading
 import time
 import uuid
+import weakref
+import ctypes
+import _sqlite3
+import math
+import zlib
 
 NS = 'qf009.streaming-ledger'
 PROFILE = 'qf009-offline-stream-r3'
@@ -149,53 +154,272 @@ def ordered_key(k):
     return tuple(k)
 
 
+class ResourceBudget:
+    """Audit-only, pre-write quota and conservatively durable I/O debit.
+
+    Byte debit means bytes issued to file/VFS xWrite, including DB and rollback
+    journal overwrites, not an inference about storage-device amplification.
+    Grants survive a crash; unused grant is never silently reset on reopen.
+    """
+    def __init__(self,root,limit,book=None,reserve=262144):
+        self.root=Path(root).resolve();self.limit=limit;self.reserve=min(reserve,limit//8)
+        self.book=Path(book or self.root/'RESOURCE_LOG');self.sizes={};self.total=0;self.written=0;self.grant=0;self.last_error=None;self.emergency=False
+        self.book.parent.mkdir(parents=True,exist_ok=True);self.previous='0'*64
+        if self.book.exists():
+            with self.book.open('rb') as source:
+                for raw in source:
+                    row=load_json(raw);h=row.pop('hash');need(row['previous']==self.previous and digest(row)==h,'STORE_INTEGRITY_FAILURE');self.previous=h
+                    self.grant=max(self.grant,row.get('write_upper',0))
+                    if row['kind']=='size':self.sizes[row['path']]=row['size']
+                    elif row['kind']=='write_grant':self.grant=row['value']
+            self.written=self.grant
+        for p in self.root.rglob('*'):
+            if p.is_file() and p!=self.book:self.sizes[str(p)]=max(self.sizes.get(str(p),0),p.stat().st_size)
+        self.total=sum(self.sizes.values());self.parent=None
+
+    def _append(self,kind,**values):
+        self.grant=max(self.grant,math.ceil((self.written+4096)/1048576)*1048576)
+        row=dict(kind=kind,previous=self.previous,write_upper=self.grant,**values);h=digest(row);raw=canonical_bytes(dict(row,hash=h))+b'\n'
+        current=self.book.stat().st_size if self.book.exists() else 0
+        need(self.total+current+len(raw)<=self.limit,'RESOURCE_EXHAUSTED','/resource_book')
+        if self.parent:self.parent.issue(self.book,current+len(raw),len(raw))
+        with self.book.open('ab') as f:f.write(raw);f.flush();os.fsync(f.fileno())
+        self.written+=len(raw);self.previous=h
+
+    def issue(self,path,end,amount=0):
+        path=str(Path(path).resolve()) if path is not None else str(self.root/'anonymous-sqlite-temp')
+        old=self.sizes.get(path,0);end=max(end,old)
+        rounded=math.ceil(end/65536)*65536 if path.endswith(('.sqlite3','-journal','-wal','-shm')) else end
+        overhead=self.book.stat().st_size if self.book.exists() else 0
+        need(self.total+rounded-old+overhead<=self.limit-(0 if self.emergency else self.reserve),'RESOURCE_EXHAUSTED','/prewrite_quota')
+        if self.parent:self.parent.issue(path,end,amount)
+        if rounded>old:
+            self._append('size',path=path,size=rounded);self.sizes[path]=rounded;self.total+=rounded-old
+        if self.written+amount>self.grant:
+            grant=max(self.grant+1048576,self.written+amount+4096);self._append('write_grant',value=grant);self.grant=grant
+        self.written+=amount
+
+    def release(self,path):
+        path=str(Path(path).resolve());old=self.sizes.get(path,0)
+        if old:self._append('size',path=path,size=0);self.sizes[path]=0;self.total-=old
+        if self.parent:self.parent.release(path)
+
+    def rename(self,source,dest):
+        source,dest=str(Path(source).resolve()),str(Path(dest).resolve());size=self.sizes.get(source,0)
+        self.release(dest);self._append('size',path=dest,size=size);self.sizes[dest]=size;self.total+=size;self.release(source)
+
+
+_BUDGETS={}
+_GLOBAL_BUDGET=None
+
+def configure_resource_budget(root,live_bytes):
+    global _GLOBAL_BUDGET
+    _GLOBAL_BUDGET=ResourceBudget(root,live_bytes,Path(root)/'aggregate-resource.jsonl',1048576)
+    return _GLOBAL_BUDGET
+
+
+def _budget_for(path):
+    p=Path(path).resolve()
+    for root,b in sorted(_BUDGETS.items(),key=lambda x:len(x[0]),reverse=True):
+        if p.is_relative_to(Path(root)):return b
+    return _GLOBAL_BUDGET if _GLOBAL_BUDGET and p.is_relative_to(_GLOBAL_BUDGET.root) else None
+
+
+# A transparent VFS method-table shim observes SQLite's actual write requests
+# before they reach the OS. Other methods, locking and sync are delegated intact.
+# Struct layout comes from the installed sqlite3.h, versions1..3 only.
+class _IOMethods(ctypes.Structure):
+    _fields_=[('version',ctypes.c_int)]+[(n,ctypes.c_void_p) for n in ('close','read','write','truncate','sync','size','lock','unlock','reserved','control','sector','device','shmmap','shmlock','shmbarrier','shmunmap','fetch','unfetch')]
+class _VFS(ctypes.Structure):
+    _fields_=[('version',ctypes.c_int),('file_size',ctypes.c_int),('max_path',ctypes.c_int),('next',ctypes.c_void_p),('name',ctypes.c_char_p),('app',ctypes.c_void_p)]+[(n,ctypes.c_void_p) for n in ('open','delete','access','fullpath','dlopen','dlerror','dlsym','dlclose','random','sleep','time','error','time64','setsys','getsys','nextsys')]
+_SQL=ctypes.CDLL(_sqlite3.__file__);_SQL.sqlite3_vfs_find.argtypes=[ctypes.c_char_p];_SQL.sqlite3_vfs_find.restype=ctypes.POINTER(_VFS)
+_SQL.sqlite3_vfs_register.argtypes=[ctypes.POINTER(_VFS),ctypes.c_int];_SQL.sqlite3_vfs_register.restype=ctypes.c_int
+_PARENT_VFS=_SQL.sqlite3_vfs_find(None)
+need(bool(_PARENT_VFS) and _PARENT_VFS.contents.version==3,'STORE_INTEGRITY_FAILURE')
+_BUDGET_VFS=_VFS.from_buffer_copy(_PARENT_VFS.contents);_BUDGET_VFS.name=b'qd009-budget-v1';_BUDGET_VFS.next=None
+_VFS_FILES={};_VFS_CALLBACKS=[];_VFS_FAILURE=None
+
+def _c_boundary(function):
+    def callback(*args):
+        global _VFS_FAILURE
+        try:return function(*args)
+        except BaseException as error:_VFS_FAILURE=error;return 10
+    return callback
+
+def _vfs_error():
+    global _VFS_FAILURE
+    if _VFS_FAILURE is not None:
+        error=_VFS_FAILURE;_VFS_FAILURE=None;raise error
+_W=ctypes.CFUNCTYPE(ctypes.c_int,ctypes.c_void_p,ctypes.c_void_p,ctypes.c_int,ctypes.c_int64)
+_T=ctypes.CFUNCTYPE(ctypes.c_int,ctypes.c_void_p,ctypes.c_int64)
+_C=ctypes.CFUNCTYPE(ctypes.c_int,ctypes.c_void_p)
+_FC=ctypes.CFUNCTYPE(ctypes.c_int,ctypes.c_void_p,ctypes.c_int,ctypes.c_void_p)
+_O=ctypes.CFUNCTYPE(ctypes.c_int,ctypes.c_void_p,ctypes.c_void_p,ctypes.c_void_p,ctypes.c_int,ctypes.POINTER(ctypes.c_int))
+_D=ctypes.CFUNCTYPE(ctypes.c_int,ctypes.c_void_p,ctypes.c_char_p,ctypes.c_int)
+_ORIG_OPEN=_O(_PARENT_VFS.contents.open);_ORIG_DELETE=_D(_PARENT_VFS.contents.delete)
+
+def _vfs_open(vfs,name,file,flags,out):
+    rc=_ORIG_OPEN(ctypes.cast(_PARENT_VFS,ctypes.c_void_p),name,file,flags,out)
+    if rc:return rc
+    path=ctypes.string_at(name).decode() if name else None;budget=_budget_for(path) if path else _GLOBAL_BUDGET
+    if budget is None:return rc
+    pointer=ctypes.cast(file,ctypes.POINTER(ctypes.c_void_p));original=_IOMethods.from_buffer_copy(_IOMethods.from_address(pointer[0]));table=_IOMethods.from_buffer_copy(original)
+    write,truncate,close,control=_W(original.write),_T(original.truncate),_C(original.close),_FC(original.control)
+    def checked_write(f,data,amount,offset):
+        try:budget.issue(path,offset+amount,amount)
+        except LedgerError as e:
+            budget.last_error=e;budget.emergency=True
+            if budget.parent:budget.parent.emergency=True
+            return 13
+        return write(f,data,amount,offset)
+    def checked_truncate(f,length):
+        try:budget.issue(path,length)
+        except LedgerError as e:
+            budget.last_error=e;budget.emergency=True
+            if budget.parent:budget.parent.emergency=True
+            return 13
+        result=truncate(f,length)
+        if result==0 and length==0 and path:budget.release(path)
+        return result
+    def checked_control(f,operation,arg):
+        if operation==6:return 12  # optional chunk preallocation cannot bypass quota
+        if operation==5 and arg:
+            target=ctypes.cast(arg,ctypes.POINTER(ctypes.c_int64))[0]
+            try:
+                current=Path(path).stat().st_size if path and Path(path).exists() else 0
+                budget.issue(path,target,max(0,target-current))
+            except LedgerError as e:
+                budget.last_error=e;budget.emergency=True
+                if budget.parent:budget.parent.emergency=True
+                return 13
+        return control(f,operation,arg)
+    def checked_close(f):
+        result=close(f);_VFS_FILES.pop(int(f),None)
+        if path is None:budget.release(budget.root/'anonymous-sqlite-temp')
+        return result
+    callbacks=(_W(_c_boundary(checked_write)),_T(_c_boundary(checked_truncate)),_C(_c_boundary(checked_close)),_FC(_c_boundary(checked_control)));table.control=ctypes.cast(callbacks[3],ctypes.c_void_p).value;table.write=ctypes.cast(callbacks[0],ctypes.c_void_p).value;table.truncate=ctypes.cast(callbacks[1],ctypes.c_void_p).value;table.close=ctypes.cast(callbacks[2],ctypes.c_void_p).value
+    _VFS_FILES[int(file)]=(original,table,callbacks);pointer[0]=ctypes.addressof(table);return 0
+
+def _vfs_delete(vfs,name,sync):
+    result=_ORIG_DELETE(ctypes.cast(_PARENT_VFS,ctypes.c_void_p),name,sync)
+    if result==0:
+        budget=_budget_for(name.decode())
+        if budget:budget.release(name.decode())
+    return result
+_VFS_CALLBACKS.extend((_O(_c_boundary(_vfs_open)),_D(_c_boundary(_vfs_delete))))
+_BUDGET_VFS.open=ctypes.cast(_VFS_CALLBACKS[0],ctypes.c_void_p).value;_BUDGET_VFS.delete=ctypes.cast(_VFS_CALLBACKS[1],ctypes.c_void_p).value
+need(_SQL.sqlite3_vfs_register(ctypes.byref(_BUDGET_VFS),0)==0,'STORE_INTEGRITY_FAILURE')
+
+
+class _BudgetConnection(sqlite3.Connection):
+    def execute(self,*args,**kwargs):
+        try:
+            result=super().execute(*args,**kwargs);_vfs_error();return result
+        except sqlite3.Error:
+            _vfs_error();budget=getattr(self,'budget',None)
+            if budget and budget.last_error:error=budget.last_error;budget.last_error=None;raise error
+            raise
+    def commit(self):
+        try:
+            result=super().commit();_vfs_error();return result
+        except sqlite3.Error:
+            _vfs_error();budget=getattr(self,'budget',None)
+            if budget and budget.last_error:error=budget.last_error;budget.last_error=None;raise error
+            raise
+
+
+def _sql_hash(value):return bytes.fromhex(value)
+def _wire_hash(value):return value.hex() if isinstance(value,bytes) else value
+
+def _unpack_node(raw):
+    decoder=zlib.decompressobj();value=decoder.decompress(raw,8*1024**2+1)
+    need(len(value)<=8*1024**2 and decoder.eof and not decoder.unused_data,'STORE_INTEGRITY_FAILURE');return value
+
+
+def _resident_size(value):
+    return sys.getsizeof(value)+(sum(_resident_size(k)+_resident_size(v) for k,v in value.items()) if isinstance(value,dict) else sum(_resident_size(v) for v in value) if isinstance(value,(list,tuple)) else 0)
+
+
+class _WorkingNode:
+    """Unique copy-on-write node, never serialized into a public/root payload."""
+    __slots__=('component','data','charge','__weakref__')
+    def __init__(self,component,data,charge):self.component,self.data,self.charge=component,data,charge
+
+
 class NodeIndex:
     """Disk-backed immutable content-addressed treap with bounded resident cache."""
     def __init__(self,path,cache_bytes):
-        self.db=sqlite3.connect(path)
-        self.db.execute('PRAGMA journal_mode=WAL');self.db.execute('PRAGMA synchronous=FULL')
+        self.db=sqlite3.connect(Path(path).resolve().as_uri()+'?vfs=qd009-budget-v1',uri=True,factory=_BudgetConnection)
+        self.db.budget=_budget_for(path)
+        self.db.execute('PRAGMA journal_mode=DELETE');self.db.execute('PRAGMA synchronous=EXTRA')
         sql_cache=max(1024,min(1024**2,cache_bytes//4))
         self.db.execute('PRAGMA cache_size=-'+str(max(1,sql_cache//1024)));self.db.execute('PRAGMA temp_store=FILE');self.db.execute('PRAGMA mmap_size=0')
         self.db.execute('CREATE TABLE IF NOT EXISTS blobs(h TEXT PRIMARY KEY,b BLOB NOT NULL,born INTEGER) WITHOUT ROWID')
         self.db.execute('CREATE TABLE IF NOT EXISTS nodes(h TEXT PRIMARY KEY,c TEXT,k TEXT,p TEXT,v TEXT,l TEXT,r TEXT,n INTEGER,born INTEGER) WITHOUT ROWID')
-        self.birth=0
+        self.birth=0;self._empties={};self.work_bytes=0;self.work_peak=0
         self.cache=OrderedDict();self.size=0;self.cap=max(0,cache_bytes-sql_cache)
-        self.visits=0;self.writes=0
+        self.visits=0;self.writes=0;self.working_visits=0;self.immutable_visits=0
 
-    def empty(self,c): return digest([c,'empty'])
+    def empty(self,c):
+        if c not in self._empties:self._empties[c]=digest([c,'empty'])
+        return self._empties[c]
+
+    def _evict(self):
+        while self.cache and self.size+self.work_bytes>self.cap:
+            _,(_,used)=self.cache.popitem(last=False);self.size-=used
 
     def _remember(self,h,node):
-        def size(v):
-            return sys.getsizeof(v)+(sum(size(k)+size(x) for k,x in v.items()) if isinstance(v,dict) else sum(size(x) for x in v) if isinstance(v,(list,tuple)) else 0)
-        n=size(node)+sys.getsizeof(h)+256
-        if h in self.cache: old=self.cache.pop(h);self.size-=old[1]
+        n=_resident_size(node)+sys.getsizeof(h)+256
+        if h in self.cache:old=self.cache.pop(h);self.size-=old[1]
         if n<=self.cap:
-            self.cache[h]=(node,n);self.size+=n
-            while self.size>self.cap:
-                _,(_,used)=self.cache.popitem(last=False);self.size-=used
+            self.cache[h]=(node,n);self.size+=n;self._evict()
+
+    def _release_work(self,charge):self.work_bytes-=charge[0]
+
+    def _working(self,c,data):
+        # A node value is detached once per batch, not at every ancestor rewrite.
+        owned=dict(data,k=list(data['k']),v=deepcopy(data['v']))
+        charge=[512+_resident_size(owned['k'])+_resident_size(owned['p'])+_resident_size(owned['v'])]
+        need(self.work_bytes+charge[0]<=self.cap,'RESOURCE_EXHAUSTED','/resident_index')
+        self.work_bytes+=charge[0];self.work_peak=max(self.work_peak,self.work_bytes);self._evict()
+        node=_WorkingNode(c,owned,charge);weakref.finalize(node,self._release_work,charge);return node
+
+    def ensure_room(self,roots):
+        if self.work_bytes>self.cap//2:
+            self.freeze_roots(roots)
+
+    def freeze_roots(self,roots):
+        for c,h in list(roots.items()):roots[c]=self.freeze(c,h)
+
+    def freeze(self,c,h):
+        if not isinstance(h,_WorkingNode):return h
+        n=h.data;l=self.freeze(c,n['l']);r=self.freeze(c,n['r']);v=n['v'];k=n['k']
+        raw=canonical_bytes(v);vh=hashlib.sha256(raw).hexdigest();result=digest(['qf009.economic-node-v3',c,k,v,l,r])
+        if result in self.cache:return result
+        if self.db.execute('SELECT 1 FROM nodes WHERE h=?',(_sql_hash(result),)).fetchone():self.node(c,result);return result
+        self.db.execute('INSERT OR IGNORE INTO blobs VALUES (?,?,?)',(_sql_hash(vh),zlib.compress(raw,1),self.birth))
+        self.db.execute('INSERT OR IGNORE INTO nodes VALUES (?,?,?,?,?,?,?,?,?)',(_sql_hash(result),c,zlib.compress(canonical_bytes(k),1),None,_sql_hash(vh),_sql_hash(l),_sql_hash(r),n['n'],self.birth))
+        self.writes+=1;self._remember(result,dict(k=k,p=n['p'],v=v,l=l,r=r,n=n['n']));return result
 
     def node(self,c,h):
+        if isinstance(h,_WorkingNode):self.visits+=1;self.working_visits+=1;return h.data
         if h==self.empty(c): return None
-        self.visits+=1
+        self.visits+=1;self.immutable_visits+=1
         if h in self.cache:
             node,n=self.cache.pop(h);self.cache[h]=(node,n);return node
-        row=self.db.execute('SELECT c,k,p,v,l,r,n FROM nodes WHERE h=?',(h,)).fetchone()
+        row=self.db.execute('SELECT c,k,p,v,l,r,n FROM nodes WHERE h=?',(_sql_hash(h),)).fetchone()
         need(row is not None and row[0]==c,'STORE_INTEGRITY_FAILURE')
-        cc,k,p,v,l,r,count=row;key=load_json(k)
+        cc,k,p,v,l,r,count=row;key=load_json(_unpack_node(k));p=digest(['qf009.index-priority-v3',c,key]);l=_wire_hash(l);r=_wire_hash(r)
         raw=self.db.execute('SELECT b FROM blobs WHERE h=?',(v,)).fetchone()
-        need(raw is not None and hashlib.sha256(raw[0]).hexdigest()==v,'STORE_INTEGRITY_FAILURE')
+        if raw is not None:raw=(_unpack_node(raw[0]),)
+        need(raw is not None and hashlib.sha256(raw[0]).hexdigest()==_wire_hash(v),'STORE_INTEGRITY_FAILURE')
         value=load_json(raw[0]);node=dict(k=key,p=p,v=value,l=l,r=r,n=count)
         need(digest(['qf009.economic-node-v3',c,key,value,l,r])==h,'STORE_INTEGRITY_FAILURE')
         self._remember(h,node);return node
 
     def put(self,c,k,v,l=None,r=None):
-        l=l or self.empty(c);r=r or self.empty(c)
-        priority=digest(['qf009.index-priority-v3',c,k]);raw=canonical_bytes(v);vh=hashlib.sha256(raw).hexdigest()
-        n=1+self.count(c,l)+self.count(c,r)
-        h=digest(['qf009.economic-node-v3',c,k,v,l,r])
-        self.db.execute('INSERT OR IGNORE INTO blobs VALUES (?,?,?)',(vh,raw,self.birth))
-        self.db.execute('INSERT OR IGNORE INTO nodes VALUES (?,?,?,?,?,?,?,?,?)',(h,c,canonical_bytes(k).decode(),priority,vh,l,r,n,self.birth))
-        self.writes+=1;self._remember(h,dict(k=k,p=priority,v=v,l=l,r=r,n=n));return h
+        l=self.empty(c) if l is None else l;r=self.empty(c) if r is None else r
+        return self._working(c,dict(k=k,p=digest(['qf009.index-priority-v3',c,k]),v=v,l=l,r=r,n=1+self.count(c,l)+self.count(c,r)))
 
     def count(self,c,h):
         n=self.node(c,h);return n['n'] if n else 0
@@ -210,42 +434,45 @@ class NodeIndex:
 
     def set(self,c,h,k,v):
         n=self.node(c,h)
-        if n is None: return self.put(c,k,v)
+        if n is None:return self.put(c,k,v)
         a,b=ordered_key(k),ordered_key(n['k'])
-        if a==b: return h if n['v']==v else self.put(c,k,v,n['l'],n['r'])
-        side='l' if a<b else 'r';new=self.set(c,n[side],k,v)
-        if new==n[side]:return h
-        child=self.node(c,new)
-        if (child['p'],ordered_key(child['k']))<(n['p'],b):
-            if side=='l':
-                right=self.put(c,n['k'],n['v'],child['r'],n['r'])
-                return self.put(c,child['k'],child['v'],child['l'],right)
-            left=self.put(c,n['k'],n['v'],n['l'],child['l'])
-            return self.put(c,child['k'],child['v'],left,child['r'])
-        return self.put(c,n['k'],n['v'],new if side=='l' else n['l'],new if side=='r' else n['r'])
+        if a==b and n['v']==v:return h
+        w=h if isinstance(h,_WorkingNode) else self._working(c,n);n=w.data
+        if a==b:
+            charge=_resident_size(v)-_resident_size(n['v']);need(self.work_bytes+charge<=self.cap,'RESOURCE_EXHAUSTED','/resident_index')
+            self.work_bytes+=charge;w.charge[0]+=charge;n['v']=deepcopy(v);self._evict();return w
+        side='l' if a<b else 'r';child=self.set(c,n[side],k,v);n[side]=child;cn=self.node(c,child)
+        n['n']=1+self.count(c,n['l'])+self.count(c,n['r'])
+        if (cn['p'],ordered_key(cn['k']))<(n['p'],b):
+            if not isinstance(child,_WorkingNode):child=self._working(c,cn);cn=child.data
+            other='r' if side=='l' else 'l';n[side]=cn[other];n['n']=1+self.count(c,n['l'])+self.count(c,n['r'])
+            cn[other]=w;cn['n']=1+self.count(c,cn['l'])+self.count(c,cn['r']);return child
+        return w
 
     def floor(self,c,h,k):
         target=ordered_key(k);result=None
         while (n:=self.node(c,h)) is not None:
             if ordered_key(n['k'])<=target:result=(n['k'],n['v']);h=n['r']
             else:h=n['l']
-        return deepcopy(result)
+        return (deepcopy(result[0]),deepcopy(result[1])) if result is not None else None
 
     def merge(self,c,l,r):
         a,b=self.node(c,l),self.node(c,r)
         if a is None:return r
         if b is None:return l
         if (a['p'],ordered_key(a['k']))<(b['p'],ordered_key(b['k'])):
-            return self.put(c,a['k'],a['v'],a['l'],self.merge(c,a['r'],r))
-        return self.put(c,b['k'],b['v'],self.merge(c,l,b['l']),b['r'])
+            w=l if isinstance(l,_WorkingNode) else self._working(c,a);w.data['r']=self.merge(c,a['r'],r)
+        else:
+            w=r if isinstance(r,_WorkingNode) else self._working(c,b);w.data['l']=self.merge(c,l,b['l'])
+        w.data['n']=1+self.count(c,w.data['l'])+self.count(c,w.data['r']);return w
 
     def delete(self,c,h,k):
         n=self.node(c,h)
         if n is None:return h
         a,b=ordered_key(k),ordered_key(n['k'])
         if a==b:return self.merge(c,n['l'],n['r'])
-        side='l' if a<b else 'r';v=self.delete(c,n[side],k)
-        return self.put(c,n['k'],n['v'],v if side=='l' else n['l'],v if side=='r' else n['r'])
+        w=h if isinstance(h,_WorkingNode) else self._working(c,n);side='l' if a<b else 'r'
+        w.data[side]=self.delete(c,n[side],k);w.data['n']=1+self.count(c,w.data['l'])+self.count(c,w.data['r']);return w
 
     def items(self,c,h,after=None,prefix=None):
         stack=[];bound=ordered_key(after) if after is not None else None
@@ -273,13 +500,14 @@ class NodeIndex:
         while stack:
             c,h=stack.pop()
             if h==self.empty(c):continue
-            row=self.db.execute('SELECT l,r,born FROM nodes WHERE h=?',(h,)).fetchone()
+            row=self.db.execute('SELECT l,r,born FROM nodes WHERE h=?',(_sql_hash(h),)).fetchone()
             need(row is not None,'STORE_INTEGRITY_FAILURE')
             if row[2]!=self.birth:continue
-            if self.db.execute('INSERT OR IGNORE INTO retained VALUES (?)',(h,)).rowcount==0:continue
-            stack.extend(((c,row[0]),(c,row[1])))
+            if self.db.execute('INSERT OR IGNORE INTO retained VALUES (?)',(_sql_hash(h),)).rowcount==0:continue
+            stack.extend(((c,_wire_hash(row[0])),(c,_wire_hash(row[1]))))
             if c=='_timeline':stack.extend(self.node(c,h)['v'].items())
             if c=='_link_roots':stack.append(('links',self.node(c,h)['v']))
+            if c=='_audit_ref_roots':stack.append(('_audit_refs',self.node(c,h)['v']))
         self.db.execute('DELETE FROM nodes WHERE born=? AND h NOT IN (SELECT h FROM retained)',(self.birth,))
         self.db.execute('DELETE FROM blobs WHERE born=? AND h NOT IN (SELECT v FROM nodes WHERE born=?)',(self.birth,self.birth))
         self.cache.clear();self.size=0
@@ -290,11 +518,14 @@ class State:
         self.index,self.config=index,config;self.roots=dict(roots or {})
         self.rules={r['rule_id']:r for r in config['rules']}
         self.at=(config['initial_at_us'],0)
-        self.touched_slices=set()
+        self.touched_slices=set();self.delta={};self.private_delta={};self.frames=[]
 
     def root(self,c):return self.roots.get(c,self.index.empty(c))
     def get(self,c,k,default=None):return self.index.get(c,self.root(c),list(k),default)
-    def set(self,c,k,v):self.roots[c]=self.index.set(c,self.root(c),list(k),v)
+    def set(self,c,k,v):
+        self.index.ensure_room(self.roots);self.roots[c]=self.index.set(c,self.root(c),list(k),v)
+        if c in COMPONENTS:self.delta[(c,sl_key(k))]=(list(k),deepcopy(v))
+        elif c in ('_owners','_dedup','_revisions','_assertion_versions','_snapshots'):self.private_delta[(c,sl_key(k))]=(list(k),deepcopy(v))
     def rows(self,c,after=None,prefix=None):return self.index.items(c,self.root(c),after,prefix)
     def meta(self,k,default=None):return self.get('_meta',[k],default)
     def putmeta(self,k,v):self.set('_meta',[k],v)
@@ -329,7 +560,7 @@ class State:
         item=dict(owner_kind=owner,owner_id=id,ordinal=count,value=dict(kind=kind,**value))
         key=[owner,id,count];self.set('links',key,item);self.set('_link_counts',[owner,id],count+1);self.set('_link_seen',identity,True)
         root=self.get('_link_roots',[owner,id,kind],self.index.empty('links'))
-        self.set('_link_roots',[owner,id,kind],self.index.set('links',root,key,item))
+        self.set('_link_roots',[owner,id,kind],self.index.freeze('links',self.index.set('links',root,key,item)))
 
     def link_root(self,owner,id,kind):return self.get('_link_roots',[owner,id,kind],self.index.empty('links'))
 
@@ -437,7 +668,7 @@ class State:
         if old is not None:
             need(old['body']==r,{'ObligationRevision':'CONFLICTING_OBLIGATION_REVISION','Posting':'CONFLICTING_POSTING_REVISION'}.get(typ,'CONFLICTING_EVENT_REVISION'))
             return False
-        self.own(typ,r['record_id'],inst)
+        self.own({'Fill':'fill','FundingSnapshot':'funding-event','ObligationRevision':'obligation','Posting':'posting','Valuation':'valuation','Reserves':'reserves','CompletenessAssertion':'assertion'}[typ],r['record_id'],inst)
         if typ=='Fill':self._fill(r)
         elif typ=='FundingSnapshot':self._snapshot(r)
         elif typ=='ObligationRevision':self._revision(r)
@@ -475,6 +706,8 @@ class State:
         need(fee['role']==r['liquidity_role'] and fee['signed_fraction']==r['fee_fraction'],'FEE_RULE_MISMATCH')
         for kind,id in [('obligation',r['fee_obligation_id']),('episode','episode:'+r['record_id']),('lot','lot:'+r['record_id']),('leg','leg:'+r['record_id']+':open'),('leg','leg:'+r['record_id']+':close')]:self.own(kind,id,inst)
         remaining=abs(q);ranges=[];closed=[]
+        # Mutation of the active tree must not mutate an in-flight FIFO cursor.
+        self.roots['_live']=self.index.freeze('_live',self.root('_live'))
         for l in self.live(inst):
             need(l['multiplier']==r['multiplier'],'MISSING_CONTRACT_CONVERSION')
             if l['direction']==side:break
@@ -582,6 +815,7 @@ class State:
         for ref in r['posting_refs']:
             p=self.get('_postings',[ref['posting_id']]);need(p is not None and p['instrument_id']==r['instrument_id'],'REFERENCE_SCOPE_MISMATCH')
             need(any(u['episode_id']==sc['episode_id'] for u in p['allocations']),'REFERENCE_SCOPE_MISMATCH')
+        self.set('_assertion_versions',[r['record_id'],r['revision']],r)
         self.set('_assertion_heads',[r['record_id']],r);self.set('_ep_assertions',[sc['episode_id'],r['record_id']],r)
 
     def attribution(self):
@@ -717,6 +951,7 @@ class State:
                         base['funding_cash_usdt']=None;base['null_reasons']['funding_cash_usdt']='UNRESOLVED_SNAPSHOT_COVERAGE'
                     self.set('closed_slices',key,base)
             self.putmeta('qualified_bad',bad)
+        self.index.freeze_roots(self.roots)
         sums=[dict(component=c,count=self.index.count(c,self.root(c)),root_sha256=self.root(c)) for c in COMPONENTS]
         ec=dict(view=b['view'],economic_at_us=t,knowledge_cutoff=cutoff,causal_policy_sha256=self.config['_policy_hash'],balance=b,
                 economic_component_roots=[v for v in sums if v['component'] in ECONOMIC],coverage=coverage)
@@ -853,11 +1088,19 @@ def _validate_state(state,definition):
 
 def _safe_path(root,relative):
     need(type(relative) is str and not Path(relative).is_absolute() and '..' not in Path(relative).parts,'SCHEMA_VIOLATION')
+    need(not Path(root).is_symlink(),'SCHEMA_VIOLATION')
     path=Path(root)/relative
     current=Path(root)
     for p in Path(relative).parts:
         current=current/p;need(not current.is_symlink(),'SCHEMA_VIOLATION')
     need(path.resolve().is_relative_to(Path(root).resolve()),'SCHEMA_VIOLATION');return path
+
+
+def _file_sha(path):
+    h=hashlib.sha256()
+    with Path(path).open('rb') as source:
+        while chunk:=source.read(65536):h.update(chunk)
+    return h.hexdigest()
 
 
 def _fsync_directory(path):
@@ -869,8 +1112,17 @@ def _fsync_directory(path):
 def _atomic(path,value):
     path=Path(path);tmp=path.with_name(path.name+'.'+uuid.uuid4().hex+'.pending')
     raw=canonical_bytes(value)+b'\n'
+    immutable=path.name.startswith(('control-','guard-input-','journal-','manifest-')) or path.parent.name=='audit-rows'
+    if immutable and path.exists():
+        need(path.is_file() and path.stat().st_size==len(raw) and _file_sha(path)==hashlib.sha256(raw).hexdigest(),'STORE_INTEGRITY_FAILURE')
+        with path.open('rb') as existing:os.fsync(existing.fileno())
+        _fsync_directory(path.parent);return
+    budget=_budget_for(path)
+    if budget:budget.issue(tmp,len(raw),len(raw))
     with tmp.open('xb') as f:f.write(raw);f.flush();os.fsync(f.fileno())
-    os.replace(tmp,path);_fsync_directory(path.parent)
+    os.replace(tmp,path)
+    if budget:budget.rename(tmp,path)
+    _fsync_directory(path.parent)
     need(path.read_bytes()==raw,'STORE_INTEGRITY_FAILURE')
 
 
@@ -910,6 +1162,7 @@ def register_port(definition,port):
 
 class Ledger:
     def __init__(self,store_root,expected_head=None,_recovery=False):
+        self.thread_id=threading.get_ident()
         self.root=Path(store_root);need(self.root.is_dir() and not self.root.is_symlink(),'STORE_INTEGRITY_FAILURE')
         import fcntl
         self.lease=_safe_path(self.root,'LEASE').open('a+b')
@@ -919,6 +1172,9 @@ class Ledger:
         try:
             self.request=load_json(_safe_path(self.root,'GENESIS').read_bytes());self.config=_prepare_config(self.request['config'])
             self.head=load_json(_safe_path(self.root,'HEAD').read_bytes());need(expected_head is None or expected_head==self.head['audit_prefix'],'CHECKPOINT_MISMATCH')
+            self.budget=_BUDGETS.get(str(self.root.resolve()))
+            if self.budget is None:self.budget=ResourceBudget(self.root,self.config['limits']['max_store_bytes']);_BUDGETS[str(self.root.resolve())]=self.budget
+            self.budget.parent=_GLOBAL_BUDGET if _GLOBAL_BUDGET and self.root.resolve().is_relative_to(_GLOBAL_BUDGET.root) else None
             self.control=self._load_control();self.unknown=None
             self.spent=load_json((self.root/'SPENT').read_bytes()) if (self.root/'SPENT').exists() else dict(active_wall_us=0,total_written_bytes=0,attempts_started=1)
             self.index=NodeIndex(_safe_path(self.root,'cache.sqlite3'),self.config['limits']['max_resident_cache_bytes'])
@@ -935,6 +1191,7 @@ class Ledger:
                 self.state=State(self.index,self.config,roots)
             else:self.state=genesis
             self.state.at=(self.head['cutoff']['at_us'],self.head['cutoff']['slot'])
+            self._load_audit()
         except (OSError,sqlite3.Error) as e:
             if hasattr(self,'index'):self.index.db.close()
             self.lease.close();raise LedgerError('STORE_INTEGRITY_FAILURE') from e
@@ -951,10 +1208,12 @@ class Ledger:
         d.execute('CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,sha TEXT,seq INTEGER)')
         d.execute('CREATE TABLE IF NOT EXISTS commits(seq INTEGER PRIMARY KEY,at INTEGER,prefix TEXT)')
         d.execute('CREATE TABLE IF NOT EXISTS views(h TEXT PRIMARY KEY,b BLOB,roots BLOB)')
+        d.execute('CREATE TABLE IF NOT EXISTS audit_rows(seq INTEGER PRIMARY KEY,kind TEXT,commit_seq INTEGER,guard_id TEXT,b BLOB)')
         self._load_sources()
         d.commit()
 
     def _load_sources(self):
+        cached=self.index.db.execute('SELECT v FROM local_meta WHERE k="sources"').fetchone()==(digest(self.request['raw_catalogue']),)
         roots={r['root_id']:r['path'] for r in self.request['source_roots']}
         cat=self.request['raw_catalogue'];shape(cat,'namespace schema_version catalogue_id objects fact_store qualification_ref')
         need(cat['namespace']=='qf009.raw-catalogue' and cat['schema_version']==1,'UNSUPPORTED_NAMESPACE')
@@ -966,7 +1225,7 @@ class Ledger:
             need(h.hexdigest()==item['sha256'] and size==item['bytes'],'SOURCE_HASH_MISMATCH');objects[item['object_id']]=dict(item,rows=count)
         ref=self.request['fact_store'];need(ref==cat['fact_store'],'SOURCE_HASH_MISMATCH')
         p=_safe_path(roots[ref['root_id']],ref['relative_path']);h=hashlib.sha256();count=size=0
-        self.index.db.execute('DELETE FROM facts')
+        if not cached:self.index.db.execute('DELETE FROM facts')
         with p.open('rb') as source:
             for raw in source:
                 h.update(raw);count+=1;size+=len(raw);row=load_json(raw)
@@ -980,10 +1239,13 @@ class Ledger:
                 else:
                     shape(row,'fact_key instrument_id schema_id economic_at_us scenario_available_at_us observed_first_available_at_us cells raw_refs null_reasons')
                     schema=row['schema_id'];at=row['economic_at_us'];self._validate_fact(row)
-                try:self.index.db.execute('INSERT INTO facts VALUES (?,?,?,?,?,?)',(row['fact_key'],row['instrument_id'],schema,at,row['scenario_available_at_us'],canonical_bytes(row)))
+                try:
+                    if cached:
+                        existing=self.index.db.execute('SELECT b FROM facts WHERE k=?',(row['fact_key'],)).fetchone();need(existing is not None and existing[0]==canonical_bytes(row),'STORE_INTEGRITY_FAILURE')
+                    else:self.index.db.execute('INSERT INTO facts VALUES (?,?,?,?,?,?)',(row['fact_key'],row['instrument_id'],schema,at,row['scenario_available_at_us'],canonical_bytes(row)))
                 except sqlite3.IntegrityError as e:raise LedgerError('DUPLICATE_SOURCE') from e
         need(h.hexdigest()==ref['sha256'] and count==ref['rows'] and size==ref['bytes'],'SOURCE_HASH_MISMATCH')
-        self.index.db.execute('INSERT OR REPLACE INTO local_meta VALUES ("sources",?)',(digest(cat),))
+        if not cached:self.index.db.execute('INSERT OR REPLACE INTO local_meta VALUES ("sources",?)',(digest(cat),))
 
     def _validate_fact(self,row):
         schema=next((s for s in self.config['fact_schemas'] if s['schema_id']==row['schema_id']),None);need(schema is not None,'UNSUPPORTED_GENERATOR')
@@ -1007,36 +1269,43 @@ class Ledger:
 
     def _load_control(self):
         p=load_json(_safe_path(self.root,'CONTROL').read_bytes());seq=p['control_seq'];last=digest(['qf009.control-v3',self.request['config']['ledger_id'],PROFILE,'genesis'])
-        status='ACTIVE';guard=None
+        status='ACTIVE';guard=None;validated=False
         for n in range(1,seq+1):
             row=load_json(_safe_path(self.root,f'control-{n:08}.json').read_bytes());h=row.pop('control_sha256')
             need(h==digest(row) and row['previous_control_sha256']==last,'STORE_INTEGRITY_FAILURE');last=h
-            if row['kind']=='write_guard':guard=row
+            if row['kind']!='write_guard':
+                need(guard is not None and all(row[k]==guard[k] for k in ('guard_id','guard_input','request_id','request_sha256')),'STORE_INTEGRITY_FAILURE')
+            if row['kind']=='write_guard':guard=row;validated=False
+            elif row['kind']=='validated':need(guard is not None and row['guard_id']==guard['guard_id'],'STORE_INTEGRITY_FAILURE');validated=True
             elif row['kind']=='integrity_stop':status='INTEGRITY_STOPPED'
             elif row['kind']=='resource_stop' and status!='INTEGRITY_STOPPED':status='RESOURCE_STOPPED'
             elif row['kind']=='resolution' and row['outcome']!='unknown':guard=None
         need(last==p['control_sha256'],'STORE_INTEGRITY_FAILURE')
-        return dict(seq=seq,hash=last,status=status,guard=guard)
+        return dict(seq=seq,hash=last,status=status,guard=guard,validated=validated)
 
     def _control(self,kind,request=None,outcome=None,error=None):
+        self.budget.emergency=True
+        if self.budget.parent:self.budget.parent.emergency=True
         seq=self.control['seq']+1
         row=dict(ledger_id=self.config['ledger_id'],profile=PROFILE,control_seq=seq,previous_control_sha256=self.control['hash'],
           at_committed_seq=self.head['committed_seq'],audit_prefix=self.head['audit_prefix'],kind=kind,
           guard_id=self.control['guard']['guard_id'] if self.control['guard'] else 'g:'+str(seq),
           guard_input=self.control['guard']['guard_input'] if self.control['guard'] else self.guard_input,
-          request_id=request['request_id'] if request else None,request_sha256=digest(request) if request else None,
-          error=error,outcome=outcome,null_reasons={**({'error':'NOT_APPLICABLE'} if error is None else {}),**({'outcome':'NOT_APPLICABLE'} if outcome is None else {})})
+          request_id=request.get('request_id') if request else None,request_sha256=digest(request) if request else None,
+          error=error,outcome=outcome,null_reasons={**({'request_id':'UNKNOWN_INPUT_IDENTITY'} if not request or request.get('request_id') is None else {}),**({'request_sha256':'NONCANONICAL_INPUT'} if request is None else {}),**({'error':'NOT_APPLICABLE'} if error is None else {}),**({'outcome':'NOT_APPLICABLE'} if outcome is None else {})})
         row['control_sha256']=digest(row)
         _atomic(self.root/f'control-{seq:08}.json',row)
         _atomic(self.root/'CONTROL',dict(control_seq=seq,control_sha256=row['control_sha256']))
         # Both barriers/readbacks succeeded. Advance the already-verified chain
         # in O(1); a cold open verifies the entire durable chain once.
         current=dict(self.control,seq=seq,hash=row['control_sha256'])
-        if kind=='write_guard':current['guard']=row
+        if kind=='write_guard':current['guard']=row;current['validated']=False
+        elif kind=='validated':current['validated']=True
         elif kind=='integrity_stop':current['status']='INTEGRITY_STOPPED'
         elif kind=='resource_stop' and current['status']!='INTEGRITY_STOPPED':current['status']='RESOURCE_STOPPED'
         elif kind=='resolution' and outcome!='unknown':current['guard']=None
-        self.control=current
+        self.control=current;self.budget.emergency=False
+        if self.budget.parent:self.budget.parent.emergency=False
 
     def current_head(self):
         h=deepcopy(self.head);h['status']=self.control['status'] if self.control['status']!='ACTIVE' else 'COMMIT_UNKNOWN' if self.control['guard'] or self.unknown else 'ACTIVE';return h
@@ -1062,7 +1331,7 @@ class Ledger:
                 projection=self.projection(row);semantic.update(canonical_bytes(projection)+b'\n');audit.update(canonical_bytes(row)+b'\n');count+=1
         s.putmeta('context_receipt',dict(from_us=context['from_us'],before_us=self.config['initial_at_us'],fact_count=count,
                     economic_prefix_sha256=semantic.hexdigest(),audit_binding_sha256=audit.hexdigest()))
-        return s
+        self.index.freeze_roots(s.roots);s.delta.clear();s.private_delta.clear();return s
 
     def schema(self,id):
         found=next((x for x in self.config['fact_schemas'] if x['schema_id']==id),None)
@@ -1071,7 +1340,10 @@ class Ledger:
     @staticmethod
     def projection(row):return {k:deepcopy(row[k]) for k in ('fact_key','instrument_id','schema_id','economic_at_us','scenario_available_at_us','cells')}
 
+    def _assert_thread(self):need(threading.get_ident()==self.thread_id,'STORE_INTEGRITY_FAILURE','/writer_thread')
+
     def _assert_active(self):
+        self._assert_thread()
         need(self.control['status']=='ACTIVE','RESOURCE_EXHAUSTED' if self.control['status']=='RESOURCE_STOPPED' else 'STORE_INTEGRITY_FAILURE')
         need(self.control['guard'] is None and not self.unknown,'COMMIT_OUTCOME_UNKNOWN')
 
@@ -1090,6 +1362,14 @@ class Ledger:
         return dict(e,body=r)
 
     def _group(self,envelopes,st,applied,duplicates):
+        # Reject a late fill crossing the frozen calendar before a snapshot in
+        # the same delivery can fail inventory eligibility for a secondary reason.
+        for e in envelopes:
+            r=e['body']
+            if r['record_type']=='Fill' and st.get('events',list(wire_key(r))) is None:
+                calendar=st.calendar(r['instrument_id']);fill_first=st.one_rule('sequence',r['instrument_id'],r['filled_at_us'])['same_time_order']=='fills_before_snapshot'
+                start=bisect.bisect_left(calendar,r['filled_at_us']) if fill_first else bisect.bisect_right(calendar,r['filled_at_us'])
+                need(start==len(calendar) or calendar[start]>=r['available_at_us'],'LATE_ORIGIN_UNSUPPORTED')
         def order(e):
             r=e['body'];typ=r['record_type'];at=economic_time(r)
             tie=st.one_rule('sequence',r['instrument_id'],at).get('same_time_order') if typ in ('Fill','FundingSnapshot') else ''
@@ -1100,7 +1380,10 @@ class Ledger:
             r=e['body'];key=list(wire_key(r));old=st.get('events',key)
             if old is None:
                 need(not self.head['committed_seq'] or r['available_at_us']>self.head['cutoff']['at_us'],'PAST_AVAILABILITY')
-            if st.apply(r):
+            changed=st.apply(r)
+            refs=st.get('_audit_ref_roots',key,self.index.empty('_audit_refs'));refs=self.index.freeze('_audit_refs',self.index.set('_audit_refs',refs,[digest(e['origin'])],e['origin']));st.set('_audit_ref_roots',key,refs)
+            dedup=st.get('_dedup',key,dict(key=key_of(r),body_sha256=digest(r),first_commit=self.head['committed_seq']+1,audit_refs_root=refs));dedup['audit_refs_root']=refs;st.set('_dedup',key,dedup)
+            if changed:
                 st.set('events',key,e);st.set('_accepted',[st.at[0],st.at[1],*key],r);applied.append(key_of(r))
             else:duplicates.append(key_of(r))
         st.attribution()
@@ -1143,13 +1426,18 @@ class Ledger:
             if requirement['for_view'] or requirement['before_slots']:st.set('_query_times',[inst,clock,q],True)
 
     def _frame(self,st,cutoff):
+        self.index.freeze_roots(st.roots)
+        if st.delta or st.private_delta:
+            st.frames.append(dict(cutoff=deepcopy(cutoff),projection=[dict(component=c,item=v) for (c,_),(key,v) in sorted(st.delta.items())],private=[dict(component=c,key=key,value=v) for (c,_),(key,v) in sorted(st.private_delta.items())]));st.delta.clear();st.private_delta.clear()
         roots={k:v for k,v in st.roots.items() if k!='_timeline'}
         st.set('_timeline',[cutoff['at_us'],cutoff['slot']],roots)
+        st.roots['_timeline']=self.index.freeze('_timeline',st.roots['_timeline'])
 
     def _stage(self,request,st=None,partial=None):
         st=st or self.state;applied=[];duplicates=[];generated=[];noops=[]
         lower=self.head['cutoff']['at_us'] if self.head['committed_seq'] else self.config['initial_at_us']-1
         t=request['through_us'] if partial is None else partial['at_us']
+        need(t>=self.config['initial_at_us'],'SCHEDULE_MISMATCH')
         need(lower<=t<self.config['knowledge_end_exclusive_us'],'SCHEDULE_MISMATCH')
         imported=request['imported'];need(type(imported) is list and type(request['generated']) is list)
         if self.config['ingestion_mode']=='reference_import':
@@ -1176,7 +1464,16 @@ class Ledger:
                         if g['result']['outcome']=='noop':noops.append(dict(at_us=at,slot=slotno))
                         self._frame(st,dict(at_us=at,slot=slotno))
                 previous=at
-            if partial is None and request['generated']:need(request['generated']==generated,'ADAPTER_RESULT_MISMATCH')
+            if partial is None and request['generated']:
+                need(len(request['generated'])==len(generated),'SCHEDULE_MISMATCH')
+                for proposed,actual in zip(request['generated'],generated):
+                    for read in proposed.get('reads',[]):
+                        if read.get('kind')=='fact':
+                            row=self.index.db.execute('SELECT available FROM facts WHERE k=?',(read['fact_key'],)).fetchone()
+                            need(row is not None and row[0] is not None and row[0]<=actual['slot']['at_us'],'FUTURE_DEPENDENCY')
+                    for field in ('slot','slot_id','adapter_id','input_projection_sha256','prior_adapter_state_sha256','reads','selection_bindings'):
+                        need(proposed.get(field)==actual[field],'INPUT_BINDING_MISMATCH')
+                    need(proposed==actual,'ADAPTER_RESULT_MISMATCH')
         st.advance_clock(t);self._check_exact(st)
         slot=st.at[1] if st.at[0]==t else 0;st.at=(t,slot)
         return dict(applied_keys=applied,duplicate_keys=duplicates,no_op_slots=noops,generated=generated)
@@ -1188,6 +1485,7 @@ class Ledger:
             need(max(abs(f.numerator).bit_length(),f.denominator.bit_length())<=cap,'RESOURCE_EXHAUSTED','/exact_integer')
 
     def advance(self,request):
+        self._assert_thread()
         if type(request) is dict:
             for e in request.get('imported',[]) if type(request.get('imported')) is list else []:
                 if type(e) is dict and type(e.get('body')) is dict:
@@ -1199,7 +1497,7 @@ class Ledger:
         if saved and saved[0]==sha:
             self._assert_active();r=self._receipt(saved[1]);r['status']='replayed';return r
         if not saved and type(request) is dict and request.get('expected_audit_prefix')!=self.head['audit_prefix']:
-            raise LedgerError('PREFIX_MISMATCH')
+            error=LedgerError('PREFIX_MISMATCH');self._failure(error,request,read=False);raise error
         self._assert_active();before=deepcopy(self.head);roots=dict(self.state.roots);publication=False
         try:
             guard=f'guard-input-{self.control["seq"]+1:08}.json';_atomic(self.root/guard,request)
@@ -1217,12 +1515,13 @@ class Ledger:
                 if isinstance(error,LedgerError):raise
                 raise LedgerError('SCHEMA_VIOLATION') from error
             self._bound();cutoff=dict(at_us=request['through_us'],slot=self.state.at[1]);self._frame(self.state,cutoff)
-            view=self.state.view(cutoff);self._remember_view(view,self.state.roots)
+            view=self.state.view(cutoff);self._frame(self.state,cutoff);self._remember_view(view,self.state.roots)
             after=dict(ledger_id=self.config['ledger_id'],committed_seq=seq,cutoff=cutoff,economic_state_sha256=view['economic_state_sha256'],status='ACTIVE')
             core=dict(request_id=rid,request_sha256=sha,status='committed',before=before,after=after,
                 entries=self._handle(view,'entries'),registry_from=self.state.meta('registry_start',1),registry_to=self.state.meta('registry_next',1)-1,
                 **{k:result[k] for k in ('applied_keys','duplicate_keys','no_op_slots')})
-            payload=dict(request=request,receipt=core,roots=self.state.roots,generated=result['generated'])
+            payload=dict(request=request,receipt=core,roots=self.state.roots,generated=result['generated'],frames=self.state.frames)
+            self.state.frames=[]
             name=f'journal-{seq:08}.json';_atomic(self.root/name,payload);data=(self.root/name).read_bytes()
             file=dict(relative_path=name,sha256=hashlib.sha256(data).hexdigest(),bytes=len(data),rows=1)
             manifest=dict(seq=seq,previous_prefix=before['audit_prefix'],request_id=rid,request_sha256=sha,before=before,after=after,files=[file])
@@ -1233,14 +1532,15 @@ class Ledger:
             self.index.db.execute('INSERT OR REPLACE INTO commits VALUES (?,?,?)',(seq,cutoff['at_us'],prefix))
             self.index.prune(self.state.roots);self.index.db.commit();self.index.db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
             publication=True;_atomic(self.root/'HEAD',dict(after,audit_prefix=prefix));self.head=dict(after,audit_prefix=prefix)
-            self._control('resolution',request,'committed');self._save_spent()
+            self._append_audit('commit',manifest=manifest);self._save_spent();self._control('resolution',request,'committed')
             return self._receipt(seq)
         except LedgerError as e:
             if publication:self.unknown=True;raise LedgerError('COMMIT_OUTCOME_UNKNOWN',before=before,disposition='inspect_committed_head') from e
             self.index.db.rollback();self.index.cache.clear();self.index.size=0;self.state=State(self.index,self.config,roots);self.head=before
             e.receipt.update(request_id=rid,before=before,input_sha256=sha,disposition='stop_resource' if e.code=='RESOURCE_EXHAUSTED' else 'quarantine')
             e.receipt['null_reasons']={}
-            try:self._control('resource_stop' if e.code=='RESOURCE_EXHAUSTED' else 'integrity_stop',request,error=e.receipt)
+            try:
+                self._failure(e,request,read=False);self._control('resource_stop' if e.code=='RESOURCE_EXHAUSTED' else 'integrity_stop',request,error=e.receipt)
             except (OSError,LedgerError) as failure:
                 self.unknown=True;raise LedgerError('COMMIT_OUTCOME_UNKNOWN',before=before,disposition='inspect_committed_head') from failure
             raise
@@ -1453,7 +1753,9 @@ class Ledger:
         shape(result,'outcome events decisions orders order_transitions reserve_dependencies next_state');need(result['outcome'] in ('emit','noop'))
         need(result['outcome']!='noop' or not result['events'],'INPUT_BINDING_MISMATCH')
         need(len(result['events'])<=limits['max_adapter_emitted_events'] and len(canonical_bytes(result['next_state']))<=limits['max_adapter_state_bytes'],'RESOURCE_EXHAUSTED')
-        _validate_state(result['next_state'],definition);port.validate_state(deepcopy(result['next_state']))
+        _validate_state(result['next_state'],definition);_GUARD.active=True
+        try:port.validate_state(deepcopy(result['next_state']))
+        finally:_GUARD.active=False
         seq=st.meta('registry_next',1);st.putmeta('registry_next',seq+1)
         entry=dict(registry_seq=seq,slot=at,slot_id=slot['slot_id'],adapter_id=definition['adapter_id'],parent_audit_prefix=self.head['audit_prefix'],
            parent_registry_sha256=st.meta('registry_last',digest(['qf009.registry-v3',self.config['ledger_id'],'genesis'])),before_economic_state=view['economic_state_sha256'],
@@ -1520,7 +1822,7 @@ class Ledger:
 
     def _save_spent(self):
         now=_clock();self.spent['active_wall_us']+=int((now-self.started)*1000000);self.started=now
-        self.spent['total_written_bytes']=max(self.spent['total_written_bytes'],sum(p.stat().st_size for p in self.root.iterdir() if p.is_file()))
+        self.spent['total_written_bytes']=max(self.spent['total_written_bytes'],self.budget.written)
         _atomic(self.root/'SPENT',self.spent)
 
     def _rebuild_index(self):
@@ -1534,7 +1836,8 @@ class Ledger:
                 need(m['previous_prefix']==previous['audit_prefix'] and m['before']==previous,'STORE_INTEGRITY_FAILURE')
                 p=self._payload(seq);need(digest(p['request'])==m['request_sha256'],'STORE_INTEGRITY_FAILURE');self.index.birth=seq
                 result=self._stage(p['request'],st);cutoff=p['receipt']['after']['cutoff'];self._frame(st,cutoff)
-                v=st.view(cutoff)
+                v=st.view(cutoff);self._frame(st,cutoff)
+                need(st.frames==p['frames'],'STORE_INTEGRITY_FAILURE');st.frames=[]
                 need(st.roots==p['roots'] and result['generated']==p['generated'] and v['economic_state_sha256']==m['after']['economic_state_sha256'],'STORE_INTEGRITY_FAILURE')
                 previous=dict(m['after'],audit_prefix=digest(m));self.head=previous
                 d.execute('INSERT INTO requests VALUES (?,?,?)',(m['request_id'],m['request_sha256'],seq));d.execute('INSERT INTO commits VALUES (?,?,?)',(seq,cutoff['at_us'],digest(m)))
@@ -1543,28 +1846,161 @@ class Ledger:
             self.state=st
         finally:self.head=target
 
+    def _fact_cursors(self,at):
+        out=[]
+        for schema in self.config['fact_schemas']:
+            row=self.index.db.execute('SELECT available,k FROM facts WHERE schema_id=? AND available<=? AND (available>=? OR schema_id IN (%s)) ORDER BY available DESC,k DESC LIMIT 1'%(','.join('?' for _ in self.config['initial_context']['schemas']) or 'NULL'),
+                (schema['schema_id'],at,self.config['initial_at_us'],*self.config['initial_context']['schemas'])).fetchone()
+            out.append(dict(schema_id=schema['schema_id'],last_available_us=row[0] if row else None,last_fact_key=row[1] if row else None))
+        return out
+
+    def _query_cursors(self,st,at):
+        out=[]
+        for c in self.config['mark_clocks']:
+            inst,clock=c['instrument_id'],c['clock_id'];requirements=[r for r in self.config['mark_requirements'] if (r['key']['instrument_id'],r['key']['clock_id'])==(inst,clock)]
+            admitted=[v['key']['query_at_us'] for _,v in st.rows('query_status',prefix=[inst,clock])];authority=self.index.floor('_query_times',st.root('_query_times'),[inst,clock,at])
+            out.append(dict(instrument_id=inst,clock_id=clock,next_requirement_index=sum(r['key']['query_at_us']<=at for r in requirements),last_admitted_query_us=max(admitted) if admitted else None,
+                            last_authoritative_query_us=authority[0][2] if authority and authority[0][:2]==[inst,clock] else None))
+        return out
+
+    def _write_rows(self,relative,rows,component):
+        path=_safe_path(self.root,relative);path.parent.mkdir(parents=True,exist_ok=True);pending=path.with_name(path.name+'.'+uuid.uuid4().hex+'.pending')
+        count=size=0;h=hashlib.sha256();buffer=bytearray();budget=_budget_for(path)
+        # If a previous checkpoint export exists, independently recompute the
+        # exact closed rows and compare, never trust a leftover filename.
+        if path.exists():
+            for row in rows:
+                raw=canonical_bytes(row)+b'\n';h.update(raw);size+=len(raw);count+=1
+            need(path.stat().st_size==size and _file_sha(path)==h.hexdigest(),'STORE_INTEGRITY_FAILURE')
+        else:
+            with pending.open('xb') as f:
+                for row in rows:
+                    raw=canonical_bytes(row)+b'\n';h.update(raw);size+=len(raw);count+=1;buffer.extend(raw)
+                    if len(buffer)>=65536:
+                        if budget:budget.issue(pending,f.tell()+len(buffer),len(buffer))
+                        f.write(buffer);buffer.clear()
+                if buffer:
+                    if budget:budget.issue(pending,f.tell()+len(buffer),len(buffer))
+                    f.write(buffer)
+                f.flush();os.fsync(f.fileno())
+            os.replace(pending,path)
+            if budget:budget.rename(pending,path)
+            _fsync_directory(path.parent)
+            need(_file_sha(path)==h.hexdigest(),'STORE_INTEGRITY_FAILURE')
+        return dict(component=component,relative_path=relative,format_version=3,bytes=size,rows=count,sha256=h.hexdigest())
+
+    def _export_segments(self,upto,verify_all=False):
+        cached=getattr(self,'_export_inventory',None)
+        if cached is not None and not verify_all and upto>=self._export_upto:
+            inventory=deepcopy(cached);start_seq=self._export_upto+1
+        else:inventory=[];start_seq=1
+        if start_seq==1:
+            base={'config':[self.request['config']],'raw_catalogue':[self.request['raw_catalogue']],'adapters':self.config['adapters'],'schedule':self.config['schedule']}
+            for component,rows in base.items():inventory.append(self._write_rows('exports/base-'+component+'.jsonl',iter(rows),component))
+            def facts():
+                for (blob,) in self.index.db.execute('SELECT b FROM facts ORDER BY available,k'):yield load_json(blob)
+            inventory.append(self._write_rows('exports/base-facts.jsonl',facts(),'facts'))
+            def context():
+                yield self.state.meta('context_receipt')
+                if self.config['initial_context']['mode']=='closed_fact_prefix':
+                    for (blob,) in self.index.db.execute('SELECT b FROM facts WHERE at>=? AND available<? ORDER BY available,k',(self.config['initial_context']['from_us'],self.config['initial_at_us'])):
+                        row=load_json(blob)
+                        if row['schema_id'] in self.config['initial_context']['schemas']:yield self.projection(row)
+            inventory.append(self._write_rows('exports/base-context.jsonl',context(),'context'))
+            inventory.append(self._write_rows('exports/base-calendar.jsonl',(dict(entry=e,seen_key=None,null_reasons={'seen_key':'MISSING_EXPECTED_SNAPSHOT'}) for e in self.config['expected_snapshots']),'calendar'))
+        for seq in range(start_seq,upto+1):
+            payload=self._payload(seq)
+            # Export immutable segment rows once; subsequent checkpoints reuse
+            # the same confined file identities, not repeated full snapshots.
+            for ordinal,frame in enumerate(payload['frames']):
+                cutoff=frame['cutoff'];prefix=f'exports/{seq:08}-{ordinal:04}-'
+                items=frame['projection'];private=frame['private']
+                inventory.append(self._write_rows(prefix+'projection.jsonl',(dict(cutoff=cutoff,**row) for row in items),'projection'))
+                for component in ('adapter_states','orders','decisions','query_status','reserve_dependencies'):
+                    rows=[row['item'] for row in items if row['component']==component]
+                    if rows:inventory.append(self._write_rows(prefix+component+'.jsonl',iter(rows),component))
+                registry=[row['item'] for row in items if row['component']=='registry']
+                if registry:inventory.append(self._write_rows(prefix+'registry.jsonl',iter(registry),'registry'))
+                events=[dict(committed_seq=seq,slot=cutoff,envelope=row['item']) for row in items if row['component']=='events']
+                if events:inventory.append(self._write_rows(prefix+'journal.jsonl',iter(events),'journal'))
+                owners=[dict(kind=row['key'][0],entity_id=row['key'][1],instrument_id=row['value'][0],trajectory_id=row['value'][1],scenario_id=row['value'][2]) for row in private if row['component']=='_owners']
+                if owners:inventory.append(self._write_rows(prefix+'ownership.jsonl',iter(owners),'ownership'))
+                dedup=[row['value'] for row in private if row['component']=='_dedup']
+                if dedup:inventory.append(self._write_rows(prefix+'dedup.jsonl',iter(dedup),'dedup'))
+                revisions=[dict(kind='obligation' if row['component']=='_revisions' else 'assertion',entity_id=row['key'][0],revision=row['key'][1],key=key_of(row['value']),cutoff=cutoff) for row in private if row['component'] in ('_revisions','_assertion_versions')]
+                if revisions:inventory.append(self._write_rows(prefix+'revisions.jsonl',iter(revisions),'revisions'))
+                calendar=[dict(entry=self.config['_calendar_by_id'][(row['value']['instrument_id'],row['value']['record_id'])],seen_key=key_of(row['value']),null_reasons={}) for row in private if row['component']=='_snapshots']
+                if calendar:inventory.append(self._write_rows(prefix+'calendar.jsonl',iter(calendar),'calendar'))
+        self._export_inventory=deepcopy(inventory);self._export_upto=upto
+        return inventory
+
     def checkpoint(self,request):
-        shape(request,'expected_head');need(request['expected_head']==self.head['audit_prefix'],'CHECKPOINT_MISMATCH');self._assert_active();self._bound()
-        self._save_spent();h=self.head;c=self.config
-        # The candidate exports immutable authoritative inventory, not SQLite.
-        inventory=[]
-        for p in sorted(self.root.iterdir()):
-            if p.name=='GENESIS' or p.name.startswith(('journal-','manifest-','control-','guard-input-')) or p.name=='CONTROL':
-                raw=p.read_bytes();inventory.append(dict(component='config' if p.name=='GENESIS' else 'control' if p.name.startswith(('control-','guard-input-')) or p.name=='CONTROL' else 'journal',relative_path=p.name,format_version=3,bytes=len(raw),rows=1,sha256=hashlib.sha256(raw).hexdigest()))
+        shape(request,'expected_head');need(request['expected_head']==self.head['audit_prefix'],'CHECKPOINT_MISMATCH');self._assert_active()
+        before=deepcopy(self.head);established=False
+        try:
+            name=f'guard-input-{self.control["seq"]+1:08}.json';_atomic(self.root/name,request);path=self.root/name
+            self.guard_input=dict(relative_path=name,sha256=_file_sha(path),bytes=path.stat().st_size,rows=1);self._control('write_guard',request);established=True
+            result=self._checkpoint(request)
+            self._control('validated',request);self._save_spent();self._control('resolution',request,'not_committed')
+            return result
+        except LedgerError as error:
+            if not established:
+                self.unknown=True;raise LedgerError('COMMIT_OUTCOME_UNKNOWN',before=before,disposition='inspect_committed_head') from error
+            if self.control['guard']:
+                error.receipt.update(before=before,input_sha256=digest(request),disposition='stop_resource' if error.code=='RESOURCE_EXHAUSTED' else 'quarantine')
+                self._failure(error,request,False);self._control('resource_stop' if error.code=='RESOURCE_EXHAUSTED' else 'integrity_stop',request,error=error.receipt)
+            raise
+        except OSError as error:
+            self.unknown=True;raise LedgerError('COMMIT_OUTCOME_UNKNOWN',before=before,disposition='inspect_committed_head') from error
+
+    def _checkpoint(self,request):
+        shape(request,'expected_head');need(request['expected_head']==self.head['audit_prefix'],'CHECKPOINT_MISMATCH');self._bound()
+        h=self.head;c=self.config;inventory=self._export_segments(h['committed_seq']);self._save_spent()
+        fact_cursors=self._fact_cursors(h['cutoff']['at_us'] if h['committed_seq'] else h['cutoff']['at_us']-1);adapter_cursors=[dict(adapter_id=a['adapter_id'],last_invocation=self.state.meta('adapter_cursor:'+a['adapter_id'])) for a in c['adapters']]
+        query_cursors=self._query_cursors(self.state,h['cutoff']['at_us'])
+        name=f'exports/cursors-{h["committed_seq"]:08}.jsonl'
+        inventory.append(self._write_rows(name,iter([dict(kind='fact',value=v) for v in fact_cursors]+[dict(kind='adapter',value=v) for v in adapter_cursors]+[dict(kind='query',value=v) for v in query_cursors]),'cursors'))
+        for seq in range(1,self.control['seq']+1):
+            path=_safe_path(self.root,f'control-{seq:08}.json');raw=path.read_bytes();inventory.append(dict(component='control',relative_path=path.name,format_version=3,bytes=len(raw),rows=1,sha256=hashlib.sha256(raw).hexdigest()))
         cp=dict(namespace='qf009.streaming-checkpoint',schema_version=VERSION,profile=PROFILE,ledger_id=c['ledger_id'],trajectory_id=c['trajectory_id'],scenario_id=c['scenario_id'],
            committed_seq=h['committed_seq'],cutoff=h['cutoff'],audit_prefix=h['audit_prefix'],economic_state_sha256=h['economic_state_sha256'],config_sha256=digest(self.request['config']),
            causal_policy_sha256=c['_policy_hash'],raw_catalogue_sha256=digest(self.request['raw_catalogue']),fact_store_sha256=self.request['fact_store']['sha256'],adapters_sha256=digest(c['adapters']),schedule_sha256=digest(c['schedule']),
            journal_prefix_sha256=h['audit_prefix'],registry_prefix_sha256=self.state.root('registry'),calendar_cursor=sum(self.state.meta('calendar:'+i,0) for i in c['instruments']),
            next_tick_index=sum(t['at_us']<=h['cutoff']['at_us'] for t in c['schedule']) if h['committed_seq'] else 0,registry_next_seq=self.state.meta('registry_next',1),files=inventory,
-           context_receipt=self.state.meta('context_receipt'),fact_cursors=[],adapter_cursors=[dict(adapter_id=a['adapter_id'],last_invocation=self.state.meta('adapter_cursor:'+a['adapter_id'])) for a in c['adapters']],
-           query_cursors=[dict(instrument_id=b['instrument_id'],clock_id=b['clock_id'],next_requirement_index=sum(r['key']['instrument_id']==b['instrument_id'] and r['key']['clock_id']==b['clock_id'] and r['key']['query_at_us']<=h['cutoff']['at_us'] for r in c['mark_requirements']),last_admitted_query_us=None,last_authoritative_query_us=None) for b in c['mark_view_bindings']],
+           context_receipt=self.state.meta('context_receipt'),fact_cursors=fact_cursors,adapter_cursors=adapter_cursors,query_cursors=query_cursors,
            control_seq=self.control['seq'],control_sha256=self.control['hash'],resource_spent=deepcopy(self.spent),runner_state_coverage='CAPTURED_DECLARED_ADAPTER_STATE_NOT_R3_ACCEPTANCE')
         cp['checkpoint_sha256']=digest(cp);return cp
 
+    def _adopt_control_tail(self,outcome,allow_resolution=False):
+        # Do not overwrite a fully written companion whose pointer publication
+        # failed. Verify it under the same lease and advance only its control
+        # proof; it never imports an orphan financial segment.
+        current=self.control;guard=current['guard'];seq=current['seq'];last=current['hash'];tip=None
+        if guard is None:return
+        for _ in range(64):
+            path=_safe_path(self.root,f'control-{seq+1:08}.json')
+            if not path.exists():break
+            row=load_json(path.read_bytes());h=row.pop('control_sha256')
+            need(h==digest(row) and row['previous_control_sha256']==last and all(row[k]==guard[k] for k in ('guard_id','guard_input','request_id','request_sha256')),'STORE_INTEGRITY_FAILURE')
+            need(row['kind'] in ('validated','integrity_stop','resource_stop','resolution'),'STORE_INTEGRITY_FAILURE')
+            if row['kind']=='resolution':
+                if not allow_resolution:break
+                need(row['outcome'] in (outcome,'unknown'),'STORE_INTEGRITY_FAILURE')
+            with path.open('rb') as source:os.fsync(source.fileno())
+            seq+=1;last=h;tip=dict(control_seq=seq,control_sha256=h)
+            if row['kind']=='resolution' and row['outcome']!='unknown':break
+        else:raise LedgerError('RESOURCE_EXHAUSTED','/control_tail')
+        if tip:
+            _fsync_directory(self.root);_atomic(self.root/'CONTROL',tip);self.control=self._load_control()
+
     def resolve_commit(self,request):
+        self._assert_thread()
         shape(request,'request_id request_sha256');self._bound();guard=self.control['guard']
         need(guard is None or (guard['request_id']==request['request_id'] and guard['request_sha256']==request['request_sha256']),'REQUEST_CONFLICT')
         try:
+            if guard:
+                saved_path=_safe_path(self.root,guard['guard_input']['relative_path']);need(saved_path.is_file() and saved_path.stat().st_size==guard['guard_input']['bytes'] and _file_sha(saved_path)==guard['guard_input']['sha256'],'STORE_INTEGRITY_FAILURE')
+                saved_value=load_json(saved_path.read_bytes());need(digest(saved_value)==guard['request_sha256'] and saved_value.get('request_id')==guard['request_id'],'STORE_INTEGRITY_FAILURE')
             # Re-fsync every reachable object plus HEAD/CONTROL and the directory;
             # readability alone does not prove durable commit.
             head=load_json((self.root/'HEAD').read_bytes());oldhead=self.head;self.head=head;found=None;prefix=genesis_head(self.request,State(self.index,self.config,self._genesis_roots))['audit_prefix']
@@ -1580,11 +2016,27 @@ class Ledger:
             for name in ('HEAD','CONTROL','GENESIS'):
                 with (self.root/name).open('rb') as f:os.fsync(f.fileno())
             _fsync_directory(self.root);need(load_json((self.root/'HEAD').read_bytes())==head,'STORE_INTEGRITY_FAILURE')
+            self._adopt_control_tail('committed' if found else 'not_committed',bool(found))
             if found:
                 self._rebuild_index();outcome='committed';receipt=self._receipt(found)
+                for seq in range(1,head['committed_seq']+1):self._append_audit('commit',manifest=load_json(_safe_path(self.root,f'manifest-{seq:08}.json').read_bytes()))
             else:
                 self._rebuild_index();outcome='not_committed';receipt=None
-            if guard:
+                if guard and not self.control.get('validated'):
+                    source=_safe_path(self.root,guard['guard_input']['relative_path']);need(_file_sha(source)==guard['guard_input']['sha256'],'STORE_INTEGRITY_FAILURE');saved=load_json(source.read_bytes())
+                    roots=dict(self.state.roots);self.index.db.execute('SAVEPOINT admission_resolution')
+                    try:
+                        if set(saved)=={'request_id','expected_audit_prefix','through_us','imported','generated'}:
+                            need(len(saved['imported'])<=self.config['limits']['max_transaction_records'],'RESOURCE_EXHAUSTED');self._stage(saved,State(self.index,self.config,roots))
+                        elif set(saved)=={'expected_head'}:need(saved['expected_head']==head['audit_prefix'],'CHECKPOINT_MISMATCH')
+                        else:raise LedgerError('SCHEMA_VIOLATION')
+                    except LedgerError as error:
+                        self.index.db.execute('ROLLBACK TO admission_resolution');self._failure(error,saved,False);self._control('resource_stop' if error.code=='RESOURCE_EXHAUSTED' else 'integrity_stop',saved,error=error.receipt)
+                    finally:
+                        try:self.index.db.execute('ROLLBACK TO admission_resolution');self.index.db.execute('RELEASE admission_resolution')
+                        except sqlite3.Error:pass
+            self._adopt_control_tail(outcome,True);self._save_spent()
+            if self.control['guard']:
                 supplied=load_json(_safe_path(self.root,guard['guard_input']['relative_path']).read_bytes());self.guard_input=guard['guard_input'];self._control('resolution',supplied,outcome)
             self.unknown=None;return dict(request_id=request['request_id'],outcome=outcome,head=self.current_head(),receipt=receipt,null_reasons={} if found else {'receipt':'NOT_COMMITTED'})
         except LedgerError as e:
@@ -1593,19 +2045,65 @@ class Ledger:
         except OSError:
             return dict(request_id=request['request_id'],outcome='unknown',head=None,receipt=None,null_reasons={'head':'COMMIT_OUTCOME_UNKNOWN','receipt':'COMMIT_OUTCOME_UNKNOWN'})
 
+    def _load_audit(self):
+        pointer=self.root/'AUDIT';self.audit_tip=dict(seq=0,hash=digest(['qf009.audit-v3',self.config['ledger_id'],'genesis']))
+        if not pointer.exists():return
+        tip=load_json(_safe_path(self.root,'AUDIT').read_bytes());cached=self.index.db.execute('SELECT count(*) FROM audit_rows').fetchone()[0]==tip['seq']
+        if not cached:self.index.db.execute('DELETE FROM audit_rows')
+        for seq in range(1,tip['seq']+1):
+            wrapped=load_json(_safe_path(self.root,f'audit-rows/{seq:08}.json').read_bytes());row=wrapped['row']
+            need(wrapped['previous']==self.audit_tip['hash'] and wrapped['sha256']==digest({k:v for k,v in wrapped.items() if k!='sha256'}) and row['audit_seq']==seq,'STORE_INTEGRITY_FAILURE')
+            if row['kind']=='failure':need(row['failure_sha256']==digest({k:v for k,v in row.items() if k!='failure_sha256'}),'STORE_INTEGRITY_FAILURE')
+            else:need(row['prefix']==digest(row['manifest']),'STORE_INTEGRITY_FAILURE')
+            expected=(row['kind'],row.get('manifest',{}).get('seq'),wrapped['guard_id'],canonical_bytes(row))
+            if cached:need(self.index.db.execute('SELECT kind,commit_seq,guard_id,b FROM audit_rows WHERE seq=?',(seq,)).fetchone()==expected,'STORE_INTEGRITY_FAILURE')
+            else:self.index.db.execute('INSERT INTO audit_rows VALUES (?,?,?,?,?)',(seq,*expected))
+            self.audit_tip=dict(seq=seq,hash=wrapped['sha256'])
+        need(self.audit_tip==tip,'STORE_INTEGRITY_FAILURE');self.index.db.commit()
+
+    def _append_audit(self,kind,manifest=None,error=None):
+        if kind=='commit' and self.index.db.execute('SELECT 1 FROM audit_rows WHERE kind="commit" AND commit_seq=?',(manifest['seq'],)).fetchone():return
+        seq=self.audit_tip['seq']+1;guard=self.control['guard']['guard_id'] if self.control['guard'] else None
+        if kind=='commit':row=dict(audit_seq=seq,kind=kind,manifest=manifest,prefix=digest(manifest))
+        else:
+            row=dict(audit_seq=seq,kind='failure',at_committed_seq=self.head['committed_seq'],error=deepcopy(error));row['failure_sha256']=digest(row)
+        wrapped=dict(row=row,previous=self.audit_tip['hash'],guard_id=guard);wrapped['sha256']=digest(wrapped)
+        directory=self.root/'audit-rows';directory.mkdir(exist_ok=True)
+        self.budget.emergency=True
+        if self.budget.parent:self.budget.parent.emergency=True
+        try:
+            _atomic(directory/f'{seq:08}.json',wrapped);tip=dict(seq=seq,hash=wrapped['sha256']);_atomic(self.root/'AUDIT',tip)
+            self.index.db.execute('INSERT INTO audit_rows VALUES (?,?,?,?,?)',(seq,kind,manifest['seq'] if manifest else None,guard,canonical_bytes(row)));self.index.db.commit();self.audit_tip=tip
+        finally:
+            self.budget.emergency=False
+            if self.budget.parent:self.budget.parent.emergency=False
+
+    def _failure(self,error,request,read=True):
+        error.receipt.update(request_id=request.get('request_id') if type(request) is dict else None,before=error.receipt.get('before') or self.current_head(),input_sha256=digest(request),disposition='reject' if read else error.receipt['disposition'])
+        error.receipt['null_reasons']={'request_id':'NOT_APPLICABLE' if read else 'UNKNOWN_INPUT_IDENTITY'} if error.receipt['request_id'] is None else {}
+        self._append_audit('failure',error=error.receipt)
+
     def audit(self,request):
+        self._assert_thread()
         shape(request,'after_audit_seq limit');start=integer(request['after_audit_seq']);limit=integer(request['limit'],1);need(limit<=256,'RESOURCE_EXHAUSTED_READ')
-        rows=[];ordinal=0
-        for seq in range(1,self.head['committed_seq']+1):
-            ordinal+=1
-            if ordinal<=start:continue
-            m=load_json((self.root/f'manifest-{seq:08}.json').read_bytes());rows.append(dict(audit_seq=ordinal,kind='commit',manifest=m,prefix=digest(m)))
-            if len(rows)==limit:break
-        page=dict(rows=rows,next_after_audit_seq=ordinal if ordinal<self.head['committed_seq'] else None,null_reasons={} if ordinal<self.head['committed_seq'] else {'next_after_audit_seq':'END_OF_AUDIT'})
+        rows=[load_json(row[0]) for row in self.index.db.execute('SELECT b FROM audit_rows WHERE seq>? ORDER BY seq LIMIT ?',(start,limit))]
+        last=rows[-1]['audit_seq'] if rows else start;more=last<self.audit_tip['seq']
+        page=dict(rows=rows,next_after_audit_seq=last if more else None,null_reasons={} if more else {'next_after_audit_seq':'END_OF_AUDIT'})
         need(len(canonical_bytes(page))<=self.config['limits']['max_page_bytes'],'RESOURCE_EXHAUSTED_READ');return page
 
 
 def sl_key(key):return canonical_bytes(key).decode()
+
+def _audited_read(method):
+    def read(self,request):
+        self._assert_thread()
+        try:return method(self,request)
+        except LedgerError as error:
+            self._failure(error,request,True);raise
+    read.__name__=method.__name__;return read
+for _read_name in ('as_known','restated','scan','readiness'):
+    setattr(Ledger,_read_name,_audited_read(getattr(Ledger,_read_name)))
+
 
 
 def _item_key(item):
@@ -1633,7 +2131,9 @@ def create(request):
     config=_prepare_config(request['config']);ident(request['request_id']);root=Path(request['store_root'])
     need(not root.exists() and not root.is_symlink(),'STORE_INTEGRITY_FAILURE')
     for parent in root.parents:need(not parent.is_symlink(),'SCHEMA_VIOLATION')
-    root.mkdir(parents=False);_fsync_directory(root.parent);_atomic(root/'GENESIS',request)
+    root.mkdir(parents=False);_fsync_directory(root.parent)
+    budget=ResourceBudget(root,config['limits']['max_store_bytes']);budget.parent=_GLOBAL_BUDGET if _GLOBAL_BUDGET and root.is_relative_to(_GLOBAL_BUDGET.root) else None;_BUDGETS[str(root.resolve())]=budget
+    _atomic(root/'GENESIS',request)
     _atomic(root/'CONTROL',dict(control_seq=0,control_sha256=digest(['qf009.control-v3',config['ledger_id'],PROFILE,'genesis'])))
     # Initial source validation and context admission share the same implementation
     # as cold open. No financial genesis is acknowledged before they succeed.
@@ -1651,16 +2151,45 @@ def restore(request):
         need(cp['committed_seq']<=ledger.head['committed_seq'],'CHECKPOINT_MISMATCH')
         for key,value in [('config_sha256',digest(ledger.request['config'])),('raw_catalogue_sha256',digest(ledger.request['raw_catalogue'])),('fact_store_sha256',ledger.request['fact_store']['sha256']),('adapters_sha256',digest(ledger.config['adapters'])),('schedule_sha256',digest(ledger.config['schedule']))]:need(cp[key]==value,'CHECKPOINT_MISMATCH')
         for ref in cp['files']:
-            p=_safe_path(ledger.root,ref['relative_path']);need(p.is_file(),'STORE_INTEGRITY_FAILURE');raw=p.read_bytes()
-            # CONTROL may have advanced since an old checkpoint. Its current
-            # independent hash chain must be checked, never rolled back.
-            if p.name!='CONTROL':need(len(raw)==ref['bytes'] and hashlib.sha256(raw).hexdigest()==ref['sha256'],'STORE_INTEGRITY_FAILURE')
+            shape(ref,'component relative_path format_version bytes rows sha256');need(ref['format_version']==3,'UNSUPPORTED_VERSION')
+            p=_safe_path(ledger.root,ref['relative_path']);need(p.is_file(),'STORE_INTEGRITY_FAILURE')
+            need(p.stat().st_size==ref['bytes'] and _file_sha(p)==ref['sha256'],'STORE_INTEGRITY_FAILURE')
         ledger._rebuild_index();seq=cp['committed_seq']
         if seq:
-            p=ledger._payload(seq);m=load_json((ledger.root/f'manifest-{seq:08}.json').read_bytes())
-            need(digest(m)==cp['audit_prefix'] and m['after']['economic_state_sha256']==cp['economic_state_sha256'],'STORE_INTEGRITY_FAILURE')
-        need(cp['context_receipt']==ledger.state.meta('context_receipt'),'CHECKPOINT_MISMATCH')
+            payload=ledger._payload(seq);manifest=load_json(_safe_path(ledger.root,f'manifest-{seq:08}.json').read_bytes())
+            need(digest(manifest)==cp['audit_prefix'] and manifest['after']['economic_state_sha256']==cp['economic_state_sha256'],'STORE_INTEGRITY_FAILURE')
+            st=State(ledger.index,ledger.config,payload['roots'])
+        else:st=State(ledger.index,ledger.config,ledger._genesis_roots)
+        cutoff=cp['cutoff'];at=cutoff['at_us']
+        need(cp['context_receipt']==st.meta('context_receipt'),'CHECKPOINT_MISMATCH')
+        expected_facts=ledger._fact_cursors(at if seq else at-1);expected_adapters=[dict(adapter_id=a['adapter_id'],last_invocation=st.meta('adapter_cursor:'+a['adapter_id'])) for a in ledger.config['adapters']]
+        expected_queries=ledger._query_cursors(st,at)
+        need(cp['fact_cursors']==expected_facts and cp['adapter_cursors']==expected_adapters and cp['query_cursors']==expected_queries,'CHECKPOINT_MISMATCH')
+        need(cp['calendar_cursor']==sum(st.meta('calendar:'+i,0) for i in ledger.config['instruments']) and cp['registry_next_seq']==st.meta('registry_next',1),'CHECKPOINT_MISMATCH')
+        need(cp['next_tick_index']==(sum(t['at_us']<=at for t in ledger.config['schedule']) if seq else 0),'CHECKPOINT_MISMATCH')
+        need(cp['registry_prefix_sha256']==st.root('registry') and cp['journal_prefix_sha256']==cp['audit_prefix'],'CHECKPOINT_MISMATCH')
         need(cp['control_seq']<=ledger.control['seq'],'CHECKPOINT_MISMATCH')
+        control_hash=load_json(_safe_path(ledger.root,f'control-{cp["control_seq"]:08}.json').read_bytes())['control_sha256'] if cp['control_seq'] else digest(['qf009.control-v3',ledger.config['ledger_id'],PROFILE,'genesis'])
+        need(cp['control_sha256']==control_hash,'CHECKPOINT_MISMATCH')
+        refs=ledger._export_segments(seq,True)
+        # Current live state may be newer; source-independent context is fixed,
+        # while snapshot cursors must be reconstructed at this checkpoint cutoff.
+        cursor_rows=[dict(kind='fact',value=v) for v in expected_facts]+[dict(kind='adapter',value=v) for v in expected_adapters]+[dict(kind='query',value=v) for v in expected_queries]
+        cursor_bytes=b''.join(canonical_bytes(v)+b'\n' for v in cursor_rows)
+        refs.append(dict(component='cursors',relative_path=f'exports/cursors-{seq:08}.jsonl',format_version=3,bytes=len(cursor_bytes),rows=len(cursor_rows),sha256=hashlib.sha256(cursor_bytes).hexdigest()))
+        for n in range(1,cp['control_seq']+1):
+            path=_safe_path(ledger.root,f'control-{n:08}.json');raw=path.read_bytes();refs.append(dict(component='control',relative_path=path.name,format_version=3,bytes=len(raw),rows=1,sha256=hashlib.sha256(raw).hexdigest()))
+        need(refs==cp['files'],'STORE_INTEGRITY_FAILURE')
+        for ref in cp['files']:
+            path=_safe_path(ledger.root,ref['relative_path']);need(path.is_file(),'STORE_INTEGRITY_FAILURE')
+            h=hashlib.sha256();size=count=0
+            with path.open('rb') as source:
+                for raw in source:
+                    obj=load_json(raw);need(raw==canonical_bytes(obj)+b'\n','STORE_INTEGRITY_FAILURE');h.update(raw);size+=len(raw);count+=1
+            need(h.hexdigest()==ref['sha256'] and size==ref['bytes'] and count==ref['rows'],'STORE_INTEGRITY_FAILURE')
+        shape(cp['resource_spent'],'active_wall_us total_written_bytes attempts_started')
+        for value in cp['resource_spent'].values():integer(value)
+        need(cp['resource_spent']['attempts_started']==ledger.spent['attempts_started'] and cp['resource_spent']['active_wall_us']<=ledger.spent['active_wall_us'] and cp['resource_spent']['total_written_bytes']<=max(ledger.budget.grant,ledger.spent['total_written_bytes']),'CHECKPOINT_MISMATCH')
         ledger.spent['active_wall_us']=max(ledger.spent['active_wall_us'],cp['resource_spent']['active_wall_us']);ledger.spent['total_written_bytes']=max(ledger.spent['total_written_bytes'],cp['resource_spent']['total_written_bytes'])
         ledger._save_spent();return ledger.current_head()
 
