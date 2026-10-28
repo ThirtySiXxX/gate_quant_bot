@@ -1,7 +1,7 @@
 {
   "namespace": "qr009.replay-proposal",
   "schema_version": 1,
-  "revision": "qr009-r3-proposal-1",
+  "revision": "qr009-r3-proposal-2",
   "task_id": "QF-QR-009-R3-DESIGN",
   "dispatch_id": "QF-DISPATCH-20261028-QR009-R3-DESIGN-1",
   "status": "DESIGN_ONLY_PENDING_QD_REVIEW_AND_USER_CHOICES",
@@ -76,6 +76,18 @@
       "commit": "19cd4c7e461799b9b9a13fef2028902e8dfcd48c",
       "path": "docs/interface-requests/qd-qf009-streaming-ledger.md",
       "sha256": "36a7b157cdba45692b6737ba465d7b2bf4e29b9d2a012a52b67d454fb1c02ac7"
+    },
+    "feedback_counterexample": {
+      "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/qr009-coordinator-feedback-literal-counterexample.json",
+      "sha256": "4d42124402c0af2515458b4f3021453d4c57564590e96f3b0b5612505dfd002b",
+      "status": "LITERAL_COUNTEREXAMPLE_NOT_NATIVE_RUNTIME_TEST"
+    },
+    "qd_AC_engineering_review": {
+      "status": "FULL_440_LINES_READ_EXACT_TARGET_REVISE_ADDRESSED_AS_PROPOSAL",
+      "commit": "89cf347482c8121a4e3da559c6fb639a30788d6f",
+      "path": "docs/agent-reports/qd/QF-QD-009-replay-engineering-review.md",
+      "sha256": "8ca4301e21aa599f97fde432695a5b40bfbcb8a58e03751f089430e2d3325e3e",
+      "target_AC_commit": "946e9fcbe2e10c1de3f51efea5f17d7395cd2067"
     }
   },
   "approved_inputs": {
@@ -144,7 +156,7 @@
     },
     "U2": {
       "status": "PROPOSED_USER_ASSUMPTION",
-      "subject": "Independent capital, cash equity binding, scenario tiers, reserves, unknown gate and delayed final feedback",
+      "subject": "Independent capital, cash equity binding, scenario tiers, reserves, unknown gate and delayed final feedback; strict pre-call feedback numeric sign gate with stop on mismatch (pending QD review)",
       "recommended": "ACCEPT_CANDIDATE_RULES",
       "alternative": "REVISE_BEFORE_FREEZE_NO_RUN"
     },
@@ -170,14 +182,17 @@
     "account_start_us": 1704067200000000,
     "warmup_end_exclusive_us": 1704067200000000,
     "warmup_exposure": false,
-    "warmup_calendar_zero_eligibility_explicit": true,
     "reset_at_fold": false,
     "native_allocation_and_ticket_equity": "as_known_booked_C",
     "report_equity": "E=C+A-L+U",
     "native_current_notional": "signed_contracts * multiplier * latest_closed_1h_trade_close",
     "bankruptcy_stop": "C <= 0 or known E <= 0",
     "bankruptcy_status": "INSOLVENT_SCENARIO_INCOMPLETE",
-    "liquidation_claim": false
+    "liquidation_claim": false,
+    "warmup_zero_inventory_evidence_basis": "immutable original-clock context/configuration assertion of no active account; NOT financial snapshots or claims",
+    "financial_expected_calendar": "source snapshot times in [2024-01-01T00:00Z, economic cutoff) only",
+    "warmup_source_calendar": "full2023 original-clock context retained separately",
+    "pre_genesis_context_transport": "QD_RV02_REQUIRED_NOT_ASSUMED_IMPLEMENTED"
   },
   "strategy_binding": {
     "status": "ENGINEERING_REVIEW_REQUIRED",
@@ -357,7 +372,50 @@
     "same_direction_pending": "LOG_NO_RESUBMISSION",
     "partial_entry": "NO_PYRAMID_NO_TOPUP",
     "reversal": "CLOSE_THEN_LATER_DECISION_AFTER_FEEDBACK_GATE",
-    "cutoff_orders": "CANCEL_NO_FILL"
+    "cutoff_orders": "CANCEL_NO_FILL",
+    "feature_clock_binding": {
+      "status": "PROPOSED_U2_QD_REVIEW_REQUIRED",
+      "intent": "at decision d, feature hourly open d-H, close/available d",
+      "fill_feedback": "at fill f, latest complete hourly open f-H, close/available f; unchanged native timing_features on causal prefix",
+      "plan": "original intent plan/config/timing scope; do not rerun signal or quantity",
+      "opening_entry_price": "projected actual executed price",
+      "reduction_entry_price": "0",
+      "completion": "saved natural-close fill-feedback feature/side/bar and original plan; no finality-hour or old intent-feature substitution",
+      "trailing_effect": "same-time decision bar equals last_fill_bar; later post-entry bar may update native trail",
+      "other_exit_logic": "native adverse/weak checks precede same-bar suppression and are preserved"
+    },
+    "partial_entry_sizing": {
+      "bind": "public EntrySizingBook.bind(symbol,original_native_model_target,projected_actual_initial_executed_notional)",
+      "actual_notional": "abs(q_fill)*multiplier*exact_fill_price",
+      "requested_notional_binding": false,
+      "persist": "native ratio bits through partial exits; no rebind/topup",
+      "clear": "public model_current(symbol,0,0) at physical natural flat in same atomic transition; cleared through finality wait"
+    },
+    "submission_validation": {
+      "unrounded_desired": "D_sub=C_submission*0.05*200 exact",
+      "tier_basis": "D_sub*(1+g)",
+      "quantity": "unchanged native entry_ticket result checked independently against exact floor/min/max/budget",
+      "persist": [
+        "D_sub",
+        "C_submission",
+        "selected_tier",
+        "reference_price",
+        "g",
+        "fee_fraction",
+        "requested_quantity",
+        "native_return_values"
+      ]
+    },
+    "fill_validation": {
+      "kind": "INDEPENDENT_EXACT_FROZEN_QUANTITY_VALIDATOR",
+      "call_entry_ticket_again": false,
+      "N_f": "q_order*multiplier*actual_open",
+      "tier_basis": "max(D_sub,N_f)*(1+g)",
+      "cash_requirement": "N_f*(1+g)/200+2*r*N_f*(1+g)+N_f*g",
+      "metadata": "same synthetic bounds; min/max integer quantity and leverage200; no new quantity selection",
+      "funds": "current known funds with only this order own reservation released for comparison",
+      "then_capacity": "only after full requested ticket passes; partial liquidity never rescues budget failure"
+    }
   },
   "reservations": {
     "decision_group": "U2",
@@ -378,8 +436,9 @@
     "positive_U_spendable": false,
     "posted_fees_reserved_again": false,
     "unknown_required_component": "NULL_BUDGET_BLOCK_INCREASE",
-    "fill_revalidation": "remove own pending reservation for comparison; full requested quantity at exact fill-open with g/r; reject rather than resize",
-    "post_fill": "atomic fills/postings/cancel/recompute before another decision"
+    "fill_revalidation": "independent execution.fill_validation; private comparison releases only own reservation, no published release before atomic result",
+    "post_fill": "atomic fills/postings/cancel/recompute before another decision",
+    "expiry": "each pre-cutoff record expires at min(next scheduled recompute, cutoff); expiry equality invalid"
   },
   "scheduler": {
     "status": "ENGINEERING_REVIEW_REQUIRED",
@@ -394,7 +453,20 @@
     "tie_stress": "Move old-order fill/fee phase before snapshot; preserve info first and all subsequent dependencies",
     "same_time_new_order_fill": false,
     "per_raw_mark_tick_trigger": false,
-    "closed_scope_endpoint_us": "natural_last_close_us + 1 (not a query time)"
+    "closed_scope_endpoint_us": "natural_last_close_us + 1 (not a query time)",
+    "same_time_reversal_cancellation": "phase5 new opposing signal may cancel only still-pending order; cannot retrospectively cancel phase4 fill",
+    "atomic_fill_group": [
+      "frozen quantity and own reserve identity",
+      "pre-funds and full check",
+      "K consumption",
+      "actual fill",
+      "fee claim and distinct Posting",
+      "partial residual cancellation",
+      "scoped native feedback",
+      "actual sizing bind/flat clear",
+      "post-state reserves and cursor"
+    ],
+    "no_fill": "K0/missing/rejected source -> no zero Fill or fee; one cancellation/release"
   },
   "postings_and_finality": {
     "status": "ENGINEERING_REVIEW_REQUIRED",
@@ -416,8 +488,9 @@
     "funding_obligation_key": [
       "account_id",
       "instrument_id",
-      "source_timestamp_us",
-      "accepted_source_row_identity"
+      "funding_applies",
+      "source_timestamp_seconds",
+      "mapping_rule_id"
     ],
     "funding_total": "-snapshot_signed_contracts*multiplier*qualified_snapshot_MARK*exact_final_rate",
     "zero_eligibility": "KNOWN_ZERO_WITH_CALENDAR_EVIDENCE_NOT_FABRICATED_MARK",
@@ -431,7 +504,9 @@
     ],
     "finality_authority": "FROZEN_NAMED_SCENARIO",
     "current_revision_invalidation": true,
-    "past_as_known_immutable": true
+    "past_as_known_immutable": true,
+    "funding_duplicate_policy": "same semantic key and identical payload/rate lexeme -> no-op plus audit corroboration; any conflict -> hard stop",
+    "raw_identity_in_business_key": false
   },
   "unknown_policy": {
     "decision_group": "U2",
@@ -458,25 +533,124 @@
     "complete_trace_with_gaps_status": "COMPLETE_WITH_UNSUPPORTED_NOT_FULL_ACCEPTANCE"
   },
   "native_feedback": {
+    "id": "qr009-feedback-f64-guard-2",
+    "status": "PROPOSED_USER_ASSUMPTION_AND_QD_REVIEW_REQUIRED",
     "decision_group": "U2",
     "material_strategy_adaptation": true,
-    "fill_call": "unchanged record_fill(closed=False); pnl=realized_price_cash+executed_fee_cash",
+    "native_source_unchanged": true,
+    "fill_call": "unchanged strategy_execution.record_fill -> ExecutionTiming.record_fill(closed=False), pnl=float64(exact realized_price_cash+executed_fee_cash)",
     "opening_fee_included": true,
     "funding_at_fake_fill": false,
+    "exact_delivered_D": "sum of exact p_j actually delivered through enabled wrapper, in persisted order",
+    "native_S": "actual session_pnl bits; independently validate sequential binary64 recurrence, never reconstruct from D",
+    "native_float_rule": "finite Python binary64, round-to-nearest ties-to-even, original += order; no fsum/Kahan/reordering",
     "natural_flat": "WAIT_EPISODE_FINALITY; no new entries or timing.decide while waiting",
-    "saved_state": [
-      "episode_id",
-      "delivered_fill_feedback_sum",
-      "natural_close_feature",
-      "natural_close_direction",
-      "natural_close_bar_ts",
-      "full_native_timing_and_sizing_books"
+    "exact_N": "cash-settled episode net under complete current revision/posting/assertion scope",
+    "exact_Delta": "N-D",
+    "projected_f": "float64(Delta), fixed projection error bound",
+    "predicted_R": "binary64(S + f)",
+    "pre_call_guards": [
+      "complete causal current prefix and financial finality; completion not already applied",
+      "S bit identity and complete ordered delivered-call recurrence; no missing/duplicate/skipped required call",
+      "f and R finite; nonzero Delta never underflows; bounded exact Fraction(f)-Delta and Fraction(R)-N",
+      "sign3(R)==sign3(N) exactly; also native R<0 iff N<0; no epsilon"
     ],
-    "completion_event": "TYPED_FEEDBACK_COMPLETION_NOT_FILL",
-    "completion_call": "unchanged record_fill(closed=True, pnl=settled_episode_net-delivered_fill_feedback_sum, saved_close_feature/side/bar)",
-    "next_decision": "next permitted hourly phase after completion",
-    "unknown_final_net": "REMAIN_WAITING_NO_ZERO_SUBSTITUTION",
-    "later_revision": "ledger/budget/current_finality update only; no retrospective rearm or duplicate close feedback"
+    "sign3": "negative|zero|positive; +0 and -0 are zero",
+    "native_R_is_exact_N": false,
+    "compensate_using_S": false,
+    "completion_event": "TYPED_FEEDBACK_COMPLETION_NOT_FILL_OR_POSTING",
+    "completion_call": "on detached candidate after guards: unchanged scoped wrapper/native record_fill(closed=True,pnl=f,saved natural-close fill-feedback feature/side/bar and original plan,entry_price=0)",
+    "post_call_validation": "full native state must match predicted unchanged function behavior before atomic publication; capture R before native reset in receipt",
+    "zero_or_positive_completion": "preserves any prior blocked_side/rearm_price; does not invent native clearing",
+    "next_decision": "next permitted hourly phase after successfully published completion",
+    "unknown_final_net": "WAIT_NO_PROJECTION_NO_COMPLETION_NO_ZERO_SUBSTITUTION",
+    "timing_disabled": "NATIVE_FEEDBACK_NOT_APPLICABLE; no fictitious TimingState or delivered p_j; U2 account finality gate still applies",
+    "enabled_missing_feature": "FEEDBACK_BINDING_MISSING; not a successful skipped call",
+    "rearm_flag_false": "does not bypass guard; enabled record_fill still writes blocked_side on loss",
+    "failure_policy": "before publication discard only unpublished candidate and stop trajectory; retain prior committed cash/fees/postings; persist diagnostic failure; no return-based restart/policy switch",
+    "failure_codes_proposed_adapter_only": [
+      "NUMERIC_FEEDBACK_PROJECTION",
+      "NUMERIC_FEEDBACK_SIGN_MISMATCH",
+      "FEEDBACK_STATE_MISMATCH",
+      "FEEDBACK_BINDING_MISSING",
+      "NATIVE_FEEDBACK_DIVERGENCE"
+    ],
+    "kernel_error_transport": "QD_REVIEW_REQUIRED_NO_SILENT_REGISTRY_CHANGE",
+    "post_publication_IO_failure": "reviewed COMMIT_UNKNOWN resolution, not rollback",
+    "forbidden": [
+      "epsilon branch repair",
+      "float residual cancellation/injection",
+      "compensating cash",
+      "fake Fill",
+      "raw TimingState field edits",
+      "native strategy rewrite",
+      "unknown -> zero"
+    ],
+    "saved_state": {
+      "scope": [
+        "account_id",
+        "instrument_id",
+        "trajectory_id",
+        "episode_id",
+        "status"
+      ],
+      "statuses": [
+        "ACTIVE",
+        "WAIT_EPISODE_FINALITY",
+        "COMPLETED",
+        "STOPPED"
+      ],
+      "feedback_history": [
+        "ordered delivered fill IDs",
+        "exact p_j",
+        "exact D",
+        "wrapper applicability",
+        "f_j bits",
+        "actual S bits",
+        "recurrence and prefix receipt"
+      ],
+      "native_timing_fields": [
+        "last_bar",
+        "weak_count",
+        "last_fill_bar",
+        "blocked_side",
+        "rearm_price",
+        "session_pnl",
+        "entry_price",
+        "best_close"
+      ],
+      "native_state_encoding": "all fields/presence, finite binary64 big-endian 16-hex bits and typed integers; public dump/restore bit-preserving; no omitted-field defaults",
+      "sizing": "all EntrySizingBook ratios with native bit identity",
+      "order_close_context": [
+        "pending order/decision/plan",
+        "intent feature and clocks",
+        "fill-feedback feature and clocks",
+        "saved final-close fill-feedback feature including extrema",
+        "direction",
+        "native code/config/projection versions",
+        "exact source versus projected values"
+      ],
+      "full_state_bindings": [
+        "authoritative ledger/lot/claim/posting/reservations via verified reconstructible checkpoint",
+        "scenario/asset/calendar/query/feature cursors",
+        "all other adapter states"
+      ],
+      "completion": [
+        "finality scope/revision/Posting IDs and availability",
+        "exact N and Delta",
+        "f/R bits and exact errors",
+        "completion ID and exactly-once latch"
+      ],
+      "control": [
+        "last committed clock",
+        "durable failure latch",
+        "resource and attempt accounting"
+      ],
+      "restore": "validate capsule, ledger prefix and delivered-call recurrence before another native call; preserve unknown/stopped state across all boundaries"
+    },
+    "later_revision": "ledger/budget/current finality update only; never replay old completion/rearm",
+    "runtime_validation": "NOT_EXECUTED",
+    "partial_sizing_binding": "execution.partial_entry_sizing"
   },
   "evidence_tail": {
     "decision_group": "U3",
@@ -490,7 +664,14 @@
     "new_order": false,
     "forced_close": false,
     "open_at_cutoff": "CENSORED_FOR_FUTURE_EXPORT",
-    "flat_pending": "IMMATURE_OR_INVALID_IF_UNSUPPORTED"
+    "flat_pending": "IMMATURE_OR_INVALID_IF_UNSUPPORTED",
+    "cutoff_cancel": "typed lifecycle/adapter-state transition; no new FinancialBody Reserves/Valuation origin",
+    "reservation_state": "predeclared expiry equality; no backdated release or fabricated zero reserve",
+    "tail_budget": "NULL_EXPIRED_RESERVES_NO_NEW_RISK",
+    "open_view": "retain lots, old MARK timestamp evidence; U/E null when stale",
+    "flat_view": "U=0 by inventory; E may be known from known claims; budget still null from expiry",
+    "as_known": "re-evaluate stored evidence age/expiry; not a new MARK lookup",
+    "transport_dependency": "QD amended lifecycle/context/query qualification contract pending exact review"
   },
   "carry_projection": {
     "decision_group": "U3",
@@ -512,7 +693,7 @@
   },
   "numeric_projection": {
     "status": "ENGINEERING_REVIEW_REQUIRED",
-    "id": "qr009-native-f64-1",
+    "id": "qr009-native-f64-2",
     "authoritative": "exact decimal/rational and integer UTC us",
     "native_dtype": "float64",
     "integer_seconds_max_absolute": 9007199254740992,
@@ -525,7 +706,7 @@
       "min_max_quantity",
       "tier",
       "budget",
-      "feedback_net_sign"
+      "feedback_pre_call_sign3_and_loss_predicate"
     ],
     "strategy_allowlist": [
       "closed economic OHLCV fields",
@@ -544,7 +725,28 @@
       "relative_otherwise": "0.000000000001"
     },
     "generated_identity_rule": "account scope plus causal local sequence; no full-file digest or hash-dependent phase ordering",
-    "raw_identity_bindings": "separate audit envelope; future rehash may change refs, not past economic projection/transitions/generated sequence"
+    "raw_identity_bindings": "separate audit envelope; future rehash may change refs, not past economic projection/transitions/generated sequence",
+    "feedback_binding": "qr009-feedback-f64-guard-2",
+    "feedback_gate_timing": "PRE_CALL_AND_PRE_PUBLICATION",
+    "feedback_branch_tolerance": "NONE_SIGN3_EXACT_AGREEMENT_REQUIRED",
+    "indicator_branch_policy": "UNCHANGED_NATIVE_FLOAT_POLICY_NOT_NEW_EXACT_INDICATORS",
+    "decimal_context": {
+      "scope": "local per native invocation, restore caller afterward",
+      "precision": 50,
+      "rounding": "ROUND_HALF_EVEN",
+      "Emin": -999999,
+      "Emax": 999999,
+      "capitals": 1,
+      "clamp": 0,
+      "enabled_traps": [
+        "InvalidOperation",
+        "DivisionByZero",
+        "Overflow"
+      ],
+      "other_traps": false,
+      "clear_flags_before_call": true
+    },
+    "runtime_freeze": "pin exact Python/numpy/pandas and native binary64 platform before S13; null implementation_freeze_gate blocks run"
   },
   "query_plan": {
     "status": "PROPOSED_NOT_EVALUATED",
@@ -587,7 +789,18 @@
     "holdings_based_selection": false,
     "return_based_selection": false,
     "hit_rate": "NOT_EVALUATED",
-    "raw_point_materialization": false
+    "raw_point_materialization": false,
+    "runtime_roles": "seven recognized role tags allowed per Q key; actual event role/time also validated against scheduler",
+    "synthetic_boundary_probes": "cutoff-1us/cutoff or other off-plan probes are not runtime queries unless already in frozen set",
+    "checkpoint_cursors": [
+      "sorted query cursor",
+      "raw month/physical-row cursor",
+      "alias carry/lookahead",
+      "current selection or unknown receipt",
+      "actual-used query-role set"
+    ],
+    "actual_schema_hash": "UNASSIGNED_BLOCKS_EXECUTION",
+    "actual_frozen_plan_hash": "UNASSIGNED_PENDING_USER_CHOICES_BLOCKS_EXECUTION"
   },
   "scenarios": [
     {
@@ -830,18 +1043,39 @@
       "checkpoints_per_attempt": 256,
       "checkpoint_every_active_hours": 168,
       "checkpoint_at_fold_and_end": true,
-      "concurrent_paths": 1
+      "concurrent_paths": 1,
+      "journal_record_metric": "count each admitted FinancialBody, Generated incl noop, DecisionRecord, typed lifecycle/trace transition and commit/failure receipt even nested; logical identity once, checkpoint copies charge bytes not new logical records",
+      "separate_counters": [
+        "each logical kind",
+        "physical JSONL rows",
+        "index pages/visits",
+        "checkpoints",
+        "bytes"
+      ]
     },
     "whole_stage": {
       "wall_seconds": 14400,
       "cpu_seconds": 14400,
       "new_disk_mib": 14336,
       "frozen_inputs_read_only_and_not_copied": true,
-      "first_reached_limit_stops": true
+      "first_reached_limit_stops": true,
+      "all_18_paths_guaranteed_to_finish": false
     },
     "attempt_budget_includes_failures": true,
     "successful_path_rerun_for_selection": false,
-    "pre_run_scaling_gate": true
+    "pre_run_scaling_gate": true,
+    "later_native_S13": {
+      "status": "UNASSIGNED_BLOCKS_MARKET_STAGE",
+      "required_before_authorization": [
+        "finite cases and fixture sizes",
+        "attempt count",
+        "wall and CPU",
+        "RSS and disk",
+        "inclusion in global accounting and remaining headroom",
+        "native prefix/scaling parity"
+      ],
+      "additional_attempts_authorized": 0
+    }
   },
   "evaluation_annotations": {
     "calendar_utc": [
@@ -867,7 +1101,8 @@
     "feedback_finality_and_rearm": true,
     "A23": "scheduler crossing fold with pending obligations; no reset or prior-fold label; forced-terminal negative fixture censored/null",
     "A26": "controlled scheduler cash100/ticket80/loss50 vs skip first gives blocked50 vs eligible100; also actual native sizing path",
-    "A34": "reference100/fill101/exit110/base1/fees0/funding0 yields9 through scheduler/cash/feedback; no second slippage expense"
+    "A34": "reference100/fill101/exit110/base1/fees0/funding0 yields9 through scheduler/cash/feedback; no second slippage expense",
+    "feedback_numeric_guard": "FB01-FB12 below, future actual unchanged wrapper/native path plus atomic publication/restart; stdlib examples are not runtime acceptance"
   },
   "future_gates": {
     "R3": "reviewed streaming/projection + independent acceptance + query coverage + user choices + bounded dispatch",
@@ -893,5 +1128,192 @@
     "query_schema": null,
     "python_numpy_pandas_versions": null,
     "complete_resolved_config_hash": null
+  },
+  "revision_dispatch_id": "QF-DISPATCH-20261028-QR009-DESIGN-REVISION-1",
+  "revision_base_commit": "4d4e5304be7646e0a4520f4ec8512a7890f847a4",
+  "revision_review_status": "R01_R05_PROPOSED_BINDINGS_R06_FUTURE_GATES_PENDING_QD_REVIEW",
+  "feedback_validation_vectors": [
+    {
+      "id": "FB01",
+      "p": [
+        "-0.1",
+        "-0.2"
+      ],
+      "N": "0",
+      "expected": "NUMERIC_FEEDBACK_SIGN_MISMATCH; no completion/rearm publication",
+      "QD_counterexample": {
+        "p": [
+          "-0.1",
+          "0.3",
+          "-0.2"
+        ],
+        "N": "0",
+        "expected_R": "-2^-55",
+        "expected": "NUMERIC_FEEDBACK_SIGN_MISMATCH"
+      }
+    },
+    {
+      "id": "FB02",
+      "p": [
+        "-0.125",
+        "-0.25"
+      ],
+      "N": "0",
+      "expected": "PASS_LITERAL_GATE; prospective native reset verification"
+    },
+    {
+      "id": "FB03",
+      "p": [
+        "-0.1",
+        "-0.2"
+      ],
+      "N": "0.125",
+      "expected": "PASS_LITERAL_GATE with bounded approximation and positive branch"
+    },
+    {
+      "id": "FB04",
+      "p": [
+        "-0.1",
+        "-0.2"
+      ],
+      "N": "-0.125",
+      "expected": "PASS_LITERAL_GATE with bounded approximation and loss branch"
+    },
+    {
+      "id": "FB05",
+      "p": [
+        "-0.25",
+        "-0.25"
+      ],
+      "N_exact_expression": "2^-60",
+      "expected": "NUMERIC_FEEDBACK_SIGN_MISMATCH; rounded final zero is not exact positive"
+    },
+    {
+      "id": "FB06",
+      "p": [
+        "-0.25",
+        "-0.25"
+      ],
+      "N_exact_expression": "-2^-60",
+      "expected": "NUMERIC_FEEDBACK_SIGN_MISMATCH; rounded final zero must not erase loss"
+    },
+    {
+      "id": "FB07",
+      "N": null,
+      "expected": "WAIT_NO_PROJECTION"
+    },
+    {
+      "id": "FB08",
+      "case": "altered persisted S bits",
+      "expected": "FEEDBACK_STATE_MISMATCH even if loss predicate agrees"
+    },
+    {
+      "id": "FB09",
+      "case": "nonfinite/overflow/nonzero-underflow projection or state",
+      "expected": "PRE_CALL_REJECT; source-schema-invalid amounts fail even earlier"
+    },
+    {
+      "id": "FB10",
+      "case": "duplicate completion / changed same identity / late revision-refund",
+      "expected": "exactly-once noop or conflict; no old rearm rewrite; prospective"
+    },
+    {
+      "id": "FB11",
+      "case": "disabled timing vs enabled missing feature; rearm flag true and false; preexisting blocked state",
+      "expected": "correct applicability/guard/full native state; prospective"
+    },
+    {
+      "id": "FB12",
+      "case": "partial fill, natural exit, late fee/funding finality, checkpoint/fold interruption, future-only input/hash perturbation",
+      "expected": "complete actual native/ledger/decision path equivalence; prospective"
+    }
+  ],
+  "source_consumer_bindings": {
+    "status": "PROPOSED_ENGINEERING_BINDINGS_PENDING_QD_AMENDMENT_REVIEW",
+    "exec_open": {
+      "schema_id": "qr009.exec-open-fact-v1",
+      "transport": "closed Fact header",
+      "stable_key": "instrument/open_us/execution-open channel",
+      "economic_at_us": "open_us",
+      "scenario_available_at_us": "open_us under pending U1 scenario",
+      "cells": {
+        "open_price": {
+          "type": "D+",
+          "unit": "USDT_per_base"
+        }
+      },
+      "consumer_fields": [
+        "instrument_id",
+        "open_us",
+        "open_price"
+      ],
+      "qualification_audit": "accepted full source row and its unchanged close-time availability plus explicit U1 open-only rule",
+      "full_ohlcv_retimestamped": false,
+      "strategy_access": false
+    },
+    "mark": {
+      "observation_semantic_key": [
+        "instrument_id",
+        "archive-mark",
+        "source_us"
+      ],
+      "legacy_QR008_audit_ids_unchanged": true,
+      "aliases": "existing exact-lexeme rule; all raw refs retained in audit",
+      "raw_available_a": "source_us+approved_delay",
+      "consumer_known_and_available": "query_us q",
+      "reuse": "reuse existing qualified financial Valuation and emit consumer receipt; never redeliver new body at old a behind sealed frontier",
+      "first_financial_delivery": "if source origin is in account range: valuation_at=source_us, known_at=available_at=q; never pretend source=q",
+      "pre_genesis_flat": "qualified context query can gate entry without out-of-range financial Valuation",
+      "funding_formula": "retain source valuation time and actual a<=snapshot; total availability remains strictly-next-hour R",
+      "unknown_status_transport": "QD must bind current query qualification to authoritative financial/adapter unknown U/reserves/budget and later recovery; no stale cached supported view or shadowing null-Valuation shortcut",
+      "if_transport_missing": "BLOCK_REGISTRATION_RUN_NO_PRIVATE_API_OR_FROZEN_SCHEMA_EDIT"
+    },
+    "selection_payload": {
+      "closed_fields": [
+        "instrument_id",
+        "query_us",
+        "mark_clock_id",
+        "roles",
+        "status",
+        "source_us",
+        "source_available_us",
+        "source_semantic_key",
+        "mark_price",
+        "selected_at_us",
+        "consumer_available_us",
+        "unknown_reason"
+      ],
+      "status_enum": [
+        "SUPPORTED",
+        "UNKNOWN"
+      ],
+      "consumer_times": "selected_at_us=consumer_available_us=q",
+      "supported": "nonnull source/value fields; unknown_reason null",
+      "unknown": "source/value fields null; one registered unknown reason",
+      "unknown_reasons": [
+        "MISSING_REQUIRED_MONTH",
+        "NO_ELIGIBLE_POINT",
+        "SOURCE_TOO_OLD",
+        "AVAILABLE_TOO_OLD",
+        "UNRESOLVED_SOURCE_OR_RULE"
+      ],
+      "integrity_conflict": "HARD_STOP_NOT_BENIGN_UNKNOWN",
+      "audit_envelope": [
+        "plan/version/hash",
+        "qualification/code identities",
+        "raw refs",
+        "latest-eligible proof"
+      ],
+      "audit_hashes_in_numeric_inputs": false,
+      "schema_id": "qr009.mark-selection-v1"
+    }
+  },
+  "revision_issue_map": {
+    "R01": "section5/8 feedback exact-vs-bits, scoped wrapper, pre-call sign3/atomic stop; FB01-FB12 prospective",
+    "R02": "section3/8 intent/fill/completion clocks, actual partial-entry bind and flat clear, fixed Decimal context, unrounded submission tier and separate frozen-quantity fill predicate",
+    "R03": "section2/5 context-only2023, financial calendar2024, predeclared reserve expiry/cutoff lifecycle, no tail fresh MARK",
+    "R04": "section4 private own-reserve comparison, full-check before K, atomic outputs, no phase5 retrospective phase4 cancel",
+    "R05": "section4/7.1 closed open Fact, source versus consumer clocks, stable funding semantic ID, query qualification/unknown/closure/cursors; QD transport dependency explicit",
+    "R06": "unchanged initial register, defined record counters, later S13 finite register/scaling gate remains unassigned; no measured feasibility"
   }
 }
