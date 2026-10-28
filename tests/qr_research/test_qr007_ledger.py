@@ -40,7 +40,144 @@ def rehash(snapshot):
     snapshot["state_sha256"]=v.digest({k:x for k,x in snapshot.items() if k!="state_sha256"})
 
 
+def closed_b1_snapshot(*,partial=False,unknown=False,restored=False):
+    """Hand-written B1 levels; never imports the producer or copies its output."""
+    f,unit=v.b1_fixture(partial)
+    f.revision("fee-o","o",10*v.U,40*v.U,None,[],rev=2,kind="fee")
+    f.revision("fee-o","o",10*v.U,50*v.U,"-0.2",[(unit,"-0.2")],rev=3,kind="fee")
+    f.post("refund","fee-o",60*v.U,"0.0495",[(unit,"0.0495")],corrects="p-o")
+    cfg,records=f.seal();_,_,s=entry_snapshot()
+    t=50 if restored else 40 if unknown else 35
+    s.update(as_of_us=t*v.U,knowledge_cutoff_us=t*v.U,
+             causal_policy_sha256=v.digest({k:x for k,x in cfg.items() if k!="source_manifest"}))
+    b=s["balances"];b.update(as_of_us=t*v.U,knowledge_cutoff_us=t*v.U,valuation_refs=[])
+    b.update(v.balance("10001.5",None if unknown else "0.0495" if restored else "0",
+                       None if unknown else "0","0",None if unknown else "10001.5495" if restored else "10001.5",
+                       None if unknown else "10001.5"),new_risk_supported=not unknown)
+    if unknown:
+        b["null_reasons"].update({k:"UNKNOWN_OBLIGATION_TOTAL" for k in
+            ("receivables_usdt","liabilities_usdt","economic_equity_usdt","simulated_budget_usdt")})
+    specs=[("c6",30,0,6,"1.2","-0.1497","-0.12","-0.1503"),
+           ("c4",35,6,10,"0.8","-0.0998","-0.08","-0.1002")] if partial else [
+           ("c",30,0,10,"2","-0.2495","-0.2","-0.2505")]
+    s["closed_slices"]=[dict(slice_id="slice:"+name,lot_id="lot:o",episode_id="episode:o",
+        closing_fill_id=name,closed_at_us=close*v.U,unit_start=lo,unit_end=hi,
+        realized_price_pnl_usdt=gross,entry_fee_cash_usdt=None if unknown else new if restored else old,
+        exit_fee_cash_usdt=exit_fee,funding_cash_usdt="0",attribution_revision=3 if restored else 2 if unknown else 1,
+        null_reasons={"entry_fee_cash_usdt":"UNKNOWN_OBLIGATION_TOTAL"} if unknown else {})
+        for name,close,lo,hi,gross,old,new,exit_fee in specs]
+    s["lots"][0].update(remaining_contracts=0,live_ranges=[],closed_slice_ids=[r["slice_id"] for r in s["closed_slices"]])
+    ob=s["obligations"][0]
+    ob.update(latest_revision=3 if restored else 2 if unknown else 1,T_usdt=None if unknown else "-0.2" if restored else "-0.2495",
+              P_usdt=None if unknown else "0.0495" if restored else "0",A_usdt=None if unknown else "0.0495" if restored else "0",
+              L_usdt=None if unknown else "0",allocation_refs=[] if unknown else ob["allocation_refs"])
+    if unknown:ob["null_reasons"]={k:"UNKNOWN_OBLIGATION_TOTAL" for k in ("T_usdt","P_usdt","A_usdt","L_usdt")}
+    for name,_,lo,hi,_,_,_,fee in specs:
+        s["obligations"].append(dict(instrument_id=v.BTC,obligation_id="fee-"+name,kind="fee",origin_id=name,
+            latest_revision=1,T_usdt=fee,B_usdt=fee,P_usdt="0",A_usdt="0",L_usdt="0",
+            allocation_refs=[f.alloc("fee-"+name,[(f.unit("o",lo,hi),fee)])[0]["allocation_id"]],
+            posting_refs=[dict(instrument_id=v.BTC,record_type="Posting",record_id="p-"+name,revision=1)],null_reasons={}))
+    rehash(s)
+    return cfg,records,s
+
+
+def saved_empty_candidate():
+    """Literal producer envelope with its own fixture identity, no producer."""
+    f=v.Fixture();f.config["ledger_id"]="saved-ledger";f.reserve()
+    cfg,records=f.seal();_,_,s=entry_snapshot()
+    s.update(ledger_id="saved-ledger",lots=[],obligations=[],closed_slices=[],
+             causal_policy_sha256=v.digest({k:x for k,x in cfg.items() if k!="source_manifest"}))
+    s["balances"].update(v.balance("10000","0","0","0","10000","10000"),valuation_refs=[])
+    rehash(s)
+    state=dict(config=cfg,records=records,derived_entries=[],corroborating_source_refs=[])
+    before=dict(state,records=[])
+    audit=dict(namespace=v.NS,schema_version=1,profile=v.PROFILE,ledger_id="saved-ledger",
+               config_sha256=v.digest(cfg),source_manifest_sha256=v.digest(cfg["source_manifest"]),
+               committed_sha256=v.digest(state),committed_state=state,integrity="clean",failure_receipts=[])
+    receipt=dict(status="applied",applied_keys=[{k:records[0][k] for k in v.KEY}],
+                 duplicate_keys=[],corroborated_keys=[],entries=[],
+                 committed_before_sha256=v.digest(before),committed_after_sha256=v.digest(state))
+    return dict(candidate_type="synthetic-producer-output-not-independent-oracle",code_commit=v.SCHEMA_COMMIT,profile=v.PROFILE,
+        inputs=dict(case_id="hand-written-empty",config=cfg,records=records,expected_error=None,
+                    readiness_queries=[],snapshot_at_us=[10*v.U]),
+        outputs=dict(audit=audit,receipt=receipt,snapshots=[s],readiness=[]))
+
+
 class CheckerFinancialTests(unittest.TestCase):
+    def test_input_decimal_padding_normalizes_without_weakening_outputs(self):
+        f=v.Fixture();r=f.fill("o",v.U,10,"49900");raw=copy.deepcopy(r)
+        raw.update(fill_price="+49900.00",multiplier="0.00100",fee_fraction="+0.000500")
+        normalized=v.normalize_record_input(raw)
+        self.assertEqual(normalized,r);self.assertEqual(raw["fill_price"],"+49900.00")
+        self.assertEqual(v.independent_content(normalized),v.independent_content(r))
+        unknown=f.revision("fee-o","o",v.U,2*v.U,None,[],rev=2,kind="fee")
+        self.assertEqual(v.normalize_record_input(unknown),unknown)
+        for amount in (1.0,"01","1e3","0."+"1"*65,"1"*129):
+            bad=copy.deepcopy(raw);bad["fill_price"]=amount
+            with self.assertRaises(v.CheckError):v.normalize_record_input(bad)
+        cfg,records,s=entry_snapshot();s["balances"]["cash_usdt"]="9999.750500";rehash(s)
+        with self.assertRaisesRegex(v.CheckError,"noncanonical money"):
+            v.check_snapshot(s,cfg,records=records)
+
+    def test_saved_candidate_uses_own_fixture_and_rejects_rehashed_cash(self):
+        d=saved_empty_candidate();v.check_saved_candidate(d,v.SCHEMA_COMMIT)
+        s=d["outputs"]["snapshots"][0];cfg,_=v.a11_fixture().seal()
+        with self.assertRaises(v.CheckError):v.check_snapshot(s,cfg)
+        for key in ("cash_usdt","economic_equity_usdt","simulated_budget_usdt"):
+            s["balances"][key]="10001"
+        rehash(s)
+        with self.assertRaisesRegex(v.CheckError,"cash differs"):
+            v.check_saved_candidate(d,v.SCHEMA_COMMIT)
+
+    def test_literal_B1_known_unknown_and_restored_snapshots(self):
+        for partial in (False,True):
+            for state,net in (({},"1.5"),({"unknown":True},None),({"restored":True},"1.5495")):
+                cfg,records,s=closed_b1_snapshot(partial=partial,**state)
+                v.check_snapshot(s,cfg,records=records)
+                nets=[v.slice_net(r) for r in s["closed_slices"]]
+                self.assertEqual(None if any(x is None for x in nets) else v.finite_decimal(sum(map(Fraction,nets))),net)
+
+    def test_rehashed_B1_unknown_fee_cannot_keep_old_value_or_zero(self):
+        for partial in (False,True):
+            for amount in ("-0.2495","0"):
+                cfg,records,s=closed_b1_snapshot(partial=partial,unknown=True)
+                row=s["closed_slices"][-1];row["entry_fee_cash_usdt"]=amount;row["null_reasons"]={};rehash(s)
+                with self.assertRaisesRegex(v.CheckError,"unknown fee attribution hidden"):
+                    v.check_snapshot(s,cfg,records=records)
+
+    def test_B1_fee_requires_its_own_precise_null_reason(self):
+        for reasons in ({},{"entry_fee_cash_usdt":"UNKNOWN_AMOUNT"}):
+            cfg,records,s=closed_b1_snapshot(unknown=True)
+            s["closed_slices"][0]["null_reasons"]=reasons;rehash(s)
+            with self.assertRaises(v.CheckError):v.check_snapshot(s,cfg,records=records)
+
+    def test_B1_known_other_side_cannot_be_erased(self):
+        cfg,records,s=closed_b1_snapshot(unknown=True)
+        row=s["closed_slices"][0];row["exit_fee_cash_usdt"]=None
+        row["null_reasons"]["exit_fee_cash_usdt"]="UNKNOWN_OBLIGATION_TOTAL";rehash(s)
+        with self.assertRaisesRegex(v.CheckError,"known fee attribution became unknown"):
+            v.check_snapshot(s,cfg,records=records)
+
+    def test_rehashed_B1_gross_cannot_change_when_fee_is_unknown(self):
+        cfg,records,s=closed_b1_snapshot(unknown=True)
+        s["closed_slices"][0]["realized_price_pnl_usdt"]="3";rehash(s)
+        with self.assertRaisesRegex(v.CheckError,"slice gross differs"):
+            v.check_snapshot(s,cfg,records=records)
+
+    def test_B1_restoration_cannot_book_early_refund_even_if_levels_balance(self):
+        cfg,records,s=closed_b1_snapshot(restored=True)
+        s["balances"].update(v.balance("10001.5495","0","0","0","10001.5495","10001.5495"))
+        s["obligations"][0].update(B_usdt="-0.2",P_usdt="0",A_usdt="0")
+        rehash(s)
+        with self.assertRaisesRegex(v.CheckError,"cash differs"):
+            v.check_snapshot(s,cfg,records=records)
+
+    def test_rehashed_equal_total_ranges_must_still_partition_units(self):
+        cfg,records,s=closed_b1_snapshot(partial=True)
+        s["closed_slices"][1].update(unit_start=5,unit_end=9);rehash(s)
+        with self.assertRaisesRegex(v.CheckError,"unit partition overlap/gap"):
+            v.check_snapshot(s,cfg,records=records)
+
     def test_readiness_cannot_claim_future_or_blocked_completion(self):
         complete=dict(episode_id="episode:o",as_of_us=10*v.U,natural_exit_at_us=3*v.U,
                       status="complete",complete_at_us=10*v.U,assertion_refs=[],
@@ -166,20 +303,23 @@ class CheckerBoundariesTests(unittest.TestCase):
     def test_prepared_has_no_producer_pass_or_fit(self):
         report=v.prepared_report()
         self.assertEqual(report["status"],"PREPARED_NOT_EXECUTED")
-        self.assertEqual(report["totals"],dict(prepared=21,passed=0,failed=0,not_executed=21))
+        self.assertEqual(report["totals"],dict(prepared=26,passed=0,failed=0,not_executed=26))
         self.assertEqual(len(report["criteria"]),34)
         self.assertIsNone(report["target"])
         self.assertFalse(report["producer_executed"])
         self.assertEqual(report["model_fits"],0)
         self.assertIn("A26",v.DEFERRED)
-        self.assertEqual(len({r["case_id"] for r in report["cases"]}),21)
+        self.assertEqual(len({r["case_id"] for r in report["cases"]}),26)
 
-    def test_B1_prevents_candidate_execution_until_owner_patch(self):
-        self.assertTrue(v.PENDING_CONTRACTS)
-        with self.assertRaisesRegex(v.CheckError,"amendment pending"):
-            v.load_target("not-read.py","0"*64,"0"*40,"not-read.md")
-        with self.assertRaisesRegex(v.CheckError,"amendment pending"):
-            v.execute_cases(object(),{})
+    def test_reviewed_B1_binding_and_unreviewed_amendment_gate(self):
+        self.assertFalse(v.PENDING_CONTRACTS)
+        self.assertEqual(v.PROFILE,"qd007-synthetic-r3")
+        self.assertEqual(v.ACCEPTED_B1_PROPOSAL_SHA256,"8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1")
+        with patch.object(v,"PENDING_CONTRACTS",["unreviewed amendment"]):
+            with self.assertRaisesRegex(v.CheckError,"amendment pending"):
+                v.load_target("not-read.py","0"*64,"0"*40,"not-read.md")
+            with self.assertRaisesRegex(v.CheckError,"amendment pending"):
+                v.execute_cases(object(),{})
 
     def test_offline_guard_and_restoration(self):
         previous=socket.create_connection

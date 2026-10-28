@@ -1,11 +1,11 @@
 # QF-QR-007-READINESS 预检、schema审查及经济覆盖规范
 
 日期：2026-10-28 Australia/Melbourne。角色：QR。
-当前结论：**PREPARED_NOT_EXECUTED**，独立验证器23项自身测试通过；21项producer用例未执行。
-r2设计接受记录保留；B1修订待QD精确schema/profile交接，尚未接受实现。
-覆盖规范子步骤：**SPEC_READY_FOR_REVIEW / PROPOSED_NOT_ACTIVE**，见最新记录。
+当前结论：**PASS_SYNTHETIC_ONLY**，32项自身测试、26项独立producer算例、11份保存产物通过。
+精确r3/B1实现验收见末节；先前PREPARED、r2及覆盖规范记录保留为历史。
+负责人已传达QR008来源方案A获用户批准；本轮未独立验收QD008候选，不改冻结QR008文档。
 预检结论仍为 PASS（仅文档/验收准备）；以下原预检记录保留。
-当前依赖：负责人交接B1与producer的确切commit/hash；可靠成交量和新精度/聚合版本仍待验收。
+当前依赖：可靠成交量、新精度/聚合版本与MARK覆盖仍待验收，再进入完整回放/标签验证。
 训练就绪仍未达；模型、scaler、校准器拟合均为0，开始拟合前仍须用户确认。
 Dispatch QF-DISPATCH-20261028-QR007-PREFLIGHT-1，补充 DECIMAL-SCOPE-1；
 CAPACITY-1只恢复同一任务，没有改模型或扩大范围。
@@ -339,3 +339,98 @@ MARK 202310 BTC有5个相邻完全相同四字段重复行，无降序；采集�
 替代来源一致性/精度验收。同时等待QD的B1精确schema及producer commit/hash，用另一个
 明确交接执行合成实现验收。本检查点后停止，不增加币种，不自行改覆盖协议、获取数据、
 启动市场回放或拟合。达到训练条件后先报告证据，再取得用户训练确认。
+
+## IMPLEMENTATION-REVIEW-1 完成报告 — PASS_SYNTHETIC_ONLY
+
+派单 `QF-DISPATCH-20261028-QR007-IMPLEMENTATION-REVIEW-1`；起点
+`8b9e85e5c041fcf9167940520035693562f761ba`，QR工作树/分支同上，起始干净。
+本轮只编辑四个已分配文件：
+
+- `research/qr007/validate_event_ledger.py`：接受精确r3/B1绑定；新增五个独立算例，
+  源绑定的fee未知/gross检查、无重叠单位分区、显式保存产物检查与回放。
+- `tests/qr_research/test_qr007_ledger.py`：23→32项自测，手写B1/保存产物fixture；
+  测试重算hash仍不能掩盖未知费被填0/旧值、擦除已知费用、篡改gross、提前退款。
+- `research/qr007/ledger-review.md`：精确schema接受、实际验收结果与限制；历史保留。
+- 本角色报告。新合成证据仅写入忽略目录`research/.data/qr007/`的新子目录。
+
+### 精确身份
+
+| 项目 | commit / SHA256 |
+| --- | --- |
+| QD代码commit | `0ea2d51901689a351068bb9d33906c3240832afa` |
+| QD代码 | `7c1a08c569b79618b6de3092e297ef1ed1a51b54da29d62e76e7e2c900620636` |
+| r3 schema | `7fd7df5f84a8822f5fdd37243d24e0eb293d9eeacda17514c8b1f1ad04ac475a` |
+| QD测试文件（只核验身份） | `aa4ec5c282ab6107c3970c986dd3ba2e45d86638b265eabdc36a86c921f7c8d8` |
+| QD报告发布commit | `45bf3e036516b97570b3630cc19684af26713132` |
+| QD报告 | `28bf64df16cc81fe6037ca1ade67894ca7abb59d104506885a6b1cbcfdffb504` |
+| candidate-r3/manifest.json | `e9b3745fb33fb63043033a005cd87240acece29ac1c1daef37e42cc4ba23b2a7` |
+| 冻结B1提案 | `8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1` |
+| 本轮QR验证器 | `c59d47ba3e46da4e4077b2596692fe7dd5c8a4f50756498a03e9a0fb6d08a8dd` |
+| 本轮QR自身测试 | `1950b41dda7cfea9f6bfdc45549b4416cb34577f2fb0364098ebe2f43583f394` |
+
+QD工作树HEAD可能继续推进；本结论只绑定上述commit/bytes，执行前已核对实际文件
+与Git提交对象一致。B1最小diff与冻结提案一致后才更新QR绑定；没有取消未来契约
+变更的pending门。QR不编辑QD源码/schema/test/report，也未运行其应用回归套件；
+QD自报32 focused/262 regression/8 frontend不计入本轮独立测试数。
+
+### 实际执行结果与复现
+
+最终一次统一脚本执行：**32项checker自测通过；26项公共API独立算例通过；
+11份保存产物通过；R01跨产物因果检查通过**。三类计数分开，不相加当作同一测试数。
+26项每个算例保存公共API入参、输出、异常receipt；失败与原子停机是预期负例。
+期望值由字面常量/Fraction计算，未使用producer金融helper作oracle。
+
+检查器规范化合法输入`-0.10`→`-0.1`只用于独立源检查，原始输入字节不变；
+输出仍严格要求canonical字符串。保存产物使用其实际config/catalog与微秒时点，
+不是套用QR A11 fixture的ledger_id或秒时间轴。全部金额比较精确，无浮点容差。
+保存输出相等只证明可重现，独立金融语义检查和C01–C26反例另行给出接受依据。
+
+在QR工作树实际执行的命令（目标目录必须不存在，重复执行应选另一个新目录）：
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/.data/qr007/implementation-review-r3-reproduction/run.py research/.data/qr007/implementation-review-r3-verified
+```
+
+脚本SHA256 `ba97639f9f6f817bd995c2c76678661d1d89f9aa91c59ff87b17e2fc4a43fb7e`。
+它是本地忽略证据；提交的验证器也可直接用显式`--target/--target-sha256/
+--target-commit/--schema`执行26项，或调用`inspect_candidate_manifest`检查保存产物。
+未安装/升级依赖；使用既有解释器，producer导入与全部验证在Python socket guard内。
+该guard不是针对任意恶意代码的OS沙箱，本次加载的是精确审核的标准库合成模块。
+
+证据根目录 `research/.data/qr007/implementation-review-r3-verified/`：
+
+| 文件 | SHA256 |
+| --- | --- |
+| verification.json | `7b4d7b838cbc9bf0151b4fbd0d903367ad95691674d6323487eb22a7c73ace99` |
+| results.json（26份transcript的路径/hash/bytes索引） | `1ea9afdb152ca36c5291adddcf545cab85077b537a31efcece30637b8fc27dce` |
+| saved-artifacts.json（11份实际重放输出） | `09e272109f82a1347e840ab201137ff4ff9b16ae7f98e75feee821c4e4c9e590` |
+| selftests.txt | `7f22fbc4932de17797168dad910483522ab8a2e1d9a8b48b7d3233f613b8a854` |
+| preservation.json | `fb5ac6b07ccfc33411a1ec36837d80dfed792a308785cdc397467249989a9d20` |
+
+途中结果保留，不能冒充最终producer失败：`implementation-review-r3-initial`
+在第18项trace bytes序列化中断；`original21`完整21通过；`expanded26`完整26通过。
+`artifacts11`的10通过/1拒绝是QR误用输出规则拒绝合法输入尾零；
+`artifacts11-final`名字虽含final，其7通过/4拒绝仍是中间结果，来自QR规范化误处理
+null_reasons同名键。两项检查器问题已修正并回归；最终以`verified`为准。
+这些目录均未覆盖/删除，QD候选原件未修改。
+
+### 保护、限制和下一步
+
+主仓7项保护指纹（HEAD、branch、暂存diff、实际索引字节、未暂存diff、完整status、
+72条目数）与既有基线一致。QR006五文件、旧QR008 coverage两文件和新QR008四文件
+继续与起点字节一致；本轮只暂存上述四个独占文件，独立提交，无merge/push。
+共享PROGRESS/DECISIONS由QD/负责人在审阅后整合，本轮没有并发修改共享日志。
+
+本结论仅为合成账本阶段；没有市场请求/下载、市场标签、模型/scaler/校准器fit。
+未启动应用/引擎，未读用真实凭据、改变风险默认、NAS/Windows或生产服务。
+没有真实可用保证金、cross-margin清算/ADL或历史真实成交证明。34项设计标准的
+剩余覆盖/回放/标签项仍列在review与validator的DEFERRED映射。
+
+依赖负责人/QD交接并完成QR独立验收：BTC/ETH来源方案A的新候选与可靠成交量，
+明确小数精度/单位/可用时点及跨周期聚合版本，MARK alias/覆盖和经济情景冻结。
+之后是完整状态回放、成熟净收益标签、时间/跨币依赖审计与purge切分、冻结可检验
+训练/样本外计划。负责人已传达方案A获用户批准；这仅是协调依赖进度，QR本轮
+未读取/验收新的QD008实现，不改其旧文档的历史待批准状态。
+
+当前**训练未就绪**。本检查点完成后停止，等待负责人安排下一交接；不自选新任务、
+扩币或启动市场回放。达到全部训练条件时报告证据并请用户确认，确认前任何fit为0。

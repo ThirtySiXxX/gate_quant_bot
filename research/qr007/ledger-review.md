@@ -1,8 +1,9 @@
-# QR007 账本独立验收预检
+# QR007 账本独立验收
 
 2026-10-28 Australia/Melbourne。任务 QF-QR-007-READINESS。
-当前状态：**PREPARED_NOT_EXECUTED**；独立验证器及23项自身测试已完成，21项producer用例未执行。
-r2设计复核记录保留；B1费用未知值修订等待QD精确schema/profile交接，尚无实现验收结论。
+当前状态：**PASS_SYNTHETIC_ONLY**；32项检查器自测、26项独立producer算例、11份保存产物通过。
+仅接受精确QD commit `0ea2d51901689a351068bb9d33906c3240832afa` 的r3合成账本；
+不表示BTC/ETH市场数据、完整回放、标签或训练就绪。r2/准备阶段记录按历史保留。
 QR 起点 52ce1ebeb054abd49c41fc4acbb4c7b7eb41c762。
 语义基线 QR006 c7e9a2492247fa31e216035f87e8bb20cca6e6ad；对应 QD006
 9bb3c0ec2b57e7154a51e56d795645c273c1308d 接受 34 项设计标准。
@@ -26,7 +27,8 @@ Python 验证代码，不猜测函数签名。
 ## 34 项标准的阶段映射
 
 S1 表示合成账本/输入状态阶段可测；S2 表示实际资料覆盖；S3 表示完整状态回放；
-S4 表示标签生产/训练切分。全部“待测”，不是已通过；阶段1的小例子不替代后续验收。
+S4 表示标签生产/训练切分。下表保留原预检时的“待测”映射；当前S1执行结果见末节，
+其余阶段仍未通过，阶段1的小例子不替代后续验收。
 
 | 稳定 ID | 独立字面 oracle / 负例 | 本阶段与剩余范围 |
 | --- | --- | --- |
@@ -374,3 +376,69 @@ producer_executed=false、target=null、market_requests=0、model_fits=0。
 下一步：负责人交接QD的B1精确schema/profile与已提交producer身份后，另行更新
 绑定、补B1对称未知/恢复用例，再执行真实producer独立验收。当前提交是PREPARED，
 不是S1实现通过、市场就绪或训练批准。用户选择的成交量精度前置条件继续有效。
+
+## IMPLEMENTATION-REVIEW-1：r3精确schema复核
+
+2026-10-28，QR基线8b9e85e5c041fcf9167940520035693562f761ba，独占原QR007四文件。
+已核验QD提交0ea2d51901689a351068bb9d33906c3240832afa的schema字节，SHA256
+7fd7df5f84a8822f5fdd37243d24e0eb293d9eeacda17514c8b1f1ad04ac475a；工作文件与提交
+相同。逐项检查相对已接受a183e40的完整diff，并对照冻结B1提案
+8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1：
+仅两侧ClosedSlice fee变为独立D|null，增加对应UNKNOWN_OBLIGATION_TOTAL、全受影响
+切片、已知其他项/原始费用/现金不回写、恢复累计归属/独立退款的明确语义；profile
+改为qd007-synthetic-r3，其余是交接状态说明。无新净额字段或R01–R06语义改动。
+
+**ACCEPT_SCHEMA_BINDING_ONLY**：精确B1修订与提案一致，可以更新本地schema/profile
+绑定并清空已解决的B1 pending项。保留执行门机制，不用删门的方式绕过待决契约。
+这只是允许执行独立验收，不是producer通过；实施结果另记下文。QR008四文件、旧
+coverage和QR006继续冻结；QD008已由负责人取得用户A选择，不在本轮改其证据。
+
+## IMPLEMENTATION-REVIEW-1：实际执行与判定
+
+结论 **PASS_SYNTHETIC_ONLY**。被测代码commit为上节精确r3提交，代码SHA256
+`7c1a08c569b79618b6de3092e297ef1ed1a51b54da29d62e76e7e2c900620636`；
+候选manifest SHA256 `e9b3745fb33fb63043033a005cd87240acece29ac1c1daef37e42cc4ba23b2a7`。
+QD角色报告单独在 `45bf3e036516b97570b3630cc19684af26713132` 发布，不把报告提交当
+producer版本。QR调用显式公共API取得实际值；期望金额来自本地字面值及Fraction，
+不以QD helper的结果计算期望值。所有执行均禁用Python socket连接。
+
+| 验收层 | 实际结果 | 代表性内容 |
+| --- | --- | --- |
+| 检查器自身测试 | 32/32 | 手写快照、重算hash后协调篡改、B1未知/恢复、精确输入规范化、输出仍须canonical |
+| 独立公共API算例 | 26/26 | 原C01–C21，新增C22–C26；保留逐调用输入/输出/异常receipt |
+| 保存产物 | 11/11 | 按各自config/catalog、微秒时钟绑定检查；重新执行与原输出相等，并独立核对源现金/T/B/毛收益/未知语义 |
+| R01跨产物 | PASS | t=10两快照及state hash完全一致；t=20修订可用后不同；完整audit身份不同 |
+
+R01–R06对应独立用例C08–C12/C07；完整性原子失败、重复/冲突及停机行为由C09/C13
+覆盖。R04测试10/20/21/22的complete→immature→immature→complete，另测未知authority
+后继不能伪造当前最终性。R03区分因果mark和后来才可用的rate。34项标准仍逐项保留
+阶段映射，**不能将26项合成算例计作34项全研究标准通过**。
+
+B1新增对称entry/exit未知、两侧同时未知及分别恢复、6/4部分平仓全部受影响片段，
+已知另一侧/gross/funding不被清空；必需项null时派生net也是null。恢复累计费用不
+改变现金，独立refund Posting才改变C/B；旧截止时点快照不被后来修订回写。
+例如entry费从-.2495→未知→-.2，恢复时C仍10001.5、A=.0495、E=10001.5495、
+budget仍10001.5；退款后C才变10001.5495。exit对称退款为.0505。
+
+S02新增正/负/零、1/1/1与2/1的remaining-FIFO路径：.01按.0001 quantum分摊
+为.0033/.0034/.0033或.0067/.0033；修订.02后重新累计为.0067/.0066/.0067或
+.0133/.0067，现金不变、旧快照不变。过粗quantum导致反向残差仍原子拒绝，保留
+有效prefix且停止后续操作。区间检查除总量外还验证分区无重叠/缺口，费用未知检查
+由原始可见fill/最新义务驱动，不能靠重算输出hash蒙混。
+
+保存产物检查与`--snapshot`明确区分：后者只接受QR字面A11 fixture身份；本次11份
+检查使用`inspect_candidate_manifest`，显式manifest及hash、限定11个文件名、原始
+bytes/hash、实际config/catalog和public API回放。重现性相等不是独立金融oracle；
+完整分摊/时钟/最终性反例另由26项套件承担。
+
+最终证据目录 `research/.data/qr007/implementation-review-r3-verified/`；可复现脚本
+`research/.data/qr007/implementation-review-r3-reproduction/run.py`。原始途中失败也保留：
+首个trace runner在bytes JSON序列化时中断；保存产物检查曾把合法输入`-0.10`按
+输出canonical规则拒绝，随后规范化遍历又误处理null_reasons的同名字段。这两项
+检查器问题按schema第2节修正并增加自测，未改producer、候选输入或预期金额。
+最终同一代码版本的32+26+11检查全部通过，详细hash见角色报告。
+
+下一阶段仍依赖可靠volume来源/小数精度/跨周期聚合新版本、MARK覆盖及明确情景，
+再验完整状态回放、成熟净收益标签、跨折/跨币依赖与purge切分。当前没有市场标签、
+没有模型/scaler/校准器fit；不修改native适配器或市场数据。本检查点提交后停止，
+由负责人安排下一验收；达到训练条件时报告证据，实际训练前必须取得用户确认。

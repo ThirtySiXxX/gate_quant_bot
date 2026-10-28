@@ -24,10 +24,11 @@ import sys
 import tempfile
 import types
 
-SCHEMA_COMMIT = "a183e40ed27b2250f7030ce3babbe5d579dc268b"
-SCHEMA_SHA256 = "6e5fea553aedcdf6d800ced8a2ba5d0d49b5abd0b60cf931417fd6dff78408b7"
-PROFILE = "qd007-synthetic-r2"
-PENDING_CONTRACTS = ["B1: nullable current entry/exit fee attribution awaits owner schema/hash"]
+SCHEMA_COMMIT = "0ea2d51901689a351068bb9d33906c3240832afa"
+SCHEMA_SHA256 = "7fd7df5f84a8822f5fdd37243d24e0eb293d9eeacda17514c8b1f1ad04ac475a"
+PROFILE = "qd007-synthetic-r3"
+PENDING_CONTRACTS = []
+ACCEPTED_B1_PROPOSAL_SHA256 = "8e6e1af12fd5bc1257ee78f5fb21d11d58bf8eeb6c7532a9d47ca57f37228bd1"
 NS = "qd007.synthetic-ledger"
 BTC, ETH = "gate:usdt:BTC_USDT", "gate:usdt:ETH_USDT"
 U = 1_000_000
@@ -115,7 +116,8 @@ SHAPES = {
                  "live_ranges": "list:UnitRange", "closed_slice_ids": "list:ID"},
     "ClosedSlice": {**fields("slice_id lot_id episode_id closing_fill_id", "ID"), "closed_at_us": "T",
                     "unit_start": "I0", "unit_end": "I+",
-                    **fields("realized_price_pnl_usdt entry_fee_cash_usdt exit_fee_cash_usdt", "D"),
+                    "realized_price_pnl_usdt": "D",
+                    **fields("entry_fee_cash_usdt exit_fee_cash_usdt", "?D"),
                     "funding_cash_usdt": "?D", "attribution_revision": "I+", "null_reasons": "reasons"},
     "CoverageIssue": {"instrument_id": "Inst", "event_id": "ID",
                       "reason_code": "enum:MISSING_EXPECTED_SNAPSHOT|UNRESOLVED_SNAPSHOT_MAPPING"},
@@ -363,11 +365,22 @@ def check_snapshot(snapshot, config, expected=None, quantities=None, records=Non
         for key, value in expected.items(): demand(b[key] == value, f"literal oracle {key}: {b[key]!r} != {value!r}")
     if quantities is not None:
         demand({v["lot_id"]: v["remaining_contracts"] for v in snapshot["lots"]} == quantities, "literal inventory")
+    lot_ids={lot["lot_id"] for lot in snapshot["lots"]}
+    demand(len(lot_ids)==len(snapshot["lots"]),"duplicate lot identity")
+    demand(len({r["slice_id"] for r in snapshot["closed_slices"]})==len(snapshot["closed_slices"]),"duplicate slice identity")
+    demand(all(r["lot_id"] in lot_ids for r in snapshot["closed_slices"]),"orphan closed slice")
     for lot in snapshot["lots"]:
         demand(sum(r["unit_end"]-r["unit_start"] for r in lot["live_ranges"]) == lot["remaining_contracts"], "live unit conservation")
         closed = [r for r in snapshot["closed_slices"] if r["lot_id"] == lot["lot_id"]]
         demand(sum(r["unit_end"]-r["unit_start"] for r in closed)+lot["remaining_contracts"] == lot["initial_contracts"], "closed unit conservation")
         demand(set(lot["closed_slice_ids"]) == {v["slice_id"] for v in closed}, "slice references")
+        ranges=sorted([*lot["live_ranges"],*closed],key=lambda r:r["unit_start"])
+        cursor=0
+        for r in ranges:
+            demand(r["lot_id"]==lot["lot_id"] and r["episode_id"]==lot["episode_id"],"slice/range owner")
+            demand(r["unit_start"]==cursor<r["unit_end"]<=lot["initial_contracts"],"unit partition overlap/gap")
+            cursor=r["unit_end"]
+        demand(cursor==lot["initial_contracts"],"unit partition incomplete")
     if records is not None:check_source_levels(snapshot,config,records)
     return snapshot
 
@@ -402,6 +415,38 @@ def check_source_levels(snapshot,config,records):
         demand(row["instrument_id"]==origins[name],"obligation source owner")
         demand(row["T_usdt"]==(None if t is None else finite_decimal(t)),"T differs from latest available source")
         demand(money(row["B_usdt"])==booked.get(name,Fraction(0)),"B differs from independent posting sources")
+    check_slice_sources(snapshot,fills,totals)
+
+
+def check_slice_sources(snapshot,fills,totals):
+    """B1 knowledge and gross-price checks tied to original visible source facts."""
+    by_id={f["record_id"]:f for f in fills}
+    lots={lot["lot_id"]:lot for lot in snapshot["lots"]}
+    for lot in lots.values():
+        demand(lot["opening_fill_id"] in by_id,"unknown opening fill")
+        opening=by_id[lot["opening_fill_id"]]
+        demand((lot["instrument_id"],lot["opened_at_us"],lot["entry_price"],lot["multiplier"],lot["direction"])==
+               (opening["instrument_id"],opening["filled_at_us"],opening["fill_price"],opening["multiplier"],
+                "long" if opening["signed_contracts"]>0 else "short"),"lot differs from opening source")
+    for row in snapshot["closed_slices"]:
+        lot=lots[row["lot_id"]];opening=by_id[lot["opening_fill_id"]]
+        demand(row["closing_fill_id"] in by_id,"unknown closing fill")
+        closing=by_id[row["closing_fill_id"]]
+        demand(closing["instrument_id"]==opening["instrument_id"] and row["closed_at_us"]==closing["filled_at_us"],"closing source owner/time")
+        direction=1 if opening["signed_contracts"]>0 else -1
+        gross=direction*(row["unit_end"]-row["unit_start"])*money(opening["multiplier"])*(money(closing["fill_price"])-money(opening["fill_price"]))
+        demand(money(row["realized_price_pnl_usdt"])==gross,"slice gross differs from source oracle")
+        for field,fill in (("entry_fee_cash_usdt",opening),("exit_fee_cash_usdt",closing)):
+            total=totals[fill["fee_obligation_id"]]
+            if total is None:
+                demand(row[field] is None and row["null_reasons"].get(field)=="UNKNOWN_OBLIGATION_TOTAL","unknown fee attribution hidden")
+            else:
+                demand(row[field] is not None,"known fee attribution became unknown")
+
+
+def slice_net(row):
+    values=[row[k] for k in ("realized_price_pnl_usdt","entry_fee_cash_usdt","exit_fee_cash_usdt","funding_cash_usdt")]
+    return None if any(v is None for v in values) else finite_decimal(sum(map(money,values),Fraction(0)))
 
 
 def balance(c, a, l, u, e, budget=None):
@@ -960,6 +1005,113 @@ def added_lots(api):
     demand(all(r["episode_id"]=="episode:o" for r in rows),"adds fabricated new episode")
 
 
+def b1_fixture(partial=False):
+    f=Fixture();r=f.unit("o",0,10)
+    f.reserve();f.fill("o",10*U,10,"49900");f.post("p-o","fee-o",10*U,"-0.2495",[(r,"-0.2495")])
+    for name,t,q,fee,lo,hi in ([("c6",30,6,"-0.1503",0,6),("c4",35,4,"-0.1002",6,10)] if partial else [("c",30,10,"-0.2505",0,10)]):
+        f.fill(name,t*U,-q,"50100");f.post("p-"+name,"fee-"+name,t*U,fee,[(f.unit("o",lo,hi),fee)])
+    return f,r
+
+
+def b1_one_side(api,side):
+    f,r=b1_fixture();name,origin,economic,booked,refund,net=(
+        ("fee-o","o",10,"-0.2495","0.0495","1.5495") if side=="entry" else
+        ("fee-c","c",30,"-0.2505","0.0505","1.5505"))
+    f.revision(name,origin,economic*U,40*U,None,[],rev=2,kind="fee")
+    f.revision(name,origin,economic*U,50*U,"-0.2",[(r,"-0.2")],rev=3,kind="fee")
+    f.post("refund",name,60*U,refund,[(r,refund)],corrects="p-"+origin)
+    ledger,cfg,_,_=apply_fixture(api,f)
+    past=ledger.snapshot(30*U);demand(slice_net(past["closed_slices"][0])=="1.5","B1 initial net")
+    unknown=check_snapshot(ledger.snapshot(40*U),cfg,balance("10001.5",None,None,"0",None),{"lot:o":0})
+    row=unknown["closed_slices"][0];field=side+"_fee_cash_usdt";other="exit_fee_cash_usdt" if side=="entry" else "entry_fee_cash_usdt"
+    demand(row[field] is None and row["null_reasons"][field]=="UNKNOWN_OBLIGATION_TOTAL","B1 side null")
+    demand(row[other]==("-0.2505" if side=="entry" else "-0.2495") and row["funding_cash_usdt"]=="0" and row["realized_price_pnl_usdt"]=="2","B1 known values erased")
+    demand(slice_net(row) is None,"B1 net skipped unknown fee")
+    obligation(unknown,name,T_usdt=None,B_usdt=booked,P_usdt=None,A_usdt=None,L_usdt=None)
+    restored=check_snapshot(ledger.snapshot(50*U),cfg,balance("10001.5",refund,"0","0",finite_decimal(Fraction(10000)+Fraction(net)),"10001.5"),{"lot:o":0})
+    demand(restored["closed_slices"][0][field]=="-0.2" and slice_net(restored["closed_slices"][0])==net,"B1 restoration literal")
+    final_cash=finite_decimal(Fraction("10001.5")+Fraction(refund))
+    check_snapshot(ledger.snapshot(60*U),cfg,balance(final_cash,"0","0","0",final_cash,final_cash),{"lot:o":0})
+    demand(ledger.snapshot(30*U)==past and ledger.snapshot(40*U)==unknown,"B1 rewrote past view")
+
+
+@case("QR007-C22", "A12 A14 A19 A29", "B1 entry fee unknown/restoration/refund; old known cutoff immutable")
+def b1_entry(api):b1_one_side(api,"entry")
+
+
+@case("QR007-C23", "A12 A14 A19 A29", "B1 symmetric exit fee unknown/restoration/refund")
+def b1_exit(api):b1_one_side(api,"exit")
+
+
+@case("QR007-C24", "A14 A19 A29", "B1 both fee sides unknown, independent restoration and cash postings")
+def b1_both(api):
+    f,r=b1_fixture()
+    for name,origin,t in (("fee-o","o",10),("fee-c","c",30)):
+        f.revision(name,origin,t*U,40*U,None,[],rev=2,kind="fee")
+        f.revision(name,origin,t*U,(50 if origin=="o" else 55)*U,"-0.2",[(r,"-0.2")],rev=3,kind="fee")
+    f.post("refund-o","fee-o",60*U,"0.0495",[(r,"0.0495")],corrects="p-o")
+    f.post("refund-c","fee-c",65*U,"0.0505",[(r,"0.0505")],corrects="p-c")
+    ledger,cfg,_,_=apply_fixture(api,f)
+    for t,entry,exit_fee,expected in [
+        (40,None,None,balance("10001.5",None,None,"0",None)),
+        (50,"-0.2",None,balance("10001.5",None,None,"0",None)),
+        (55,"-0.2","-0.2",balance("10001.5","0.1","0","0","10001.6","10001.5")),
+        (60,"-0.2","-0.2",balance("10001.5495","0.0505","0","0","10001.6","10001.5495")),
+        (65,"-0.2","-0.2",balance("10001.6","0","0","0","10001.6","10001.6"))]:
+        s=check_snapshot(ledger.snapshot(t*U),cfg,expected,{"lot:o":0});row=s["closed_slices"][0]
+        demand((row["entry_fee_cash_usdt"],row["exit_fee_cash_usdt"])==(entry,exit_fee),"B1 independent sides")
+        demand(slice_net(row)==(None if t<55 else "1.6"),"B1 both-side net")
+        demand(row["realized_price_pnl_usdt"]=="2" and row["funding_cash_usdt"]=="0","B1 gross/funding changed")
+
+
+@case("QR007-C25", "A12 A14 A19 A29", "B1 all partial slices unknown/restored; one exit obligation stays separate")
+def b1_partial(api):
+    f,r=b1_fixture(True);first=f.unit("o",0,6)
+    f.revision("fee-o","o",10*U,40*U,None,[],rev=2,kind="fee")
+    f.revision("fee-c6","c6",30*U,41*U,None,[],rev=2,kind="fee")
+    f.revision("fee-o","o",10*U,50*U,"-0.2",[(r,"-0.2")],rev=3,kind="fee")
+    f.revision("fee-c6","c6",30*U,55*U,"-0.12",[(first,"-0.12")],rev=3,kind="fee")
+    f.post("refund-o","fee-o",60*U,"0.0495",[(r,"0.0495")],corrects="p-o")
+    f.post("refund-c6","fee-c6",65*U,"0.0303",[(first,"0.0303")],corrects="p-c6")
+    ledger,cfg,_,_=apply_fixture(api,f);past=ledger.snapshot(35*U)
+    expected=[(40,[None,None],["-0.1503","-0.1002"],None),(41,[None,None],[None,"-0.1002"],None),
+              (50,["-0.12","-0.08"],[None,"-0.1002"],None),(55,["-0.12","-0.08"],["-0.12","-0.1002"],"1.5798")]
+    for t,entries,exits,net in expected:
+        s=ledger.snapshot(t*U);rows=sorted(s["closed_slices"],key=lambda r:r["unit_start"])
+        demand([r["entry_fee_cash_usdt"] for r in rows]==entries and [r["exit_fee_cash_usdt"] for r in rows]==exits,"B1 all partial attributions")
+        demand([r["realized_price_pnl_usdt"] for r in rows]==["1.2","0.8"] and all(r["funding_cash_usdt"]=="0" for r in rows),"B1 partial gross/funding")
+        nets=[slice_net(r) for r in rows]
+        demand((None if any(v is None for v in nets) else finite_decimal(sum(map(Fraction,nets))))==net,"B1 partial net propagation")
+        check_snapshot(s,cfg,balance("10001.5",None if t<55 else "0.0798",None if t<55 else "0","0",None if t<55 else "10001.5798",None if t<55 else "10001.5"),{"lot:o":0})
+    check_snapshot(ledger.snapshot(65*U),cfg,balance("10001.5798","0","0","0","10001.5798","10001.5798"),{"lot:o":0})
+    demand(ledger.snapshot(35*U)==past,"B1 partial old cutoff changed")
+
+
+@case("QR007-C26", "A10 A12 A14 A17", "S02 signed remaining-FIFO residual paths and cumulative recomputation")
+def remaining_fifo(api):
+    for sign in (1,-1,0):
+        for path,literals,revised in [([1,1,1],["0.0033","0.0034","0.0033"],["0.0067","0.0066","0.0067"]),
+                                      ([2,1],["0.0067","0.0033"],["0.0133","0.0067"])]:
+            f=Fixture(cash="1000",fee="0",multiplier="1",calendar=[(BTC,"s",2*U)]);f.config["allocation_quantum_usdt"]="0.0001";r=f.unit("o",0,3)
+            f.reserve();f.fill("o",U,3,"100");f.snapshot("s",2*U,[r])
+            total=finite_decimal(sign*Fraction("0.01"));new=finite_decimal(sign*Fraction("0.02"))
+            f.revision("fund-s","s",2*U,2*U,total,[(r,total)])
+            for i,q in enumerate(path):f.fill("c"+str(i),(3+i)*U,-q,"100")
+            f.revision("fund-s","s",2*U,6*U,new,[(r,new)],rev=2)
+            ledger,cfg,_,_=apply_fixture(api,f);past=ledger.snapshot(5*U)
+            for t,wanted in [(5,literals),(6,revised)]:
+                s=ledger.snapshot(t*U);rows=sorted(s["closed_slices"],key=lambda x:x["unit_start"])
+                demand([r["funding_cash_usdt"] for r in rows]==[finite_decimal(sign*Fraction(v)) for v in wanted],"remaining-FIFO literal")
+                demand(s["balances"]["cash_usdt"]=="1000","revision duplicated cash")
+            demand(ledger.snapshot(5*U)==past,"S02 revision rewrote old path")
+    for sign in (1,-1):
+        f=Fixture(fee="0",calendar=[(BTC,"s",2*U)]);f.config["allocation_quantum_usdt"]="0.01"
+        f.fill("o",U,20,"100");f.snapshot("s",2*U,[f.unit("o",0,20)])
+        ranges=[(f.unit("o",lo,hi),finite_decimal(sign*Fraction(amount))) for lo,hi,amount in [(0,6,"0.01"),(6,12,"0.01"),(12,18,"0.01"),(18,20,"-0.01")]]
+        f.revision("fund-s","s",2*U,3*U,finite_decimal(sign*Fraction("0.02")),ranges)
+        rejected(api,f,"ALLOCATION_QUANTUM_TOO_COARSE",prefix=(0,1))
+
+
 DEFERRED = {
     "A03":"order cancellation/selection integration and no-fill target", "A06":"actual event-calendar completeness",
     "A08":"historical exact sequence evidence", "A15":"historical MARK coverage", "A16":"historical metadata effectiveness",
@@ -978,7 +1130,7 @@ def criteria_map():
     return {f"QF006-A{i:02}":dict(
         cases=[cid for cid,criteria,_,_ in CASES if f"A{i:02}" in criteria],
         scope="synthetic stage-1 primitive only" if any(f"A{i:02}" in c for _,c,_,_ in CASES) else "deferred",
-        remaining=DEFERRED.get(f"A{i:02}","implementation execution still required; no historical truth claim")) for i in range(1,35)}
+        remaining=DEFERRED.get(f"A{i:02}","historical evidence/downstream integration; no training-ready claim")) for i in range(1,35)}
 
 
 def result_base():
@@ -986,6 +1138,7 @@ def result_base():
                 profile=PROFILE,approved_schema_commit=SCHEMA_COMMIT,approved_schema_sha256=SCHEMA_SHA256,
                 validator_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                 criteria=criteria_map(),pending_contracts=list(PENDING_CONTRACTS),
+                accepted_b1_proposal_sha256=ACCEPTED_B1_PROPOSAL_SHA256,
                 limitations=["Synthetic ledger only; no market/replay/label/training readiness.",
                              "No real model/scaler/calibrator fit is invoked as a negative test.",
                              "Python socket guard is not an OS sandbox for arbitrary code.",
@@ -1091,6 +1244,139 @@ def inspect_snapshot_artifact(path,state):
     demand(value["as_of_us"]==value["knowledge_cutoff_us"]==t*U and value["view"]=="as_known","artifact cutoff")
     return dict(status="PASS_ONE_LITERAL_SNAPSHOT_ONLY",artifact_sha256=hashlib.sha256(body).hexdigest(),
                 profile=PROFILE,schema_sha256=SCHEMA_SHA256,state=state,producer_executed=False,training_ready=False)
+
+
+def normalize_record_input(record):
+    """Schema section 2 permits decimal padding on input, never on output.
+
+    Independent normalization of the bounded record vocabulary only. The raw
+    candidate is retained verbatim; this returns a copy for source arithmetic.
+    """
+    decimal_fields=set("fill_price multiplier fee_fraction cumulative_signed_total_usdt signed_cash_usdt signed_amount_usdt mark_price final_rate reserved_margin_usdt reserved_fees_usdt".split())
+    def visit(value):
+        if isinstance(value,list):return [visit(x) for x in value]
+        if not isinstance(value,dict):return value
+        out={}
+        for key,x in value.items():
+            if key=="null_reasons":out[key]=copy.deepcopy(x)
+            elif key in decimal_fields and x is not None:
+                normalized=decimal_text(x)
+                demand(sum(c.isdigit() for c in x)<=128 and len(x.split(".")[1] if "." in x else "")<=64,"input decimal bounds")
+                out[key]=normalized
+            else:out[key]=visit(x)
+        for key in ("source_refs","event_kinds","obligation_revision_refs","posting_refs"):
+            if key in out:
+                items=out[key];demand(type(items) is list,"input set array")
+                demand(len({canonical(x) for x in items})==len(items),"duplicate input set member")
+                out[key]=sorted(items,key=canonical)
+        return out
+    result=visit(record);shape("Record",result)
+    return result
+
+
+def check_saved_candidate(value,commit):
+    """Bind a saved producer output to ITS inputs, never to QR's A11 identity.
+
+    Source reconciliation and strict output checks are independent of replay
+    equality. This alone does not attest the implementation or all attribution.
+    """
+    demand(set(value)=={"candidate_type","code_commit","inputs","outputs","profile"},"candidate fields")
+    demand(value["candidate_type"]=="synthetic-producer-output-not-independent-oracle"
+           and value["code_commit"]==commit and value["profile"]==PROFILE,"candidate identity")
+    inputs=value["inputs"];out=value["outputs"]
+    demand(set(inputs)=={"case_id","config","expected_error","readiness_queries","records","snapshot_at_us"},"candidate input fields")
+    cfg=inputs["config"];records=[normalize_record_input(r) for r in inputs["records"]]
+    check_audit(out["audit"],cfg)
+    if inputs["expected_error"] is not None:
+        demand(inputs["case_id"]=="r02-atomic-cross-record-rejection" and inputs["expected_error"]=="LATE_ORIGIN_UNSUPPORTED","unreviewed candidate rejection")
+        demand(set(out)=={"audit","error_code","failure_receipt"},"negative output fields")
+        shape("FailureReceipt",out["failure_receipt"])
+        demand(out["error_code"]==out["failure_receipt"]["code"]=="LATE_ORIGIN_UNSUPPORTED","candidate rejection code")
+        demand(out["audit"]["integrity"]=="stopped" and not out["audit"]["committed_state"]["records"]
+               and not out["audit"]["committed_state"]["derived_entries"],"failed batch committed data")
+        demand(not inputs["snapshot_at_us"] and not inputs["readiness_queries"],"negative candidate queries")
+        return
+    demand(set(out)=={"audit","receipt","snapshots","readiness"},"positive output fields")
+    check_receipt(out["receipt"])
+    demand(out["audit"]["integrity"]=="clean" and not out["audit"]["failure_receipts"],"positive candidate stopped")
+    demand({canonical(r) for r in out["audit"]["committed_state"]["records"]}=={canonical(r) for r in records},"candidate audit/input binding")
+    demand(len(out["snapshots"])==len(inputs["snapshot_at_us"]),"candidate snapshot count")
+    for t,snapshot in zip(inputs["snapshot_at_us"],out["snapshots"]):
+        check_snapshot(snapshot,cfg,records=records)
+        demand(snapshot["as_of_us"]==snapshot["knowledge_cutoff_us"]==t and snapshot["view"]=="as_known","candidate snapshot query")
+    demand(len(out["readiness"])==len(inputs["readiness_queries"]),"candidate readiness count")
+    for query,ready in zip(inputs["readiness_queries"],out["readiness"]):
+        demand(set(query)=={"episode_id","as_of_us"},"readiness query fields")
+        check_readiness(ready)
+        demand(all(ready[k]==x for k,x in query.items()),"candidate readiness query")
+
+
+def replay_saved_candidate(api,value,commit):
+    check_saved_candidate(value,commit)
+    inputs=value["inputs"];before=copy.deepcopy(inputs)
+    with offline():
+        ledger=api.Ledger(inputs["config"]);initial=ledger.audit()
+        if inputs["expected_error"] is not None:
+            try:ledger.apply_batch(inputs["records"])
+            except api.LedgerError as exc:
+                actual=dict(error_code=exc.code,failure_receipt=exc.receipt,audit=ledger.audit())
+            else:raise CheckError("saved negative batch accepted")
+            demand(actual["audit"]["committed_state"]==initial["committed_state"]
+                   and actual["audit"]["committed_sha256"]==initial["committed_sha256"],"saved batch leaked mutation")
+        else:
+            receipt=ledger.apply_batch(inputs["records"])
+            actual=dict(receipt=receipt,snapshots=[ledger.snapshot(t) for t in inputs["snapshot_at_us"]],
+                        readiness=[ledger.readiness(q["episode_id"],q["as_of_us"]) for q in inputs["readiness_queries"]],
+                        audit=ledger.audit())
+        demand(inputs==before,"saved candidate input mutated")
+        demand(actual==value["outputs"],"saved output replay differs")
+        replayed=dict(value,outputs=actual);check_saved_candidate(replayed,commit)
+    return actual
+
+
+def inspect_candidate_manifest(api,identity,path,sha256):
+    """Explicit, hash-pinned, bounded candidate intake; no file discovery."""
+    demand(not PENDING_CONTRACTS,"contract amendment pending")
+    path,body=regular_explicit_file(path,1024*1024)
+    demand(H_RE.fullmatch(sha256 or "") and hashlib.sha256(body).hexdigest()==sha256,"candidate manifest hash")
+    manifest=strict_json(body)
+    demand(manifest["profile"]==PROFILE and manifest["code_commit"]==identity["commit"]==SCHEMA_COMMIT,"manifest producer binding")
+    demand(manifest["b1_review_sha256"]==ACCEPTED_B1_PROPOSAL_SHA256,"manifest B1 binding")
+    demand(manifest["source_sha256"]["research/qd007/event_ledger.py"]==identity["sha256"]
+           and manifest["source_sha256"]["research/qd007/schema.md"]==SCHEMA_SHA256,"manifest source binding")
+    rows=manifest["artifacts"];demand(len(rows)==11,"expected eleven declared artifacts")
+    names=[r["path"] for r in rows]
+    demand(len(set(names))==len(names) and all(re.fullmatch(r"[a-z0-9-]+\.json",n) for n in names),"artifact path/identity")
+    results=[];values={}
+    with offline():
+        for row in rows:
+            outcome=dict(path=row["path"],sha256=row["sha256"])
+            try:
+                demand(set(row)=={"path","bytes","sha256"},"artifact declaration fields")
+                _,raw=regular_explicit_file(path.parent/row["path"],4*1024*1024)
+                demand(len(raw)==row["bytes"] and hashlib.sha256(raw).hexdigest()==row["sha256"],"artifact byte identity")
+                value=strict_json(raw)
+                demand(value["inputs"]["case_id"]+".json"==row["path"],"artifact case identity")
+                actual=replay_saved_candidate(api,value,identity["commit"]);values[row["path"]]=value
+                outcome.update(status="PASS",replayed_outputs=actual)
+            except Exception as exc:
+                outcome.update(status="FAIL",error_type=type(exc).__name__,detail=str(exc)[:1000])
+            results.append(outcome)
+    # Independent cross-fixture causal assertion, not copied from QD PASS flags.
+    pair_check="NOT_EXECUTED"
+    if all(n in values for n in ("r01-future-a.json","r01-future-b.json")):
+        a,b=[values[n] for n in ("r01-future-a.json","r01-future-b.json")]
+        sa={s["as_of_us"]:s for s in a["outputs"]["snapshots"]}
+        sb={s["as_of_us"]:s for s in b["outputs"]["snapshots"]}
+        pair_check="PASS" if (set(sa)==set(sb)=={10,20} and sa[10]==sb[10] and sa[20]!=sb[20]
+                               and a["outputs"]["audit"]!=b["outputs"]["audit"]) else "FAIL"
+    passed=sum(r["status"]=="PASS" for r in results)
+    return dict(status="PASS_SYNTHETIC_ARTIFACTS_ONLY" if passed==11 and pair_check=="PASS" else "FAIL_SYNTHETIC_ARTIFACTS",
+                manifest_sha256=sha256,target=identity,artifacts=results,future_pair_causality=pair_check,
+                totals=dict(passed=passed,failed=11-passed),training_ready=False,market_requests=0,model_fits=0,
+                limitations=["Saved replay equality is reproducibility, not independent financial acceptance.",
+                             "Source cash/T/B, B1 knowledge, slice gross/partition and strict schemas checked independently.",
+                             "Exact fee/funding allocation, timing and finality counterexamples are in the separate QR case suite."])
 
 
 def write_result(path,result):
