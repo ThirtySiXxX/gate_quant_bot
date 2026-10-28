@@ -1,7 +1,7 @@
 # QR007 账本独立验收预检
 
 2026-10-28 Australia/Melbourne。任务 QF-QR-007-READINESS。
-状态：PREFLIGHT_COMPLETE_AWAITING_QD_SCHEMA；本文件是验收设计，账本尚未验收。
+当前状态：**SCHEMA_REVISE_REQUIRED**；精确 schema 审查见末节。本文件保留预检，账本尚未实现/验收。
 QR 起点 52ce1ebeb054abd49c41fc4acbb4c7b7eb41c762。
 语义基线 QR006 c7e9a2492247fa31e216035f87e8bb20cca6e6ad；对应 QD006
 9bb3c0ec2b57e7154a51e56d795645c273c1308d 接受 34 项设计标准。
@@ -12,8 +12,9 @@ QR 起点 52ce1ebeb054abd49c41fc4acbb4c7b7eb41c762。
 
 QR 允许编辑本文件、research/qr007/validate_event_ledger.py、
 tests/qr_research/test_qr007_ledger.py、research/qr008/coverage-protocol.md
-和 docs/agent-reports/qr/QF-QR-007-readiness.md。当前只提交三份 Markdown。
-在负责人交付 QD 精确 schema/API 前，不创建后两份 Python 验证代码，不猜测函数签名。
+和 docs/agent-reports/qr/QF-QR-007-readiness.md。预检提交三份 Markdown。
+当前 schema 审查只修改本文件与角色报告；在修订接口复核和负责人交接前，不创建两份
+Python 验证代码，不猜测函数签名。
 不改 QR006、共享 schema、src、他人测试、旧数据或共享日志。
 
 后续由负责人传递 QD schema 的确切 commit/hash，QR 对照下表评审；通过后按实际
@@ -109,3 +110,155 @@ QR将给 PASS/REVISE/BLOCKED，并列出“合成实现”和“实际经济覆�
 本预检只对范围和验收准备给 PASS；没有执行被测账本、完整回放或标签切分。
 训练仍依赖：schema/实现独立验收 → 覆盖与情景冻结 → 完整状态回放 → 标签/依赖
 验收 → 冻结训练/样本外计划 → 用户确认。没有为通过测试而放宽已接受语义。
+
+## QD007 精确 schema 审查：REVISE
+
+Dispatch `QF-DISPATCH-20261028-QR007-SCHEMA-REVIEW-1`。只读审查 QD commit
+`d474fdf0fdca7cb22aa47cfb220806b8ea2ab84f`（父 `9bb3c0ec2b57e7154a51e56d795645c273c1308d`）。
+以下行号均指该 commit 的 `research/qd007/schema.md`（529 行），不是以后修订的行号。
+已逐段读完 schema，并核对工作树与 commit 字节完全一致：
+
+| 文件 | SHA256 |
+| --- | --- |
+| research/qd007/schema.md | 800919cf19f02b7b7f896347f378eeef994607f2f13383d01adac1ef921f191b |
+| docs/agent-reports/qd/QF-QD-007-ledger.md | 62185bd1287d96de8ae1769f262858e80a39823c1cf29243892dfa0a5f263d7d |
+
+**结论：设计级 REVISE，六项修订要求；不是运行失败，也不是已运行34项验收。**
+QD 仍独占 schema/实现，QR 不修改 QD 文件。优先收紧这个小型合成 API 的明确边界，
+不要求增加历史数据导入、网络、标签、动态规则或一个通用事件框架。
+
+### 已接受的局部设计及 S01–S04
+
+- **S01：局部传输拆分可接受，待 R01/R05/R06 统一身份及输出定义。** 严格 JSON、
+  bool/float 拒绝、UTC us、decimal string、未知 null 原因、源内容 hash 与完整审计
+  hash 分开，符合独立离线工具边界；不能冒充 qf006/native wire。
+- **S02：分摊算法和过粗 quantum 拒绝可接受。** 保留精确父金额、HALF_EVEN、最终
+  残差、按剩余量连续 FIFO 分摊；这是有界输入拒绝，不是 silently 改费率/现金。
+  必须把下表写成生产者与独立验收的字面案例，并明确后续修订按相同历史关闭顺序
+  重算当前归属版本；不能把新的累计金额再次加到旧归属或现金。
+- **S03：全批原子拒绝及独立 integrity stop 可接受。** 失败后只能 audit，比较
+  committed_state 做 rollback；合法未知值必须保留未决，不能触发同类硬错误。
+- **S04：限制 HISTORICAL_EXACT、fractional qty、未确立时钟的 Posting、late-origin
+  repair 可接受。** 未知 booking 留在义务中，已知现金与未知总额可并存；R02/R04/R06
+  须把这些边界写清。该限制不证明 ETH 真实合约只能整数交易。
+
+| S02 字面输入 | 期望 |
+| --- | --- |
+| total=.02，weights=[6,6,6,2]，quantum=.01 | 前三项各 .01，未经保护的残差 -.01；整体 ALLOCATION_QUANTUM_TOO_COARSE，不能提交任一归属 |
+| total=-.02，同 weights/quantum | 前三项各 -.01、残差 +.01；同样整体拒绝 |
+| total=0，weights=[6,6,6,2] | [0,0,0,0]；不存在相反符号残差 |
+| total=0，weights=[]；非零total，weights=[]；weights中0/负数 | 前者 []；后两类拒绝，即使父金额0也不能接受无效权重 |
+| lot金额±.01、3单位、quantum=.0001；依次关闭1、1、1单位 | 顺序归属 ±[.0033,.0034,.0033]，总计±.01；第二次按剩余 .0067/2 计算 |
+| 同一lot先关闭2，再关闭1 | ±[.0067,.0033]；按关闭路径分摊，不能要求每个单位与另一关闭路径同舍入 |
+| 同一路径1/1/1，累计修订从 -.01 到 -.02 | 当前归属变为 [-.0067,-.0066,-.0067]，差额和=-.01；旧 cutoff 保留旧归属，修订现金变化0 |
+
+### QR007-R01 — 因果状态 hash 与完整 fixture 身份必须拆开
+
+**REVISE。** schema 95–141、451–455、465–493。config 包含完整未来 SourceManifest，
+每个旧 record 的 source_refs 又引用其整体 hash；451–455 声称 state hash 包含 config
+身份，却要求改未来修订后过去 hash 不变。465–474 的 Snapshot 字段表还没有 config
+身份字段，故当前 hash 前像定义也不唯一。
+
+最小反例：两个 fixture 具有相同 genesis、规则与 t=10 前事件；仅把 t=20 可用的
+修订 T 从 -.05 改成 -.08，并重算 future payload、manifest 和全部 source_refs。
+完整 config/manifest hash 必须不同，但 snapshot(10) 的金融内容与因果 state hash
+必须相同。只在同一个完整 fixture 内少提交几条未来记录，不能替代这个扰动检查。
+
+**验收要求：** 分别定义（a）完整 config/source/journal 审计身份，（b）因果经济状态
+的精确 canonical preimage；后者不含未来 catalogue、未来 record/source-ref hash
+或导出时间。已在 initial 前声明的情景规则/日历可属于明确的因果配置，不要求对
+不同已知政策保持 hash 相同。固定相同政策，只扰动未来事实时，past state/hash
+严格相同；audit identity 不同且仍绑定全输入。不得仅取消过去 hash 不变的断言。
+
+### QR007-R02 — 迟到成交不能通过整批经济排序提前满足资格
+
+**REVISE。** schema 171–178、214–226、413–420、451–463。
+最小反例（时间为合成 us）：起初 flat；F filled=7、available=9、buy10；S snapshot=8、
+available=8。若完整批按 economic 排序先 F 后 S，会把 snapshot(8) 的资格记成10，
+尽管F尚不可用；先单独处理S再F又可能触发 LATE_ORIGIN_UNSUPPORTED。完整批的
+input 顺序和是否分批不能成为绕过 late-origin 限制的方式。
+
+**验收要求：** 明确可用信息推进与库存经济顺序的组合。对当前不支持 late repair
+的 profile，建议对这种跨越已到达资格截面的迟到 fill 作确定性拒绝：整批 [F,S]
+和 [S,F] 均原子失败；先已提交 S 的路径在后续 F 处停止且不修改 S 旧状态。
+尚不可用 fill 不能证明历史库存完整，restated 不得声称该拒绝案例已被重建。
+F available=7、S available=8 的正常路径应通过；合法同经济时刻 tie policy 独立测试。
+若 QD 选另一有限实现，须明确 known inventory、经济库存未知范围和支持标志，
+不能让未来 fill 进入早期决策/资格或悄悄扩为历史修复实现。
+
+### QR007-R03 — 资金费公式的 mark 时钟不能只检查 revision 到达时刻
+
+**REVISE。** schema 252–263；QR006 protocol 175–178 的主情景是 causal last-available
+MARK。反例：snapshot=80；mark valuation_at=79、valuation_available=90；final rate
+available=95；revision known/available=100。当前只要求两输入 available<=100，允许
+将80时尚不可用的 mark 当作80时的 causal proxy，虽然价格时间看起来足够旧。
+
+**验收要求：** 此 profile 的 funding_formula 若代表 causal proxy，应明确
+valuation_at<=valuation_available<=snapshot、年龄上限按 snapshot 计算，并验证
+对应规则/乘数；输入时间自身不能倒置。final rate 可以晚于 snapshot，T 只在该
+revision 可用后识别，**不要求 final_rate 在 snapshot 已知**。在 mark=79/available=79、
+rate available=95、revision available=100 的正例中，99仍未决、100才识别T。
+明确 formula 的 known_at 是何种已知信息，不让其冒充更早得到计算输入；若量价输入
+只在后来提供而总额更早由账单得知，使用已声明 authoritative_total 语义并保持真实
+消费门。若要允许事后 settlement mark 估值，应另标用途及规则，不能称 causal proxy
+或进入旧决策预算；本轮不自动批准该新情景。
+
+### QR007-R04 — 完整断言的入库合法性与当前充分性需要分别定义
+
+**REVISE。** schema 214–227、294–316、428–435、476–485。已过期但曾有效的 assertion
+必须保留，而311–313的“refs=current、P=0”未区分入库条件与查询条件。合法未来修订
+不应把整个运行变成 integrity failure，也不能让旧 assertion 持续 complete。
+
+最小轨迹：自然平仓后 T1=-.05、B=-.05，A1于10可用且完整；T2=-.08于20可用；
+追加posting -.03于21可用；正确覆盖T2/全部postings的A2于22可用。
+**期望：** readiness(10)=complete/complete_at10；20为immature/P=-.03；21虽P=0仍
+immature（旧A1过期）；22才complete/complete_at22；早期状态保持不变，合法过期
+不能触发 INTEGRITY_STOPPED。A1/T2/A2同批与按可用时间分批应有相同查询结果。
+
+**还须给出明确状态表：** 缺 expected snapshot、mapping=null、非空资格但未知T、
+P未结清、缺assertion/旧revision refs均不能complete；无事件日历可明确证明无事件，
+却不能消除已有非空资格的未知费用。合法无finality信息的自然平仓为immature；
+提交authority=null的无效断言按本profile可标invalid，未注册nonnull authority为硬
+拒绝。只评估该cutoff当前有效的断言版本，不让被有效successor替代的旧无效记录永久
+污染未来状态。明确 null mapping 在rev1-only snapshot API中是否永久未决；不能把
+后续总额自动当作来源映射补证。硬冲突、合法未知与过时断言须有不同诊断。
+
+### QR007-R05 — BTC/ETH 业务键与派生 ID 的命名域不一致
+
+**REVISE。** schema 87–93、171–175、243–250、407、476。业务键包含instrument，故
+BTC fill record_id=f1 与 ETH fill record_id=f1 是不同且允许的键，但二者都派生
+episode:f1/lot:f1；readiness(episode_id, t) 没有instrument参数。相同 obligation_id
+下 allocation hash 也未含instrument，可能串接归属。
+
+**验收要求：** 选择并写明一个最小一致方案：派生 ID/引用/API 使用完整 instrument
+命名域；或明确在本ledger内需全局唯一的 fill/obligation/episode/lot ID，冲突在
+任何状态变更前拒绝。不是通过一个币种测试后宣称双币通过。两币相同本地fill ID
+必须明确被隔离或拒绝；两币不同 ID 的正常共同账户必须通过，资金费/退款不得串币。
+所有 allocation/posting/assertion 引用仍核验 instrument、trajectory、scenario。
+
+### QR007-R06 — 已知 Posting、未知 T 的输出类型与 delta 不能矛盾
+
+**REVISE。** schema 265–268、285–290、384–390、437–449、465–474。
+允许T未知时接受独立Posting，但LedgerEntry要求A/L delta为非null decimal，又说
+unknown obligation totals produce no numeric entry；这无法同时记录已知现金与未知
+应收/负债变化。Snapshot的“exactly”列表还遗漏了随后要求的null_reasons字段。
+
+最小反例：C0=1000，已知非空资格、T未知；独立Posting b=-.02 在10可用。
+**期望：** C=999.98、B=-.02；T/P/A/L未知、预算null，不能把未知delta写0或漏掉
+真实现金。20时T=-.05变得可用：C仍999.98、P=-.03、A=0、L=.03、E=999.95
+（U=0），未知到已知的delta也不能伪称0→.03已获证。Posting在T已知时才可断言
+现金与pending同步转移且E不变；未知阶段不能输出数值E不变的证明。
+
+**验收要求：** 把所有输出字段、nullable原因路径和conditional delta定义列全。
+可用nullable delta或明确区分记录种类，但不能改变T/B/P公式或拒绝原先接受的
+“已知现金、未知总额”能力来绕过问题。缺 expected event但尚未创建义务时也应
+说明未知聚合A/L/E的表示，不能给零负债/完整权益只靠budget=false隐藏未知。
+列明应拒绝的异常字段/额外字段；审查的是返回对象本身，不只JSON哈希。
+
+## 本轮审查边界和交接
+
+六项为确定性文档/API修订要求，等待 QD 精确修订 checkpoint 后复核；未执行 ledger
+测试、未创建 validator。S02表是独立字面验收要求，不是运行了 QD 分摊器。
+当前 schema 其余已列出部分接受，不重复推翻34项经济协议。QD只需回答各R项的
+修订位置、选定边界及正/负例，不需要重写工程。覆盖探测的新证据见同任务角色报告；
+不以合成schema修订宣布历史数据/标签完整或训练已就绪。

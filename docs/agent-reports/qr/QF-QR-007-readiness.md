@@ -1,8 +1,9 @@
-# QF-QR-007-READINESS 预检检查点
+# QF-QR-007-READINESS 预检及 schema 审查
 
 日期：2026-10-28 Australia/Melbourne。角色：QR。
-预检结论：**PASS（仅文档/验收准备）**。
-当前依赖：**AWAITING_QD_EXACT_SCHEMA**。实现验收未执行；市场经济覆盖/训练就绪仍未达。
+当前结论：**SCHEMA_REVISE_REQUIRED（六项定点修订）**，详见末节。
+预检结论仍为 PASS（仅文档/验收准备）；以下原预检记录保留。
+当前依赖：QD 修订精确 schema 后复核/负责人交接。实现验收未执行；训练就绪仍未达。
 Dispatch QF-DISPATCH-20261028-QR007-PREFLIGHT-1，补充 DECIMAL-SCOPE-1；
 CAPACITY-1只恢复同一任务，没有改模型或扩大范围。
 
@@ -76,3 +77,77 @@ BLOCKED并编写独立验证代码。若schema不支持某些已接受语义，�
 | research/qr008/coverage-protocol.md | e38b60d1e37ca926e2f53b06129b9ff60933c9d48ee529230f70d704a21a899c |
 
 报告本身由最终commit及另外输出的hash识别。提交前执行git diff --cached --check。
+
+## 精确 schema 审查检查点（在预检 commit 之后）
+
+Dispatch `QF-DISPATCH-20261028-QR007-SCHEMA-REVIEW-1`；QR干净起点
+`8993073e71b578f34b234403ab8ea7b1d803a16a`。补充只读证据
+`QF-CONTROL-20261028-QR007-PROBE-RESULT-1` 不开启新任务。
+
+只读审查 QD commit `d474fdf0fdca7cb22aa47cfb220806b8ea2ab84f` 的完整529行schema
+及125行角色报告，二者工作树字节与git对象一致。schema SHA256
+`800919cf19f02b7b7f896347f378eeef994607f2f13383d01adac1ef921f191b`；QD报告SHA256
+`62185bd1287d96de8ae1769f262858e80a39823c1cf29243892dfa0a5f263d7d`。
+
+局部设计接受严格JSON/decimal/us、T/B/P、FIFO与全批原子拒绝、受限SCENARIO和
+明确未知booking的处理方向。S02过粗quantum的反向残差拒绝可接受，补充正负/零、
+连续部分平仓和累计修订的字面oracle。其余六项为 **REVISE**：
+
+| ID | 最小修订及验收目的 |
+| --- | --- |
+| QR007-R01 | 完整未来fixture身份与因果state hash分离，未来修订扰动不能改过去hash |
+| QR007-R02 | 可用信息顺序与经济库存排序明确，迟到fill不能经整批排序提前满足快照资格 |
+| QR007-R03 | funding formula区分causal mark与后来才可知的final rate，不能用未来mark冒充当时代理 |
+| QR007-R04 | 断言入库合法性与当前覆盖充分性分离；合法过期/未知/硬冲突分别表示 |
+| QR007-R05 | BTC/ETH业务键与派生episode/lot/allocation ID命名域一致，引用不得串币 |
+| QR007-R06 | T未知而Posting已知时仍记录现金，但A/L delta不得伪装数值0；精确输出null字段补齐 |
+
+每项的固定schema行号、最小反例和接受条件在
+`research/qr007/ledger-review.md`。这是设计级审查，未对不存在的QD实现报告测试失败。
+本轮只修改该review和本报告；`research/qr008/coverage-protocol.md`保持原hash。
+QR006协议/接口/验收文件、共享日志、native代码与任何旧数据均未修改。
+
+## 负责人公开探测的补充证据（QR只读验证）
+
+目录 `/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/public-probe-20261028-r1/`。
+`plan.json` SHA256 `5ccfc1ede19464d1a5ae8e1c210ad027628727de558a2c66bc45a757824e3f04`；
+`result.json` SHA256 `e1799d0171b6eacd64dbfa87f7aa33229dc9e9ae4b755a6fa512f0b4db7def43`。
+QR重算8份公开raw body的bytes/hash，并独立核验两份MARK尾段的唯一时间网格。
+不是QR另行请求；所有本轮QR市场请求仍为0。负责人批次8次GET、0retry后按两次
+连续硬失败停止；不增加下载，也不修改原始v1/v2。
+
+- `X-Gate-Size-Decimal:1` 当前公开metadata：ETH min="0.1"、enable_decimal=true、
+  multiplier="0.01"；BTC min="1"、multiplier="0.0001"。两币taker="0.00075"。
+  min不是已证明的quantity step；当前值不补历史规则，也不自动改变合成.0005费率。
+- 2026-10-27 07:00—09:00 UTC，两币trade 1h各2条；ETH原始v字符串为
+  ["9654416.2","5553894.2"]。旧尾段逐行差异对照由负责人继续，QR不重复执行；
+  该证据不能泛化为全部归档存在相同损失。
+- 同期MARK 1m两币各120/120，时间网格无缺失/重复。它证明这一固定窗口可得，
+  不证明精确瞬时结算mark、来源历史可用时刻或完整长区间覆盖。
+- 2023-01-01 07:00—09:00 UTC两币MARK请求各HTTP400，响应为过旧数据/最近10000点
+  限制。其余2025/2026固定旧窗口未请求：状态只能为未验证，不能说也失败或可得。
+
+此证据强化coverage限制，不改已冻结probe预算或经济协议；不能以尾段成功宣布
+训练条件满足。官方历史归档支持由负责人继续只读核查。
+
+## 本轮验证及停点
+
+使用既有解释器标准库复核文档身份、独立字面算术、六项review ID、34项阶段映射、
+公开probe hash/尾段网格、QR006及coverage文件不变、主仓保护基线和本轮两文件范围。
+这些检查通过；8份body hash、两币各120点MARK网格、5份QR006冻结文件及coverage
+hash一致。主仓HEAD、分支、暂存/未暂存diff、索引字节、状态hash/72条目均匹配。
+首轮status校验用了默认目录汇总（53行），改回基线的
+`git status --porcelain=v1 --untracked-files=all` 后hash匹配；不是检测到主仓变化。
+最终commit/hash在交付消息列出。未创建validator/producer代码，未运行
+应用回归或拟合；schema不存在可执行实现，不能记为账本PASS。
+
+QD下一步给出六项修订的具体位置、选择的边界和正负例，负责人转交后QR复核；当前
+按交接要求提交独立检查点并停止。无需重复询问普通离线准备授权，但不越过接口
+协调边界开始写猜测API的验证器。没有merge/push、实时订单、模型激活或服务变更。
+训练仍须完成账本独立验收、覆盖与情景冻结、完整状态回放、成熟标签/切分与依赖
+审计、训练/样本外方案冻结；到达条件时再报告，任何fit开始前仍须用户确认。
+
+负责人收束指令 `QF-CONTROL-20261028-QR007-REVIEW-CLOSE-1` 已到达：用户选择先
+验证至9月末，经济验证范围截止2026-10-01 00:00UTC，10月待补证，原2024训练/
+2025验证划分暂不变。负责人另提供mark归档及9月volume差异证据目录，留待下一
+coverage任务精确核验；本次未读取/验收这些新归档，也不据其扩大六项schema审查。
