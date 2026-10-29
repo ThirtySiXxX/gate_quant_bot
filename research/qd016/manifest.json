@@ -1,0 +1,107 @@
+{
+  "schema": "qd016.exact-resident-continuation-manifest.v1",
+  "base_commit": "d6c7d5ab66a9f97a7f2a2270bf1a3c3820c76b64",
+  "authorization_ref": "QF-APPROVAL-QD016-RESUME-1",
+  "user_authority": "User requested releasing the resident-index quota and continuing; direct current-chat message: 继续吧. Original full scope/outer cumulative limits retained.",
+  "original_manifest": {
+    "path": "research/qd015/manifest.json",
+    "sha256": "a6c03c4f38cc520ebb56491a6f443843724e93734afbf0e3ce91edff4f7c0da2"
+  },
+  "prior_failure": {
+    "path": "research/.data/qd015/full-p0-actual-1/failure.json",
+    "sha256": "1b70bae171cf299c50b47fd5ea61521484c6b2591b3a7ac84504cbd672a89f69"
+  },
+  "store_root": "research/.data/qd015/full-p0-actual-1/P0-ALLOW_ALL/store",
+  "artifact_directory": "research/.data/qd015/full-p0-resume-1",
+  "record_name": "RESIDENT-CONTINUATION-1.json",
+  "operation": {
+    "authorization_ref": "QF-APPROVAL-QD016-RESUME-1",
+    "expected_head": {
+      "audit_prefix": "d05e60b02a2917de8a46b5c04bd0ba3c49cac2aa4d5a7ce269b536f34f8859bc",
+      "committed_seq": 321,
+      "cutoff": {
+        "at_us": 1704988800000000,
+        "slot": 5
+      },
+      "economic_state_sha256": "0e7cf4cf7b93249ff0234afe29a7228dc1a30dc62894cceea51f2ea553fa828f",
+      "ledger_id": "qd013:P0:ALLOW_ALL",
+      "status": "ACTIVE"
+    },
+    "stop_control": {
+      "control_seq": 965,
+      "control_sha256": "79f7d519e3734f5917d9d7138446de41ca095def4061aa02e16cb7139dfc5613"
+    },
+    "failed_request_sha256": "b89b059b493e68282c66eb92c9c8e88fe0beb32d515d46b030e818875cffc306",
+    "process_rss_limit_bytes": 1073741824
+  },
+  "cache_key": "eac8926c3a4a568335c229836295bbd6d5bf0d56a4d56543c99ca65b28e7065d",
+  "cache_path": "research/.data/qd015/markets/eac8926c3a4a568335c229836295bbd6d5bf0d56a4d56543c99ca65b28e7065d.sqlite3",
+  "cache_content_sha256": "499fc9cdabbed68cbbaf2c3cc57e5c99f06e0e416404d05a8d5582d13ac0b966",
+  "schedule_sha256": "3144fb63de1abd12821ad1bdf2099bce508ba91141b159d52de4aeb9cb969649",
+  "outer_limits": {
+    "cpu_seconds": 10800,
+    "expanded_input_bytes": 2356028624,
+    "output_bytes": 12884901888,
+    "physical_input_bytes": 1073741824,
+    "physical_rows": 53820701,
+    "rss_bytes": 1073741824,
+    "wall_seconds": 14400
+  },
+  "code_sha256": {
+    "research/qd007/event_ledger.py": "7c1a08c569b79618b6de3092e297ef1ed1a51b54da29d62e76e7e2c900620636",
+    "research/qd008/repair_history.py": "9e0d36333fc0951f5b7cc51eb10b2873a115f91239fba550bdfd8a178b244448",
+    "research/qd009/streaming_ledger.py": "d7ba2b98e723f9a14b6bd6e105aa7ddfe796c5a46bcc5ba9ff6503727d0169ab",
+    "research/qd010/economic_inputs.py": "440611367c847942b42c46450233b5e608648723d9fcbdc651f4d89ee9450bf1",
+    "research/qd010/joint_native_bridge.py": "affff49af5477290a0cd0a00c71a9ec9aae9cd9b6c609281731ac36a30313987",
+    "research/qd011/codec.py": "bddbab9dd1d7647a484b8188dd162093103c85a2146370bd2594f0724e44b0c8",
+    "research/qd011/driver.py": "a241e753fec57dfd3bb4413ab63e61069290eac55469e3f251354d1f4ae42b74",
+    "research/qd011/export.py": "94ab828007e810bdcb6827a3f0b81f5361be32f3fa07fe204b5c0b50d8259112",
+    "research/qd011/ports.py": "19fd509015e1021dc216f5e912f065ef1c047ca9f6d012cf3bea5ff79ea50237",
+    "research/qd012/actual_snapshot_entry.py": "90478fa9fdc0a98d6db49e10adea1e9f35bc4ed5c9f08808b7c38707ed1c01b2",
+    "research/qd012/native.py": "02337f8929fe2c0468ef065572f140b794e278062d86b3a22e876c37a3ec9f10",
+    "research/qd012/prepare.py": "1985c4ac99a57ffc436852c381b61b5f759bde26f21a49af528107c5ba678897",
+    "research/qd012/queries.py": "04287c87ab148dba74c972cad7213f4eec77d62a01f9d1ce6b0ef40fab2e2def",
+    "research/qd012/sources.py": "6e59916879ab34ad051cfc7a00fb326979f78c2b6dbd59b59de07f98fe856881",
+    "research/qd013/compact.py": "481a16dad3a5d1124a32d0d189531275c5e8cf93a525eecd936d1f20b21502b1",
+    "research/qd013/entry.py": "9198357b15d86a79abfc82d6199ddc07625887f81da10938652764db33394216",
+    "research/qd013/exports.py": "bbd8e0f79fa4ff597f064ade8fb70eae1d5e323fdb3d9a454a069526bd842f46",
+    "research/qd013/inputs.py": "545b6959faf9113084286abf5ec133529feac8e98d46231c071e0b10b5977bed",
+    "research/qd013/market.py": "c0017f6c5d8d464395888a8c91d284dbdf9cd85b8b457dee87c5e99e605e2729",
+    "research/qd013/runner.py": "d64676b2b15bca14987951cec7fb962194bb76d92e972a3438144af337f05863",
+    "research/qd013/scenarios.py": "e3e4ec13d3176078e6e3f906c6811b6c5d3cf754e7a050e81661bfb8b6064de2",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/carry.py": "81b370e9b84384be578db2163f7f4397b3edf41ebf78ffc56567522ead5e016f",
+    "src/config.py": "29eed6a35c7ecb8b079b21616754c49774fa0bb9034dbba3fc2112734c968709",
+    "src/crypto_ml.py": "63d0d9569cb261c83867b18cde03f9f74c7b54626172eeb5bb36eac09c19a7f6",
+    "src/data_fetcher.py": "624339d97918bc7ab99357e0d0513a9d7f356805ee5f6bd01fd7f03a987a2fdf",
+    "src/execution_timing.py": "41d4593eaf345cdc8d26759605651e3e7bcfcb679604416b29fef80b821d9344",
+    "src/indicators.py": "232a22a778a94eb0a101991474788a637078bea3f9832d8383683056878ef828",
+    "src/models.py": "01c28b7c42e00fcd6b5fcc6415246a5c73af5348fd5301d11b116f1064a8c20e",
+    "src/portfolio.py": "1837e2601c2255515644394b6934f45a933d11c758f93aafae926d9bb120397d",
+    "src/position_sizing.py": "e80773ec1bf0ec88fdf8128f368649cf123d3ad92b615b46d3ce3e754c20efad",
+    "src/risk.py": "95410f4adf88f25e1030d108c43f3a4069c162523ba91bdff91e7462966826ad",
+    "src/strategy_execution.py": "e1eaa17ea1292c7e906d4634b274fe72f2a415dfa409054674a33c22b9b1f5bb",
+    "src/strategy_signals.py": "aa3b9e71512008ff43f49639d8d2cf113e81def7ab031e41676453def86e78dc",
+    "src/trend.py": "5234e1d35b7da34b8dd3429a6811b5ea5036d1e20a3af51fe70e34e56063a361",
+    "src/vol.py": "8ed00ac4df7b86ffd2abcf80bcf55c201a631f7ac31d1e786f8e7cf95713ed3a",
+    "research/qd013/benchmark.py": "7517ba7ddafe928f9d96671a471d32db0f6afdb059ff630588c03c77ff03f1b8",
+    "research/qd014/structure.py": "9a4a575d3e479826d7de32d03ba93d0c95ec286f967e1cce72539ef1400f812d",
+    "research/qd014/runner.py": "4743fbbc12202edb5259c9e1fdbf316890dd33fb850805129cb80e01c1c5fa68",
+    "research/qd014/entry.py": "b721267e87f74c31b90ae82473bcfcea7298ee540637f4a174e0f009556c6848",
+    "research/qd015/journal.py": "f4d7e36299c4229b114bf7e08a9350b6cc67b28d00d39797cac8330f4591737c",
+    "research/qd015/runner.py": "2f8dbd1f1548ff7bcba00483713782ecdb0c9faf3d5f30731d64037468b7b68d",
+    "research/qd015/cache_identity.py": "6d7d1b3257dd1c821803151527d0695778e00c2bd7501f220cfc51a21332c87f",
+    "research/qd015/entry.py": "f9da386d8d7de9a1e76df686a31d89797c3bd4bdc14849acc94228d023901921",
+    "research/qd015/measure.py": "158610cee753691f0bafc814c4eb83b8d33bc4d40ad0c3f32d891ae338486442",
+    "research/qd016/resident.py": "b41bb51085ecdbd131f9b0d385aba3fc3b9ab1177bde7838c50052cc8d3502f7",
+    "research/qd016/entry.py": "373b98e7cf55f7bc658cc2aec2c5e359cf754cf50cecc333f4477bf23ab450b4"
+  },
+  "retained": {
+    "genesis_unchanged": true,
+    "source_unchanged": true,
+    "financial_modules_unchanged": true,
+    "old_resource_counters_preserved": true,
+    "old_failure_preserved": true
+  },
+  "training_authorized": false
+}
