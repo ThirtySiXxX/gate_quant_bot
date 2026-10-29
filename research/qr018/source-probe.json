@@ -1,0 +1,99 @@
+{
+  "BTC": {
+    "bytes": 386083,
+    "sha256": "9c037fbacf98b16d5d052c23c32b13196cd6fd0f4306e45bd894cea1cfea0eb6",
+    "git_blob_sha": "235152303aa54483ced587b86aa796e5fec783bb",
+    "rows": 1272,
+    "unique_timestamps": 1272,
+    "first_ms": 1788224544456,
+    "last_ms": 1788307127752,
+    "median_gap_seconds": 15.06,
+    "max_gap_seconds": 19819.208,
+    "gaps_over_60_seconds": 5,
+    "gaps_over_15_minutes": 5,
+    "occupied_15m_bins": 28,
+    "possible_daily_bins": 96,
+    "row_fields": [
+      "t",
+      "c",
+      "b",
+      "a",
+      "tr"
+    ],
+    "source": "https://raw.githubusercontent.com/odgersjewellr-maker/orderflow-depth/7d0b160cd4fb74746d1de670d698b0d97127be52/data/BTC-2026-09-01.jsonl.gz"
+  },
+  "ETH": {
+    "bytes": 417476,
+    "sha256": "0d04189cd0b60155bd38609e997eae2d31b5b9fcb50b0823cc396a901403a396",
+    "git_blob_sha": "859c4a723e6cfb8ec7942268b764378efd5a2d31",
+    "rows": 1272,
+    "unique_timestamps": 1272,
+    "first_ms": 1788224544987,
+    "last_ms": 1788307127752,
+    "median_gap_seconds": 15.058,
+    "max_gap_seconds": 19819.258,
+    "gaps_over_60_seconds": 5,
+    "gaps_over_15_minutes": 5,
+    "occupied_15m_bins": 28,
+    "possible_daily_bins": 96,
+    "row_fields": [
+      "t",
+      "c",
+      "b",
+      "a",
+      "tr"
+    ],
+    "source": "https://raw.githubusercontent.com/odgersjewellr-maker/orderflow-depth/7d0b160cd4fb74746d1de670d698b0d97127be52/data/ETH-2026-09-01.jsonl.gz"
+  },
+  "tardis": {
+    "availableSince": "2024-10-29T00:00:00.000Z",
+    "symbols": [
+      {
+        "id": "BTC",
+        "type": "perpetual",
+        "availableSince": "2024-10-29T00:00:00.000Z"
+      },
+      {
+        "id": "ETH",
+        "type": "perpetual",
+        "availableSince": "2024-10-29T00:00:00.000Z"
+      }
+    ],
+    "channels": [
+      {
+        "name": "l2Book",
+        "description": "Order book snapshots stream",
+        "additionalInfo": "Regular 20-level snapshot feed, currently observed around every 5.4s.",
+        "frequency": "5s",
+        "frequencySource": "inferred",
+        "exchangeDocsUrl": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions",
+        "changes": [
+          {
+            "until": "2026-06-17T00:00:00.000Z",
+            "sourceFor": [
+              "book_change"
+            ]
+          }
+        ],
+        "availableSince": "2024-10-29T00:00:00.000Z"
+      },
+      {
+        "name": "fastBook",
+        "description": "Fast 5-level order book snapshots stream",
+        "additionalInfo": "Subscribed as l2Book with fast=true. Raw messages are stored as fastBook to distinguish them from regular 20-level l2Book snapshots and include data.fast=true.",
+        "frequency": "500ms",
+        "frequencySource": "inferred",
+        "exchangeDocsUrl": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions",
+        "availableSince": "2026-06-17T00:00:00.000Z",
+        "sourceFor": [
+          "book_change"
+        ]
+      }
+    ],
+    "metadata_sha256": "a7a00a35e4e277f2fabc00f0cc1bb99cfb8b2e2e8472affe344f49dcb320f0b9"
+  },
+  "status": "SOURCE_CANDIDATE_FOUND_TRAINING_NOT_READY",
+  "training_performed": false,
+  "source_commit": "7d0b160cd4fb74746d1de670d698b0d97127be52",
+  "official_archive_anonymous_head_status": 403
+}
