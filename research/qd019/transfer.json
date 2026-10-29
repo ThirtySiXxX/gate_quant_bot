@@ -4,5 +4,27 @@
   "manifest_sha256": "74503e758b758a7a53ac4f4798b6265858c8ae9d3ca6abc193be3046c28bb81c",
   "numeric_reference_ticks": 16,
   "schema": "qd019.transfer-release.v1",
-  "source_checkpoint": 1026
+  "source_checkpoint": 1026,
+  "sqlite_host_fix": {
+    "additional": {
+      "requirements-qd020.lock": "a2848e75e0afdec69ce11129af3115e1ecfe599291dadf1f09b56800097c1719",
+      "research/qd019/sqlite_host.py": "df51f86f732f9e76fa79864bf277ae1a3f32ea3fdf23459d6b6750769df475e9"
+    },
+    "base_manifest_sha256": "74503e758b758a7a53ac4f4798b6265858c8ae9d3ca6abc193be3046c28bb81c",
+    "replacements": {
+      "research/qd019/collect.py": {
+        "after": "97825f7ed06b3c571a2d19dd808e6d69cb3fd9281c107ebfecfa079648b8ac2a",
+        "before": "85fe297c8f13d9a67daf6b71549eff24b828623f15f6a265ca1ecf13a231ee2d"
+      },
+      "research/qd019/entry.py": {
+        "after": "1981044829ccf8ca15039b82a0aefcc560d4e04c9d7a9fbe91099d7b14a4aff1",
+        "before": "3f4b632bf1243fb41e924ead50e6d8e45536bf750555c84cc161a18db98a6c26"
+      },
+      "scripts/qd019/setup-wsl.sh": {
+        "after": "b22151c3ec2c3f69740f918b5f8bce2c3a78a354bddd2c9166106e27a56a372a",
+        "before": "99091c78e207b39cfb143bc6fc4287b3025d81c91be0815dba37c1e1fc0e8218"
+      }
+    },
+    "schema": "qd020.sqlite-host-fix.v1"
+  }
 }

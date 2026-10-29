@@ -18,6 +18,8 @@ def collect(log=None):
     files = []
     if (bundle/'migration.json').exists():
         files.append((bundle/'migration.json','migration-manifest.json'))
+    if (bundle/'host-fix-1.json').exists():
+        files.append((bundle/'host-fix-1.json','compatibility/host-fix-1.json'))
     for name in ('launch','activated','runtime-validation','progress','result','failure'):
         p=run/(name+'.json')
         if p.exists(): files.append((p,'run/'+p.name))

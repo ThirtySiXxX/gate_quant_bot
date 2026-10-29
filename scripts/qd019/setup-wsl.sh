@@ -24,6 +24,7 @@ fi
 test ! -e .venv
 "$task_uv" venv --python 3.13.7 .venv
 "$task_uv" pip sync --python .venv/bin/python --only-binary=:all: requirements-qd019.lock
+"$task_uv" pip install --python .venv/bin/python --no-deps --require-hashes -r requirements-qd020.lock
 # Verify the archive against the source-controlled release binding before use.
 .venv/bin/python -B - "$task_archive" <<'PY'
 from research.qd019.migration import read,sha,require

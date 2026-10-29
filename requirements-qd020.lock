@@ -1,0 +1,4 @@
+# Only for Astral CPython's built-in SQLite on Linux x86_64.
+# Exact CPython 3.13 wheel, published PyPI SHA256; no other package is upgraded.
+pysqlite3-binary==0.5.4.post2 ; sys_platform == "linux" and platform_machine == "x86_64" \
+    --hash=sha256:930c7597a0863ef3da721e538756c2768cee14cb9b8d2c037263d061b24f66a5

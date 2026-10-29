@@ -6,6 +6,7 @@ import time
 from .migration import (SCHEMA, STORE, RECORD, read, sha, require, verify_inventory,
                         verify_code, admit_runtime, verify_chain, install_budgets,
                         open_ledger, activate)
+from .sqlite_host import admitted_code_pins, prepare_sqlite_host, prior_host_failure
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFEST = ROOT / 'research/.data/qd019-import/migration.json'
@@ -16,12 +17,14 @@ def check(manifest_path):
     release = read(ROOT/'research/qd019/transfer.json')
     require(release['manifest_sha256'] == sha(path), 'TRANSFER_MANIFEST_HASH_MISMATCH')
     require(m['schema'] == SCHEMA, 'MIGRATION_MANIFEST_VERSION')
-    verify_code(ROOT, m['code_sha256'])
+    verify_code(ROOT, admitted_code_pins(m['code_sha256'], release))
     require(not (data / RECORD).exists() and not (data / STORE / RECORD).exists(),
             'MIGRATION_ALREADY_CONSUMED_NO_RETRY')
     require(not (data / 'migration-run-1/launch.json').exists(), 'MIGRATION_ALREADY_ATTEMPTED_NO_RETRY')
     require(len(m['numeric_seals']) >= 16, 'NUMERICAL_REFERENCE_SEALS_REQUIRED')
     actual = admit_runtime(m['source_runtime'])
+    actual['sqlite_host'] = prepare_sqlite_host()
+    actual['sqlite'] = actual['sqlite_host']['sqlite_version']
     print('Checking local data hashes...', flush=True)
     size = verify_inventory(data, m['inventory'])
     require(read(data / STORE / 'HEAD') == m['frozen']['head'], 'FROZEN_HEAD_MISMATCH')
@@ -39,7 +42,10 @@ def run(manifest_path=DEFAULT_MANIFEST, *, resume=False, validate_only=False):
     from research.qd013.market import MarketCache
     from research.qd013.runner import Replay
     from research.qd013.exports import export_all, write_bundle
-    before = m['prior_observed_upper_bounds']
+    before = dict(m['prior_observed_upper_bounds'])
+    host_failure = prior_host_failure(ROOT, sha(manifest_path))
+    for name in ('wall_seconds', 'cpu_seconds'):
+        before[name] += host_failure[name]
     limits = dict(m['outer_limits'])
     limits['wall_seconds'] -= before['wall_seconds']
     limits['cpu_seconds'] -= before['cpu_seconds']
@@ -49,6 +55,7 @@ def run(manifest_path=DEFAULT_MANIFEST, *, resume=False, validate_only=False):
     durable_new(out / 'launch.json', dict(status='CONSUMED_NO_AUTOMATIC_RETRY',
                 manifest_sha256=sha(manifest_path), authorization_ref=m['authorization_ref'],
                 mode='ENGINEERING_COPY_VALIDATION' if validate_only else 'CONTINUE_ORIGINAL_ACCOUNT',
+                prior_host_failure=host_failure,
                 preflight=preflight, prior_observed_upper_bounds=before, remaining_limits=limits), 1048576)
     ledger = cache = None; allocation = None
 

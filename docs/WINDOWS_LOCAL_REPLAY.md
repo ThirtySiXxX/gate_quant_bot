@@ -72,6 +72,25 @@ bash scripts/qd019/setup-wsl.sh /mnt/c/quant-transfer/gate-qd-data.tar.gz
 先查明原因，不要删除运行证据或用旧入口强行启动。依赖安装联网；正式回放
 期间 Python 的网络入口关闭，所有计算和输出保存在本机。
 
+### 已安装环境遇到 `_sqlite3` 没有 `__file__` 时
+
+保留原来的 `return-to-codex-20261029T074002190598Z.tar.gz` 和 `local-logs/`。
+把小补丁 `qd020-sqlite-fix.zip` 解压到 Windows 的
+`C:\quant-transfer\qd020-sqlite-fix`，然后在 Ubuntu 项目目录执行：
+
+```sh
+.venv/bin/python /mnt/c/quant-transfer/qd020-sqlite-fix/apply-fix.py
+```
+
+补丁仅在确认没有 launch/迁移记录且 HEAD/CONTROL/SPENT/GENESIS 仍匹配冻结
+检查点时应用，拒绝覆盖自行改过的源码。原源码会备份；失败日志和返回包保留。
+补丁自带固定版本、校验过的 Linux SQLite 接口安装包，不需要重建虚拟环境或
+重新下载研究数据。数据 manifest 保持原样，新增源码通过明确的修复哈希覆盖表
+验收，而非关闭身份校验。前次失败启动的日志时间区间保守计入剩余资源预算。
+
+看到 `READY_FOR_LOCAL_RESUME` 后，继续下方启动命令。新的预检查还会在临时
+数据库证明写入确实经过配额拦截，并拒绝超额写入；不打开研究账户。
+
 ## 4. 启动一次连续回放
 
 ```sh
