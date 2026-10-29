@@ -18,17 +18,22 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
+import tempfile
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional
 
 from . import data_fetcher
 from .backtest import SymbolBacktestInputs, run_portfolio_backtest
-from .config import ConfigStore, CostConfig, SystematicConfig
+from .config import RiskConfig, ConfigStore, CostConfig, SystematicConfig
 from .credentials import CredentialStore
+from .backtest_reporting import position_summary
+from .performance import compounded_performance
+from .json_utils import json_safe
 
 logger = logging.getLogger("bot.backtest_runner")
 
@@ -61,20 +66,34 @@ class BacktestJob:
         if self.result is not None:
             # trend_diagnosis 里的 episodes 明细比较大，列表页不需要，详情页(to_full)才给
             d["summary"] = {k: v for k, v in self.result.items()
-                             if k not in ("trades", "equity_curve", "trend_diagnosis")}
+                             if k not in ("trades", "equity_curve", "trend_diagnosis", "executions", "chart_candles")}
+            d["summary"]["position_summary"] = position_summary(self.result.get("trades", []), self.result.get("executions") if self.result.get("schema_version",0)>=2 else None)
+            if self.result.get("schema_version",0)<2:
+                d["summary"]["avg_trade_notional"] = None
+            if not d["summary"].get("performance") and self.result.get("equity_curve"):
+                try:
+                    d["summary"]["performance"] = compounded_performance(
+                        self.result.get("initial_capital", self.initial_capital), self.result["equity_curve"])
+                except (ValueError, TypeError, KeyError):
+                    d["summary"]["performance"] = None
+            performance = d["summary"].get("performance")
+            if performance:
+                d["summary"]["return_pct"] = performance["compounded_return_pct"]
+                d["summary"]["annualized_return_pct"] = performance["cagr_pct"]
             td = self.result.get("trend_diagnosis")
             if td:
                 d["summary"]["trend_diagnosis"] = {k: v for k, v in td.items() if k != "episodes"}
-        return d
+        return json_safe(d)
 
     def to_full(self) -> dict:
         d = self.to_summary()
         if self.result is not None:
             d["trades"] = self.result.get("trades", [])
             d["equity_curve"] = self.result.get("equity_curve", [])
+            d["executions"] = self.result.get("executions", [])
             if self.result.get("trend_diagnosis"):
                 d["trend_diagnosis"] = self.result["trend_diagnosis"]
-        return d
+        return json_safe(d)
 
 
 class BacktestController:
@@ -82,6 +101,7 @@ class BacktestController:
     避免同时发起过多下载对交易所接口造成压力。"""
 
     MAX_CONCURRENT = 2
+    _ACTIVE_STATUSES = ("pending", "fetching", "running")
 
     def __init__(self, config_store: ConfigStore, cred_store: CredentialStore,
                  result_dir: str = "./data/backtests", cache_dir: str = "./data/klines"):
@@ -124,20 +144,27 @@ class BacktestController:
 
     def _persist(self, job: BacktestJob):
         path = os.path.join(self.result_dir, f"{job.id}.json")
+        temporary = None
         try:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump({
+            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=self.result_dir,
+                                             suffix=".tmp", delete=False) as f:
+                temporary = f.name
+                json.dump(json_safe({
                     "id": job.id, "symbols": job.symbols, "days_back": job.days_back,
                     "initial_capital": job.initial_capital, "status": job.status,
                     "walkforward": job.walkforward, "wf_folds": job.wf_folds,
                     "message": job.message, "created_at": job.created_at,
                     "finished_at": job.finished_at, "result": job.result, "error": job.error,
-                }, f, ensure_ascii=False)
+                }), f, ensure_ascii=False, allow_nan=False)
+            os.replace(temporary, path)
         except Exception as e:
             logger.warning("保存回测结果失败: %s", e)
+        finally:
+            if temporary and os.path.exists(temporary):
+                os.remove(temporary)
 
     def _active_count(self) -> int:
-        return sum(1 for j in self._jobs.values() if j.status in ("pending", "fetching", "running"))
+        return sum(1 for j in self._jobs.values() if j.status in self._ACTIVE_STATUSES)
 
     # ------------------------------------------------------------------
     def start_job(self, symbols: Optional[List[str]], days_back: float,
@@ -150,16 +177,17 @@ class BacktestController:
         symbols = list(dict.fromkeys(symbols))  # 去重，保持顺序
         if not symbols:
             raise RuntimeError("请至少选择一个要回测的合约代码（默认使用当前配置的交易标的池）")
-        if days_back <= 0:
-            raise RuntimeError("回测天数必须大于0")
+        days_back = float(days_back)
+        if not math.isfinite(days_back) or days_back <= 0:
+            raise ValueError("回测天数必须是大于0的有限数字")
+        if initial_capital is not None:
+            initial_capital = float(initial_capital)
+            if not math.isfinite(initial_capital) or initial_capital <= 0:
+                raise ValueError("初始资金必须是大于0的有限数字")
 
         creds = self.cred_store.load()
         if not creds.is_set:
             raise RuntimeError("请先在“设置”页填写并保存 Gate.io API Key（下载历史行情需要，但回测只做只读查询，不会下单/不涉及资金）")
-
-        with self._lock:
-            if self._active_count() >= self.MAX_CONCURRENT:
-                raise RuntimeError(f"当前已有 {self.MAX_CONCURRENT} 个回测任务在运行，请等待其中一个完成后再发起新的")
 
         settle = cfg.get("settle", "usdt")
         sys_cfg = SystematicConfig.build(cfg.get("systematic", {}))
@@ -169,11 +197,20 @@ class BacktestController:
                            initial_capital=capital, walkforward=bool(walkforward),
                            wf_folds=max(2, min(int(wf_folds or 5), 10)))
         with self._lock:
+            # Checking capacity and reserving a pending job must be atomic.
+            if self._active_count() >= self.MAX_CONCURRENT:
+                raise RuntimeError(f"当前已有 {self.MAX_CONCURRENT} 个回测任务在运行，请等待其中一个完成后再发起新的")
             self._jobs[job.id] = job
 
-        t = threading.Thread(target=self._run_job, args=(job, settle, creds, cfg, sys_cfg, capital),
-                              daemon=True, name=f"backtest-{job.id}")
-        t.start()
+        try:
+            t = threading.Thread(target=self._run_job, args=(job, settle, creds, cfg, sys_cfg, capital),
+                                  daemon=True, name=f"backtest-{job.id}")
+            t.start()
+        except Exception:
+            # No worker owns the reservation if thread creation/start fails.
+            with self._lock:
+                self._jobs.pop(job.id, None)
+            raise
         return job
 
     def _run_job(self, job: BacktestJob, settle: str, creds, cfg: dict,
@@ -247,7 +284,7 @@ class BacktestController:
                         cache_dir=self.cache_dir, progress_cb=progress)
                 except Exception as e:
                     funding_history = None
-                    fetch_warnings.append(f"{symbol} 历史资金费率下载失败，将退回实时费率近似: {e}")
+                    fetch_warnings.append(f"{symbol} 历史资金费率下载失败，Carry按零、资金费成本按输入费率近似: {e}")
 
                 try:
                     account_taker_rate = exchange.get_account_taker_fee_rate(symbol)
@@ -255,6 +292,12 @@ class BacktestController:
                     account_taker_rate = None
                     fetch_warnings.append(f"{symbol} 账户实际费率读取失败，已按成本配置回退: {e}")
 
+                tiers = None
+                if sys_cfg.position_sizing_mode == "fixed_margin":
+                    try:
+                        tiers = exchange.get_risk_limit_tiers(symbol)
+                    except Exception as e:
+                        fetch_warnings.append(f"{symbol} 风险档位读取失败，该标的将无法新开仓：{e}")
                 symbol_inputs.append(SymbolBacktestInputs(
                     symbol=symbol, df_short=df_short, df_main=df_main, df_regime=df_regime, df_cov=df_cov,
                     funding_rate=float(contract_info.get("funding_rate") or 0.0),
@@ -265,22 +308,37 @@ class BacktestController:
                     order_size_min=contract_info.get("order_size_min", 1),
                     funding_history=funding_history,
                     test_start_ts=test_start_ts,
+                    leverage_min=contract_info.get("leverage_min"),
+                    leverage_max=contract_info.get("leverage_max"),
+                    order_size_max=contract_info.get("order_size_max"),
+                    risk_limit_tiers=tiers,
+                    market_order_size_max=contract_info.get("market_order_size_max"),
                 ))
 
             if not symbol_inputs:
                 raise RuntimeError("所有标的都未能成功下载到可用历史数据，无法回测：" + "；".join(fetch_warnings))
 
+            if len(symbol_inputs) != len(job.symbols):
+                raise RuntimeError("部分标的缺少行情，不能用缩小后的交易池代替原组合回测：" + "；".join(fetch_warnings))
             job.status = "running"
 
             def bt_progress(pct, msg):
                 job.progress_pct = 40 + int(pct * 0.6)
                 job.message = msg
 
-            result = run_portfolio_backtest(symbol_inputs, sys_cfg, cost_cfg, capital, progress_cb=bt_progress)
+            risk_cfg = RiskConfig.build(cfg.get("risk", {}))
+            result = run_portfolio_backtest(symbol_inputs, sys_cfg, cost_cfg, capital, progress_cb=bt_progress, risk_cfg=risk_cfg)
             if fetch_warnings:
                 result.warnings = fetch_warnings + result.warnings
 
             result_dict = result.to_dict()
+            result_dict["strategy_config"] = asdict(sys_cfg)
+            result_dict["cost_config"] = asdict(cost_cfg)
+            result_dict["risk_config"] = asdict(risk_cfg)
+            result_dict["contract_risk_snapshots"] = {
+                sb.symbol: {"leverage_min": sb.leverage_min, "leverage_max": sb.leverage_max,
+                            "order_size_max": sb.order_size_max, "market_order_size_max": sb.market_order_size_max,
+                            "risk_limit_tiers": sb.risk_limit_tiers} for sb in symbol_inputs}
 
             # 趋势捕获诊断：客观找出显著趋势段，逐段量化"漏没漏/拿没拿满/进晚了还是出早了"
             try:
@@ -309,7 +367,7 @@ class BacktestController:
                         job.message = msg
 
                     wf = run_walk_forward(symbol_inputs, sys_cfg, cost_cfg, capital,
-                                           n_folds=job.wf_folds, progress_cb=wf_progress)
+                                           n_folds=job.wf_folds, progress_cb=wf_progress, risk_cfg=risk_cfg)
                     result_dict["walkforward"] = wf.to_dict()
                 except Exception as e:
                     logger.warning("滚动样本外验证失败: %s", e)
@@ -327,7 +385,12 @@ class BacktestController:
             job.message = f"回测失败: {e}"
             job.finished_at = time.time()
         finally:
-            self._persist(job)
+            # A terminal job can be deleted while the worker reaches finally.
+            # Serialize deletion and persistence, and never resurrect a removed
+            # record after the terminal status has become visible to the UI.
+            with self._lock:
+                if self._jobs.get(job.id) is job:
+                    self._persist(job)
 
     # ------------------------------------------------------------------
     def get_job(self, job_id: str) -> Optional[BacktestJob]:
@@ -342,10 +405,12 @@ class BacktestController:
 
     def delete_job(self, job_id: str) -> bool:
         with self._lock:
-            job = self._jobs.pop(job_id, None)
-        if job is None:
-            return False
-        path = os.path.join(self.result_dir, f"{job_id}.json")
-        if os.path.exists(path):
-            os.remove(path)
-        return True
+            job = self._jobs.get(job_id)
+            # Deleting is not cancellation: an active worker still owns capacity.
+            if job is None or job.status in self._ACTIVE_STATUSES:
+                return False
+            path = os.path.join(self.result_dir, f"{job_id}.json")
+            if os.path.exists(path):
+                os.remove(path)
+            self._jobs.pop(job_id)
+            return True

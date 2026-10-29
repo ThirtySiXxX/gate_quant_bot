@@ -1,0 +1,1415 @@
+{
+  "accepted_conclusions": {
+    "qr008_checker": "9cae8458fb85e474a047fc1793abe0458cd83ab3",
+    "qr008_report": "0a90b2555db8e16934053abff31db29bac4296a2",
+    "qr010_shared_account": "88168f34c8c2855e9e65510bcde749cc459ff12a",
+    "qr014_sample_plan": "f2c931b8335ca8b1840f22d346a040446c50abb2"
+  },
+  "actual_history_execution": "OFF",
+  "base_commit": "48a09a6b1f162f3ae39ad971bd006f9a8f6145b7",
+  "code_sha256": {
+    "research/qd007/event_ledger.py": "7c1a08c569b79618b6de3092e297ef1ed1a51b54da29d62e76e7e2c900620636",
+    "research/qd008/repair_history.py": "9e0d36333fc0951f5b7cc51eb10b2873a115f91239fba550bdfd8a178b244448",
+    "research/qd009/streaming_ledger.py": "251b7e9ead45b66972680dc5594d4e80fabc88e9bdd613fc522e3d79569b16fb",
+    "research/qd010/economic_inputs.py": "440611367c847942b42c46450233b5e608648723d9fcbdc651f4d89ee9450bf1",
+    "research/qd010/joint_native_bridge.py": "affff49af5477290a0cd0a00c71a9ec9aae9cd9b6c609281731ac36a30313987",
+    "research/qd011/codec.py": "bddbab9dd1d7647a484b8188dd162093103c85a2146370bd2594f0724e44b0c8",
+    "research/qd011/driver.py": "7ec3ff4e59afc8e5954aa6ca34aa47b13b4b0d6c037ee13e2fb213c70a07c895",
+    "research/qd011/ports.py": "6edd8b255237ec97c965766c83393a523cd2bb343323cd495e555d3c9481fd38",
+    "research/qd012/actual_snapshot_entry.py": "90478fa9fdc0a98d6db49e10adea1e9f35bc4ed5c9f08808b7c38707ed1c01b2",
+    "research/qd012/native.py": "02337f8929fe2c0468ef065572f140b794e278062d86b3a22e876c37a3ec9f10",
+    "research/qd012/prepare.py": "9d27d4130cd3d1c5bbca8b7eb0a126147c55072e55c6380ee75c894f86e0e831",
+    "research/qd012/queries.py": "04287c87ab148dba74c972cad7213f4eec77d62a01f9d1ce6b0ef40fab2e2def",
+    "research/qd012/sources.py": "6e59916879ab34ad051cfc7a00fb326979f78c2b6dbd59b59de07f98fe856881",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/carry.py": "81b370e9b84384be578db2163f7f4397b3edf41ebf78ffc56567522ead5e016f",
+    "src/config.py": "29eed6a35c7ecb8b079b21616754c49774fa0bb9034dbba3fc2112734c968709",
+    "src/crypto_ml.py": "63d0d9569cb261c83867b18cde03f9f74c7b54626172eeb5bb36eac09c19a7f6",
+    "src/data_fetcher.py": "624339d97918bc7ab99357e0d0513a9d7f356805ee5f6bd01fd7f03a987a2fdf",
+    "src/execution_timing.py": "41d4593eaf345cdc8d26759605651e3e7bcfcb679604416b29fef80b821d9344",
+    "src/indicators.py": "232a22a778a94eb0a101991474788a637078bea3f9832d8383683056878ef828",
+    "src/models.py": "01c28b7c42e00fcd6b5fcc6415246a5c73af5348fd5301d11b116f1064a8c20e",
+    "src/portfolio.py": "1837e2601c2255515644394b6934f45a933d11c758f93aafae926d9bb120397d",
+    "src/position_sizing.py": "e80773ec1bf0ec88fdf8128f368649cf123d3ad92b615b46d3ce3e754c20efad",
+    "src/risk.py": "95410f4adf88f25e1030d108c43f3a4069c162523ba91bdff91e7462966826ad",
+    "src/strategy_execution.py": "e1eaa17ea1292c7e906d4634b274fe72f2a415dfa409054674a33c22b9b1f5bb",
+    "src/strategy_signals.py": "aa3b9e71512008ff43f49639d8d2cf113e81def7ab031e41676453def86e78dc",
+    "src/trend.py": "5234e1d35b7da34b8dd3429a6811b5ea5036d1e20a3af51fe70e34e56063a361",
+    "src/vol.py": "8ed00ac4df7b86ffd2abcf80bcf55c201a631f7ac31d1e786f8e7cf95713ed3a"
+  },
+  "contracts": {
+    "cache_codec": "zlib-json-f64-v1",
+    "carry": "8h_equivalent_28800s_1095_per_year_MAIN_BAR_OPEN_alignment",
+    "covariance": "native_annual_2x2_BTC_ETH_separate_from_sizing_std",
+    "funding": "strict_next_hour_R_post_R_plus_60s_completeness_plus_1h",
+    "initializer": "ExecutionTiming().dump()_indicator_only_warmup",
+    "mark": "source_plus_60s_age_source_le_120s_age_available_le_60s",
+    "native_input_version": 2,
+    "price": "USDT_per_base",
+    "qr014_features": "SEPARATE_NOT_ASSEMBLED",
+    "source_seconds": "exact_decimal_max_6dp",
+    "timestamp": "integer_UTC_microseconds",
+    "volume": "decimal_contracts",
+    "warmup_context": "qd011.raw-native-context.v2"
+  },
+  "dataset_id": "gate-btc-eth-exact-ohlcv-v3-candidate",
+  "limitations": [
+    "No raw actual-history payload opened or rehashed by this task",
+    "Supplied manifest hash is provenance, partial streams do not prove full-object SHA or gzip CRC",
+    "MARK query coverage UNKNOWN until separately approved bounded evaluation",
+    "Integer funding source-seconds compatibility untested on actual records; fractional source rejected",
+    "Finite assembly materializes only declared scope; no full-account scalability proof or model fitting"
+  ],
+  "manifest_sha256": {
+    "funding": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+    "mark": "30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce",
+    "ohlcv": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91"
+  },
+  "namespace": "qd012.frozen-native-preparation",
+  "next_bounded_actual_scope": {
+    "decision_us": 1704067200000000,
+    "execution_open_only_us": 1704070800000000,
+    "funding_objects": [
+      {
+        "bytes": 473,
+        "crc_complete": true,
+        "expanded_bytes": 1842,
+        "first_source_seconds": 1672531200,
+        "last_source_seconds": 1675180800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00040.bin",
+        "rows": 93,
+        "sha256": "062c1d564d5db9c8fb50cfd2cf0040eed21a176981077c08d252f988ea6ef5a1",
+        "source_id": "request-00040",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 430,
+        "crc_complete": true,
+        "expanded_bytes": 1808,
+        "first_source_seconds": 1672531200,
+        "last_source_seconds": 1675180800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00042.bin",
+        "rows": 93,
+        "sha256": "ea518f82ca118577ec59439e41f26c1d7eee1826478e712526169f97139e90f3",
+        "source_id": "request-00042",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 415,
+        "crc_complete": true,
+        "expanded_bytes": 1641,
+        "first_source_seconds": 1675209600,
+        "last_source_seconds": 1677600000,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00044.bin",
+        "rows": 84,
+        "sha256": "976f4341bb936c092329cbd273f9dde5bd33da34731d3369ff5f8b7c32bebf43",
+        "source_id": "request-00044",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 409,
+        "crc_complete": true,
+        "expanded_bytes": 1641,
+        "first_source_seconds": 1675209600,
+        "last_source_seconds": 1677600000,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00046.bin",
+        "rows": 84,
+        "sha256": "2ac70dde9c7e4cb0b9a91034465dbd4b73fd43ffee62c0715787530ead35dc07",
+        "source_id": "request-00046",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 525,
+        "crc_complete": true,
+        "expanded_bytes": 1905,
+        "first_source_seconds": 1677628800,
+        "last_source_seconds": 1680278400,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00048.bin",
+        "rows": 93,
+        "sha256": "bc9b3694768f461e1592516ad6c3309b1b7a763537a260956d9d991b0a47cfd6",
+        "source_id": "request-00048",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 535,
+        "crc_complete": true,
+        "expanded_bytes": 1904,
+        "first_source_seconds": 1677628800,
+        "last_source_seconds": 1680278400,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00050.bin",
+        "rows": 93,
+        "sha256": "dd3f78b8a8ff10f607e0dd290bb496063f94b71eb57498a4c8bd1a358b354456",
+        "source_id": "request-00050",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 488,
+        "crc_complete": true,
+        "expanded_bytes": 1816,
+        "first_source_seconds": 1680307200,
+        "last_source_seconds": 1682870400,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00052.bin",
+        "rows": 90,
+        "sha256": "b2a73290550c2f4785d22643a513b83071b21aa2fa01b203e410811f6ef6c0d0",
+        "source_id": "request-00052",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 501,
+        "crc_complete": true,
+        "expanded_bytes": 1833,
+        "first_source_seconds": 1680307200,
+        "last_source_seconds": 1682870400,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00054.bin",
+        "rows": 90,
+        "sha256": "8a21d05f2dcf95fd1bf1c4bc144bdd6d8ba062946d950d97229b843194352bfa",
+        "source_id": "request-00054",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 520,
+        "crc_complete": true,
+        "expanded_bytes": 1872,
+        "first_source_seconds": 1682899200,
+        "last_source_seconds": 1685548800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00056.bin",
+        "rows": 93,
+        "sha256": "ce8766bfd2afa250b8c67aef506a57184d6c0699f52c9cb3a4eb9d19f9272cbf",
+        "source_id": "request-00056",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 521,
+        "crc_complete": true,
+        "expanded_bytes": 1888,
+        "first_source_seconds": 1682899200,
+        "last_source_seconds": 1685548800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00058.bin",
+        "rows": 93,
+        "sha256": "55f799465a43f8e3279fef1390c53e83957c770c613ea7fe9e87d19aaf221057",
+        "source_id": "request-00058",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 513,
+        "crc_complete": true,
+        "expanded_bytes": 1826,
+        "first_source_seconds": 1685577600,
+        "last_source_seconds": 1688140800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00060.bin",
+        "rows": 90,
+        "sha256": "42e3c71534c720a1454869ae9eadcc050b22cc56da4b21b06abfa24e1e4e8409",
+        "source_id": "request-00060",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 499,
+        "crc_complete": true,
+        "expanded_bytes": 1819,
+        "first_source_seconds": 1685577600,
+        "last_source_seconds": 1688140800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00062.bin",
+        "rows": 90,
+        "sha256": "2e5f9c5309c6705fff7c070388211bdcbc1348168fee56b17ef31e348e605c0d",
+        "source_id": "request-00062",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 522,
+        "crc_complete": true,
+        "expanded_bytes": 1869,
+        "first_source_seconds": 1688169600,
+        "last_source_seconds": 1690819200,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00064.bin",
+        "rows": 93,
+        "sha256": "3ed2940797e16d933b11515abd77ea26d501fe2e452850eb805497484c1ba1a8",
+        "source_id": "request-00064",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 510,
+        "crc_complete": true,
+        "expanded_bytes": 1861,
+        "first_source_seconds": 1688169600,
+        "last_source_seconds": 1690819200,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00066.bin",
+        "rows": 93,
+        "sha256": "9760f682001083ebb7807111c5b2097a54b232efec22223cb26cb1b9bae5749b",
+        "source_id": "request-00066",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 493,
+        "crc_complete": true,
+        "expanded_bytes": 1822,
+        "first_source_seconds": 1690848000,
+        "last_source_seconds": 1693497600,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00068.bin",
+        "rows": 93,
+        "sha256": "880f6f976bcf8d96d4466ec4627a7662fbeecd28046d661b888925d8c1c2be9c",
+        "source_id": "request-00068",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 507,
+        "crc_complete": true,
+        "expanded_bytes": 1857,
+        "first_source_seconds": 1690848000,
+        "last_source_seconds": 1693497600,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00070.bin",
+        "rows": 93,
+        "sha256": "7c5f85b8353b3f7822f255c46107b41b9592750e871c78b4f60c352beecb9120",
+        "source_id": "request-00070",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 515,
+        "crc_complete": true,
+        "expanded_bytes": 1834,
+        "first_source_seconds": 1693526400,
+        "last_source_seconds": 1696089600,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00072.bin",
+        "rows": 90,
+        "sha256": "965e3f6341d11113588d3bb63cf0eec70cc4b882d9e6b22e0d693d623ab68448",
+        "source_id": "request-00072",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 509,
+        "crc_complete": true,
+        "expanded_bytes": 1804,
+        "first_source_seconds": 1693526400,
+        "last_source_seconds": 1696089600,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00074.bin",
+        "rows": 90,
+        "sha256": "239e5c506ddc3a040ed418cc2d6a7a35ffbc18a8f36a1a568e92beb70ad6779a",
+        "source_id": "request-00074",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 503,
+        "crc_complete": true,
+        "expanded_bytes": 1842,
+        "first_source_seconds": 1696118400,
+        "last_source_seconds": 1698768000,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00076.bin",
+        "rows": 93,
+        "sha256": "49252af2b369eb296e4fa23478ad3459ce30e087a40b3a57d261f3298d50e83e",
+        "source_id": "request-00076",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 494,
+        "crc_complete": true,
+        "expanded_bytes": 1826,
+        "first_source_seconds": 1696118400,
+        "last_source_seconds": 1698768000,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00078.bin",
+        "rows": 93,
+        "sha256": "ea8973bff6c2b491ce603ee0943ed28cece55f9aa2e51a29483368a583ce0774",
+        "source_id": "request-00078",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 378,
+        "crc_complete": true,
+        "expanded_bytes": 1655,
+        "first_source_seconds": 1698796800,
+        "last_source_seconds": 1701360000,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00080.bin",
+        "rows": 90,
+        "sha256": "7e379715fef4e6630bb4add2fb2836eae1d4c8b7fc3cf2f498c9690ec128a44f",
+        "source_id": "request-00080",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 380,
+        "crc_complete": true,
+        "expanded_bytes": 1660,
+        "first_source_seconds": 1698796800,
+        "last_source_seconds": 1701360000,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00082.bin",
+        "rows": 90,
+        "sha256": "aba52c6d318d0b428b095c2e9cec68fc5a6db315c0597718baf5aa89f05dda91",
+        "source_id": "request-00082",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 436,
+        "crc_complete": true,
+        "expanded_bytes": 1750,
+        "first_source_seconds": 1701388800,
+        "last_source_seconds": 1704038400,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00084.bin",
+        "rows": 93,
+        "sha256": "71fed3324abde1ffa5ef3e099c16653a6ea963aef360a4b41ee869133871caa5",
+        "source_id": "request-00084",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 439,
+        "crc_complete": true,
+        "expanded_bytes": 1760,
+        "first_source_seconds": 1701388800,
+        "last_source_seconds": 1704038400,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00086.bin",
+        "rows": 93,
+        "sha256": "1a90507d124b98c31b061cc845a61c1b63f9bdd234454fa9adb5ef83bff372db",
+        "source_id": "request-00086",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 396,
+        "crc_complete": true,
+        "expanded_bytes": 1715,
+        "first_source_seconds": 1704067200,
+        "last_source_seconds": 1706716800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00088.bin",
+        "rows": 93,
+        "sha256": "e8a3b16af51335a73dbd4f8f64d5847cb9cfc58490d040b6cb7fc14f3bb6210f",
+        "source_id": "request-00088",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 410,
+        "crc_complete": true,
+        "expanded_bytes": 1730,
+        "first_source_seconds": 1704067200,
+        "last_source_seconds": 1706716800,
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00090.bin",
+        "rows": 93,
+        "sha256": "14d1ede15e648055693f005a45316e0104b2ec2bb2389c503ebd57a2fe698f11",
+        "source_id": "request-00090",
+        "source_time_unit": "UTC_unix_seconds",
+        "symbol": "ETH_USDT"
+      }
+    ],
+    "hourly_objects": [
+      {
+        "bytes": 37635437,
+        "format": "exact_ohlcv_v3_jsonl",
+        "instrument_id": "gate:usdt:BTC_USDT",
+        "manifest_sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/candles/BTC_USDT-3600s.jsonl",
+        "sha256": "1f14794a992d2551df6046752e433ecf53103a7411e36a026122133f9398ffaf",
+        "source_id": "candles/BTC_USDT-3600s.jsonl"
+      },
+      {
+        "bytes": 37576141,
+        "format": "exact_ohlcv_v3_jsonl",
+        "instrument_id": "gate:usdt:ETH_USDT",
+        "manifest_sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/candles/ETH_USDT-3600s.jsonl",
+        "sha256": "58e0f909b02c431adaa59305dcffcd9c037f6c1ee1bfd67cfcd389ed5aaa10b4",
+        "source_id": "candles/ETH_USDT-3600s.jsonl"
+      }
+    ],
+    "hourly_prefix_end_exclusive_us": 1704067200000000,
+    "hourly_prefix_start_us": 1672531200000000,
+    "mark_objects": [
+      {
+        "bytes": 3763846,
+        "month": "202312",
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/021-202312-BTC_USDT.part",
+        "sha256": "fbdacc13ce32402ed776bfcbd20d92c78b0411725841c4f915ac0b04d7c1405c",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 2492590,
+        "month": "202312",
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/022-202312-ETH_USDT.part",
+        "sha256": "f6ef2ff9cd1dbd6fd5e88f463d1663d6850492c501b9ba98ca75501c006b2759",
+        "symbol": "ETH_USDT"
+      },
+      {
+        "bytes": 4873368,
+        "month": "202401",
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/023-202401-BTC_USDT.part",
+        "sha256": "d8328375a768294c5c70b11ffc47bbca8741f072e7bf31eb6b5e0f7eb83a817c",
+        "symbol": "BTC_USDT"
+      },
+      {
+        "bytes": 1124911,
+        "month": "202401",
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/024-202401-ETH_USDT.part",
+        "sha256": "9a8c08a9fbd8f50114066908543409b0f3e6dc7cc32f1d9704f0787ce8e4595f",
+        "symbol": "ETH_USDT"
+      }
+    ],
+    "mark_queries_us": [
+      1704067200000000,
+      1704070800000000
+    ],
+    "no_account_advance": true,
+    "no_fit": true,
+    "no_labels": true,
+    "roles": [
+      "valuation",
+      "reservation",
+      "decision",
+      "permitted_fill"
+    ],
+    "status": "PROPOSAL_NOT_AUTHORIZATION_OR_EXECUTION",
+    "suggested_observation_limits": {
+      "compressed_input_mib": 128,
+      "cpu_seconds": 200,
+      "new_output_mib": 8,
+      "rss_mib": 256,
+      "wall_seconds": 300
+    },
+    "uncertainty": "METADATA_ONLY: full-year warmup is mandatory; gzip traversal/native memory and output unmeasured; stop at limit, no narrowing or retry without a new human decision",
+    "whole_selected_compressed_bytes": 87478614
+  },
+  "schema_version": 3,
+  "scope": {
+    "account_start": "2024-01-01T00:00:00Z",
+    "accounts_per_trajectory": 1,
+    "economic_end_exclusive": "2026-10-01T00:00:00Z",
+    "initial_shared_cash_usdt": "10000",
+    "joint_trajectories": 9,
+    "scenarios": 8,
+    "settlement_end_exclusive": "2026-10-01T02:00:00Z",
+    "trajectory_register": [
+      {
+        "scenario": "P0",
+        "trajectory": "ALLOW_ALL"
+      },
+      {
+        "scenario": "P0",
+        "trajectory": "SKIP_FIRST_ADMISSIBLE_BASKET"
+      },
+      {
+        "scenario": "F_HIGH",
+        "trajectory": "ALLOW_ALL"
+      },
+      {
+        "scenario": "F_REFERENCE",
+        "trajectory": "ALLOW_ALL"
+      },
+      {
+        "scenario": "S_HIGH",
+        "trajectory": "ALLOW_ALL"
+      },
+      {
+        "scenario": "L_EXTRA",
+        "trajectory": "ALLOW_ALL"
+      },
+      {
+        "scenario": "Q_LOW",
+        "trajectory": "ALLOW_ALL"
+      },
+      {
+        "scenario": "M_SLOW",
+        "trajectory": "ALLOW_ALL"
+      },
+      {
+        "scenario": "T_FILL_FIRST",
+        "trajectory": "ALLOW_ALL"
+      }
+    ],
+    "warmup": "INDICATORS_ONLY_NO_POLICY_FILLS_OR_CASHFLOWS",
+    "warmup_start": "2023-01-01T00:00:00Z"
+  },
+  "snapshot_entry_plan": {
+    "allowlist": [
+      {
+        "kind": "ohlcv",
+        "object": {
+          "bytes": 37635437,
+          "format": "exact_ohlcv_v3_jsonl",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/candles/BTC_USDT-3600s.jsonl",
+          "sha256": "1f14794a992d2551df6046752e433ecf53103a7411e36a026122133f9398ffaf",
+          "source_id": "candles/BTC_USDT-3600s.jsonl"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/candles/BTC_USDT-3600s.jsonl",
+        "permit": {
+          "end_us": 1704074400000000,
+          "expanded_input_bytes": 37635437,
+          "expected_file_bytes": 37635437,
+          "physical_input_bytes": 37635437,
+          "physical_rows": 8763,
+          "start_us": 1672531200000000
+        },
+        "reason": "8760 closed warmup + hour00 traversal + execution hour01 + one hour02 stop sentinel; no later rows parsed",
+        "row_basis": "physical_JSONL_line",
+        "source_time_unit": "integer_UTC_microseconds"
+      },
+      {
+        "kind": "ohlcv",
+        "object": {
+          "bytes": 37576141,
+          "format": "exact_ohlcv_v3_jsonl",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/candles/ETH_USDT-3600s.jsonl",
+          "sha256": "58e0f909b02c431adaa59305dcffcd9c037f6c1ee1bfd67cfcd389ed5aaa10b4",
+          "source_id": "candles/ETH_USDT-3600s.jsonl"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/candles/ETH_USDT-3600s.jsonl",
+        "permit": {
+          "end_us": 1704074400000000,
+          "expanded_input_bytes": 37576141,
+          "expected_file_bytes": 37576141,
+          "physical_input_bytes": 37576141,
+          "physical_rows": 8763,
+          "start_us": 1672531200000000
+        },
+        "reason": "8760 closed warmup + hour00 traversal + execution hour01 + one hour02 stop sentinel; no later rows parsed",
+        "row_basis": "physical_JSONL_line",
+        "source_time_unit": "integer_UTC_microseconds"
+      },
+      {
+        "first_source_us": 1672531200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 473,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00040.bin",
+          "sha256": "062c1d564d5db9c8fb50cfd2cf0040eed21a176981077c08d252f988ea6ef5a1",
+          "source_id": "request-00040"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00040.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1842,
+          "expected_file_bytes": 473,
+          "physical_input_bytes": 473,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1672531200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 430,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00042.bin",
+          "sha256": "ea518f82ca118577ec59439e41f26c1d7eee1826478e712526169f97139e90f3",
+          "source_id": "request-00042"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00042.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1808,
+          "expected_file_bytes": 430,
+          "physical_input_bytes": 430,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1675209600000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 415,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00044.bin",
+          "sha256": "976f4341bb936c092329cbd273f9dde5bd33da34731d3369ff5f8b7c32bebf43",
+          "source_id": "request-00044"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00044.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1641,
+          "expected_file_bytes": 415,
+          "physical_input_bytes": 415,
+          "physical_rows": 85,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1675209600000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 409,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00046.bin",
+          "sha256": "2ac70dde9c7e4cb0b9a91034465dbd4b73fd43ffee62c0715787530ead35dc07",
+          "source_id": "request-00046"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00046.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1641,
+          "expected_file_bytes": 409,
+          "physical_input_bytes": 409,
+          "physical_rows": 85,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1677628800000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 525,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00048.bin",
+          "sha256": "bc9b3694768f461e1592516ad6c3309b1b7a763537a260956d9d991b0a47cfd6",
+          "source_id": "request-00048"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00048.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1905,
+          "expected_file_bytes": 525,
+          "physical_input_bytes": 525,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1677628800000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 535,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00050.bin",
+          "sha256": "dd3f78b8a8ff10f607e0dd290bb496063f94b71eb57498a4c8bd1a358b354456",
+          "source_id": "request-00050"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00050.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1904,
+          "expected_file_bytes": 535,
+          "physical_input_bytes": 535,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1680307200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 488,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00052.bin",
+          "sha256": "b2a73290550c2f4785d22643a513b83071b21aa2fa01b203e410811f6ef6c0d0",
+          "source_id": "request-00052"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00052.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1816,
+          "expected_file_bytes": 488,
+          "physical_input_bytes": 488,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1680307200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 501,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00054.bin",
+          "sha256": "8a21d05f2dcf95fd1bf1c4bc144bdd6d8ba062946d950d97229b843194352bfa",
+          "source_id": "request-00054"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00054.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1833,
+          "expected_file_bytes": 501,
+          "physical_input_bytes": 501,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1682899200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 520,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00056.bin",
+          "sha256": "ce8766bfd2afa250b8c67aef506a57184d6c0699f52c9cb3a4eb9d19f9272cbf",
+          "source_id": "request-00056"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00056.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1872,
+          "expected_file_bytes": 520,
+          "physical_input_bytes": 520,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1682899200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 521,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00058.bin",
+          "sha256": "55f799465a43f8e3279fef1390c53e83957c770c613ea7fe9e87d19aaf221057",
+          "source_id": "request-00058"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00058.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1888,
+          "expected_file_bytes": 521,
+          "physical_input_bytes": 521,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1685577600000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 513,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00060.bin",
+          "sha256": "42e3c71534c720a1454869ae9eadcc050b22cc56da4b21b06abfa24e1e4e8409",
+          "source_id": "request-00060"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00060.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1826,
+          "expected_file_bytes": 513,
+          "physical_input_bytes": 513,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1685577600000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 499,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00062.bin",
+          "sha256": "2e5f9c5309c6705fff7c070388211bdcbc1348168fee56b17ef31e348e605c0d",
+          "source_id": "request-00062"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00062.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1819,
+          "expected_file_bytes": 499,
+          "physical_input_bytes": 499,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1688169600000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 522,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00064.bin",
+          "sha256": "3ed2940797e16d933b11515abd77ea26d501fe2e452850eb805497484c1ba1a8",
+          "source_id": "request-00064"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00064.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1869,
+          "expected_file_bytes": 522,
+          "physical_input_bytes": 522,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1688169600000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 510,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00066.bin",
+          "sha256": "9760f682001083ebb7807111c5b2097a54b232efec22223cb26cb1b9bae5749b",
+          "source_id": "request-00066"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00066.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1861,
+          "expected_file_bytes": 510,
+          "physical_input_bytes": 510,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1690848000000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 493,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00068.bin",
+          "sha256": "880f6f976bcf8d96d4466ec4627a7662fbeecd28046d661b888925d8c1c2be9c",
+          "source_id": "request-00068"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00068.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1822,
+          "expected_file_bytes": 493,
+          "physical_input_bytes": 493,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1690848000000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 507,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00070.bin",
+          "sha256": "7c5f85b8353b3f7822f255c46107b41b9592750e871c78b4f60c352beecb9120",
+          "source_id": "request-00070"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00070.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1857,
+          "expected_file_bytes": 507,
+          "physical_input_bytes": 507,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1693526400000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 515,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00072.bin",
+          "sha256": "965e3f6341d11113588d3bb63cf0eec70cc4b882d9e6b22e0d693d623ab68448",
+          "source_id": "request-00072"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00072.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1834,
+          "expected_file_bytes": 515,
+          "physical_input_bytes": 515,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1693526400000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 509,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00074.bin",
+          "sha256": "239e5c506ddc3a040ed418cc2d6a7a35ffbc18a8f36a1a568e92beb70ad6779a",
+          "source_id": "request-00074"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00074.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1804,
+          "expected_file_bytes": 509,
+          "physical_input_bytes": 509,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1696118400000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 503,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00076.bin",
+          "sha256": "49252af2b369eb296e4fa23478ad3459ce30e087a40b3a57d261f3298d50e83e",
+          "source_id": "request-00076"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00076.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1842,
+          "expected_file_bytes": 503,
+          "physical_input_bytes": 503,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1696118400000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 494,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00078.bin",
+          "sha256": "ea8973bff6c2b491ce603ee0943ed28cece55f9aa2e51a29483368a583ce0774",
+          "source_id": "request-00078"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00078.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1826,
+          "expected_file_bytes": 494,
+          "physical_input_bytes": 494,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1698796800000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 378,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00080.bin",
+          "sha256": "7e379715fef4e6630bb4add2fb2836eae1d4c8b7fc3cf2f498c9690ec128a44f",
+          "source_id": "request-00080"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00080.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1655,
+          "expected_file_bytes": 378,
+          "physical_input_bytes": 378,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1698796800000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 380,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00082.bin",
+          "sha256": "aba52c6d318d0b428b095c2e9cec68fc5a6db315c0597718baf5aa89f05dda91",
+          "source_id": "request-00082"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00082.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1660,
+          "expected_file_bytes": 380,
+          "physical_input_bytes": 380,
+          "physical_rows": 91,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1701388800000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 436,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00084.bin",
+          "sha256": "71fed3324abde1ffa5ef3e099c16653a6ea963aef360a4b41ee869133871caa5",
+          "source_id": "request-00084"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00084.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1750,
+          "expected_file_bytes": 436,
+          "physical_input_bytes": 436,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1701388800000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 439,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00086.bin",
+          "sha256": "1a90507d124b98c31b061cc845a61c1b63f9bdd234454fa9adb5ef83bff372db",
+          "source_id": "request-00086"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00086.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1760,
+          "expected_file_bytes": 439,
+          "physical_input_bytes": 439,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1704067200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 396,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00088.bin",
+          "sha256": "e8a3b16af51335a73dbd4f8f64d5847cb9cfc58490d040b6cb7fc14f3bb6210f",
+          "source_id": "request-00088"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00088.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1715,
+          "expected_file_bytes": 396,
+          "physical_input_bytes": 396,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "first_source_us": 1704067200000000,
+        "kind": "funding",
+        "object": {
+          "bytes": 410,
+          "format": "funding_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5",
+          "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00090.bin",
+          "sha256": "14d1ede15e648055693f005a45316e0104b2ec2bb2389c503ebd57a2fe698f11",
+          "source_id": "request-00090"
+        },
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/history-v1/raw/request-00090.bin",
+        "permit": {
+          "end_us": 1704067200000000,
+          "expanded_input_bytes": 1730,
+          "expected_file_bytes": 410,
+          "physical_input_bytes": 410,
+          "physical_rows": 94,
+          "start_us": 1672531200000000
+        },
+        "reason": "whole accepted month row cap + possible header; January metadata-ineligible objects remain unopened",
+        "row_basis": "data_row_excluding_optional_header",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "kind": "mark",
+        "month": "202312",
+        "object": {
+          "bytes": 3763846,
+          "format": "mark_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce",
+          "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/021-202312-BTC_USDT.part",
+          "sha256": "fbdacc13ce32402ed776bfcbd20d92c78b0411725841c4f915ac0b04d7c1405c",
+          "source_id": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/021-202312-BTC_USDT.part"
+        },
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/021-202312-BTC_USDT.part",
+        "permit": {
+          "end_us": 1704070800000000,
+          "expanded_input_bytes": 11396140,
+          "expected_file_bytes": 3763846,
+          "physical_input_bytes": 3763846,
+          "physical_rows": 265003,
+          "start_us": 1701388800000000
+        },
+        "reason": "prefix traversal from gzip start; full-month metadata cap; stop at January01 01:00 sentinel, with ordered-selector lookahead",
+        "row_basis": "physical_CSV_line",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "kind": "mark",
+        "month": "202312",
+        "object": {
+          "bytes": 2492590,
+          "format": "mark_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce",
+          "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/022-202312-ETH_USDT.part",
+          "sha256": "f6ef2ff9cd1dbd6fd5e88f463d1663d6850492c501b9ba98ca75501c006b2759",
+          "source_id": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/022-202312-ETH_USDT.part"
+        },
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/022-202312-ETH_USDT.part",
+        "permit": {
+          "end_us": 1704070800000000,
+          "expanded_input_bytes": 8585874,
+          "expected_file_bytes": 2492590,
+          "physical_input_bytes": 2492590,
+          "physical_rows": 209999,
+          "start_us": 1701388800000000
+        },
+        "reason": "prefix traversal from gzip start; full-month metadata cap; stop at January01 01:00 sentinel, with ordered-selector lookahead",
+        "row_basis": "physical_CSV_line",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "kind": "mark",
+        "month": "202401",
+        "object": {
+          "bytes": 4873368,
+          "format": "mark_csv_gzip",
+          "instrument_id": "gate:usdt:BTC_USDT",
+          "manifest_sha256": "30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce",
+          "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/023-202401-BTC_USDT.part",
+          "sha256": "d8328375a768294c5c70b11ffc47bbca8741f072e7bf31eb6b5e0f7eb83a817c",
+          "source_id": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/023-202401-BTC_USDT.part"
+        },
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/023-202401-BTC_USDT.part",
+        "permit": {
+          "end_us": 1704070800000000,
+          "expanded_input_bytes": 14842338,
+          "expected_file_bytes": 4873368,
+          "physical_input_bytes": 4873368,
+          "physical_rows": 344443,
+          "start_us": 1704067200000000
+        },
+        "reason": "prefix traversal from gzip start; full-month metadata cap; stop at January01 01:00 sentinel, with ordered-selector lookahead",
+        "row_basis": "physical_CSV_line",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      },
+      {
+        "kind": "mark",
+        "month": "202401",
+        "object": {
+          "bytes": 1124911,
+          "format": "mark_csv_gzip",
+          "instrument_id": "gate:usdt:ETH_USDT",
+          "manifest_sha256": "30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce",
+          "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/024-202401-ETH_USDT.part",
+          "sha256": "9a8c08a9fbd8f50114066908543409b0f3e6dc7cc32f1d9704f0787ce8e4595f",
+          "source_id": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/024-202401-ETH_USDT.part"
+        },
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/raw/024-202401-ETH_USDT.part",
+        "permit": {
+          "end_us": 1704070800000000,
+          "expanded_input_bytes": 3641649,
+          "expected_file_bytes": 1124911,
+          "physical_input_bytes": 1124911,
+          "physical_rows": 89009,
+          "start_us": 1704067200000000
+        },
+        "reason": "prefix traversal from gzip start; full-month metadata cap; stop at January01 01:00 sentinel, with ordered-selector lookahead",
+        "row_basis": "physical_CSV_line",
+        "source_time_unit": "exact_UTC_seconds_decimal_max_6dp"
+      }
+    ],
+    "approval_scope_id": "QD012-ACTUAL-SNAPSHOT-20240101-ONE-ATTEMPT",
+    "artifact_directory": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd012/actual-snapshot-20240101-attempt-1",
+    "authorization_status": "PROPOSED_REQUIRES_SEPARATE_HUMAN_AUTHORIZATION",
+    "diagnostics": "exact-source last closed row/open only; f64 native snapshot/full covariance; compact cache/prefix identities and UNKNOWN MARK DTOs; no raw/context dump",
+    "entry_module": "research.qd012.actual_snapshot_entry",
+    "execution_open_us": 1704070800000000,
+    "funding_data_row_cap": 2376,
+    "instruments": [
+      "gate:usdt:BTC_USDT",
+      "gate:usdt:ETH_USDT"
+    ],
+    "limits": {
+      "cpu_seconds": 200,
+      "expanded_input_bytes": 113724359,
+      "output_bytes": 8388608,
+      "physical_input_bytes": 134217728,
+      "physical_rows": 928382,
+      "rss_bytes": 268435456,
+      "wall_seconds": 300
+    },
+    "mark_queries_us": [
+      1704067200000000,
+      1704070800000000
+    ],
+    "mark_roles": [
+      "valuation",
+      "reservation",
+      "decision",
+      "permitted_fill"
+    ],
+    "metadata_identities": [
+      {
+        "kind": "ohlcv",
+        "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate/manifest.json",
+        "sha256": "c1e6056058fd312d472e96fddfea15e78c778847de9942e5757cb39ad2ac9b91"
+      },
+      {
+        "kind": "funding",
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/funding-raw-lineage-through-september-r1.json",
+        "sha256": "176d0c987d23d4b29b7f901b7dfaa6eeffe56ad84bc57ee07f89a261dab65be5"
+      },
+      {
+        "kind": "mark",
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-r2-raw-handoff.json",
+        "sha256": "30fe38ea8ae0a30aa3ba60da5f7462de37f57849bbe5307435286a3d627407ce"
+      },
+      {
+        "kind": "mark_result",
+        "path": "/Users/lzh/Documents/Codex/2026-10-27/referenced-chatgpt-conversation-this-is-an/work/quantflow-coordination/mark-archive-intake-through-september-r2/result.json",
+        "sha256": "3f601ebf45b2e97825b9c701234060a3348e47e508c28211b98572ed38f5a21e"
+      }
+    ],
+    "metadata_physical_row_upper_bound": 928382,
+    "no_account": true,
+    "no_fit": true,
+    "no_labels": true,
+    "no_matrix": true,
+    "no_payload_revalidation": "accepted expected SHA/size/row/expanded metadata provenance; no full payload hashing or whole-history checker",
+    "no_retry_or_resume": true,
+    "ohlcv_root": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd008/exact-ohlcv-v3-candidate",
+    "output_files": [
+      "launch-receipt.json",
+      "result.json",
+      "failure.json"
+    ],
+    "resource_semantics": "cooperative checks before/after chunks, rows and native call; native/decompressor/JSON/fsync can overshoot observed budgets; no hard OS enforcement",
+    "snapshot_us": 1704067200000000,
+    "static_preparation_dispatch": "QF-DISPATCH-20261028-QD012-SNAPSHOT-ENTRY-PREP-1",
+    "unknown_attempt": "existing artifact directory or receipt without terminal summary consumes this one attempt; explicit new human decision required",
+    "version": 1,
+    "warmup_start_us": 1672531200000000,
+    "whole_selected_expanded_metadata_bytes": 113724359,
+    "whole_selected_metadata_bytes": 87478614
+  },
+  "source_policy_id": "ARCHIVE_PREFIX_REST_COMPLETE_ROWS_FROM_20251201_R1",
+  "status": "SNAPSHOT_ENTRY_STATIC_PREPARATION_ONLY_NOT_EXECUTED"
+}

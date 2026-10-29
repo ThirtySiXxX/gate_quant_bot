@@ -88,6 +88,12 @@ class ConfigStore:
                 self._data["symbols"] = symbols
         self._write_to_disk()
 
+    def add_symbols(self, symbols: List[str]) -> None:
+        """Append a validated candidate basket in one write; preserve manual picks."""
+        with self._lock:
+            self._data["symbols"] = list(dict.fromkeys(self._data.get("symbols", []) + list(symbols)))
+            self._write_to_disk()
+
     def remove_symbol(self, symbol: str) -> None:
         symbol = symbol.strip().upper()
         with self._lock:
@@ -133,6 +139,7 @@ class RiskConfig:
     max_leverage: int = 15
     max_concurrent_positions: int = 6
     max_portfolio_heat_pct: float = 20.0
+    daily_loss_limit_enabled: bool = False
     daily_loss_limit_pct: float = 8.0
     max_correlated_positions: int = 3
     atr_stop_multiplier: float = 1.6
@@ -221,7 +228,7 @@ class CostConfig:
 @dataclass
 class HedgeConfig:
     """[legacy，新版系统性策略默认不再使用] 旧版15分钟多因子+双向对冲策略的对冲参数，
-    仅保留给 engine_legacy_hedge.py 用，新的 SystematicEngine 不读取这个配置。"""
+    保留用于旧配置兼容；旧引擎已归档，新的 SystematicEngine 不读取这个配置。"""
     enabled: bool = True
     trigger_loss_r: float = 0.6          # 主仓浮亏达到止损距离的多少倍(R)时考虑对冲
     require_regime_flip: bool = True      # 是否要求高周期市场状态走弱/反转才触发对冲(更保守)
@@ -262,8 +269,18 @@ class SystematicConfig:
         大周期regime过滤 = 1D；波动率 = 1H+4H；资金费Carry按实际funding周期；
         组合协方差按 covariance_interval（默认4H）。
     """
+    # Shared causal execution timing; validated independently of forecast sizing.
+    execution_timing: dict = field(default_factory=lambda: {
+        "symbols": ["ETH_USDT"], "require_trend_agreement": True, "trail_atr": 3.0,
+    })
+
     # ---- 资金 ----
     initial_capital_usdt: float = 10000.0     # 仅 paper 模式/回测默认初始资金使用
+    # fixed_margin: 每次新开仓按权益5% × 币种杠杆；旧模式仅用于研究对照。
+    position_sizing_mode: str = "fixed_margin"
+    # Opt-in research gate. JSON model inference is shared by live and replay.
+    ml_model_path: str = ""
+    ml_min_entry_probability: float = 0.45
 
     # ---- 信号权重 ----
     # trend_weight 相对 carry 调高：carry(资金费率)信号强度天然远小于趋势，混合权重太高会在强趋势期间
@@ -384,4 +401,10 @@ class SystematicConfig:
                     setattr(base, k, _as_horizon_tuples(d[k]))
                 else:
                     setattr(base, k, d[k])
+        if base.position_sizing_mode not in ("fixed_margin", "volatility"):
+            raise ValueError("position_sizing_mode 必须为 fixed_margin 或 volatility")
+        if base.ml_model_path and base.short_trend_interval != "1h":
+            raise ValueError("当前ML特征版本仅支持1h短周期")
+        if not 0 <= float(base.ml_min_entry_probability) <= 1:
+            raise ValueError("ml_min_entry_probability 必须在0到1之间")
         return base

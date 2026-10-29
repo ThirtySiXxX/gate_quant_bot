@@ -5,8 +5,8 @@
 启停线程），具体的策略逻辑在 systematic_engine.py 的 SystematicEngine 里
 （多资产 Trend + Carry + 波动率目标系统）。
 
-旧版"15分钟多因子+双向对冲"的策略实现整体移到了 engine_legacy_hedge.py，
-默认不再使用，但代码原样保留、可以随时参考或切回。
+旧版"15分钟多因子+双向对冲"实现已归档，不再随当前源码发布；
+历史实现可从 Git 历史查阅。
 """
 from __future__ import annotations
 
@@ -80,10 +80,17 @@ class EngineController:
 
             self.engine = SystematicEngine(self.config_store, exchange, self.state,
                                             cache_dir=self.kline_cache_dir)
-            self.thread = threading.Thread(target=self.engine.run, daemon=True, name="systematic-engine")
-            self.state.engine_running = True
-            self.state.engine_started_at = now_ts()
-            self.thread.start()
+            previous_started_at = self.state.engine_started_at
+            try:
+                self.thread = threading.Thread(target=self.engine.run, daemon=True, name="systematic-engine")
+                self.state.engine_running = True
+                self.state.engine_started_at = now_ts()
+                self.thread.start()
+            except Exception as e:
+                self.state.engine_running = self.is_running()
+                if not self.state.engine_running:
+                    self.state.engine_started_at = previous_started_at
+                return False, f"启动引擎线程失败: {e}"
             return True, f"引擎已启动（{'实盘 LIVE' if mode=='live' else '模拟盘 PAPER'}）"
 
     def stop(self) -> Tuple[bool, str]:
@@ -93,6 +100,11 @@ class EngineController:
                 return False, "引擎未运行"
             self.engine.stop()
             self.thread.join(timeout=15)
+            if self.thread.is_alive():
+                # A stop request is not proof of termination. Keep the worker
+                # registered so start() and callers cannot treat it as stopped.
+                # Do not overwrite the worker's own finally-state on this path.
+                return False, "停止等待超时，引擎线程仍未退出；停止请求已发送，请稍后检查状态"
             self.state.engine_running = False
             return True, "引擎已停止"
 

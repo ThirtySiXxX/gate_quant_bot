@@ -38,6 +38,10 @@ class InstrumentSignal:
     risk_multiplier: float = 1.0       # 高波动震荡覆盖层：只能在0~1内缩风险
     efficiency_ratio: float = 1.0      # 近期方向效率 ER，诊断用
     range_vol_ratio: float = 1.0       # 1H影线快/慢波动率比，诊断用
+    short_forecast: float = 0.0
+    main_forecast: float = 0.0
+    timing_feature: Optional[dict] = None
+    ml_entry: Optional[dict] = None
 
 
 @dataclass

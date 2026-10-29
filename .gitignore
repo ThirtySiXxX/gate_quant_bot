@@ -76,3 +76,9 @@ desktop.ini
 scratch/
 tmp/
 *.tmp
+
+# 本地历史归档（不随源码发布）
+/archive/
+
+# 本地任务交接说明
+/agent.md

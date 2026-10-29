@@ -1,0 +1,8 @@
+{
+  "data_archive_bytes": 629912635,
+  "data_archive_sha256": "4e678a03c0ce24e863184ce2520446251de6c947b7d3fc4b321cf14b8710a394",
+  "manifest_sha256": "74503e758b758a7a53ac4f4798b6265858c8ae9d3ca6abc193be3046c28bb81c",
+  "numeric_reference_ticks": 16,
+  "schema": "qd019.transfer-release.v1",
+  "source_checkpoint": 1026
+}

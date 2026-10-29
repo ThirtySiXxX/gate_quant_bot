@@ -1,0 +1,31 @@
+{
+  "state": "ADAPTER_PUBLISHED_BEFORE_COLLECTION",
+  "spec_revision": "b573d5278b2bf74770b996bc03ba11fe2cb19a08",
+  "spec_sha256": "6e3d4fb99c62d0658fcb3bb779a35b072d65b29df399e9b287fa315943687862",
+  "dataset_root": "research/.data/qd004/history-v1",
+  "manifest_path": "manifest.json",
+  "route_id": "hybrid_native_v1",
+  "routes": {
+    "candles_1h": "official monthly archives 202301..202609; October REST with two-hour September overlap",
+    "candles_4h_1d": "native official REST throughout frozen range, max1000 bars/page with one-bar page overlap",
+    "funding": "funding_applies monthly archives 202301..202609; October REST with one-day September overlap",
+    "metadata": "four current-only public contract/tier snapshots"
+  },
+  "prior_network_attempts": 12,
+  "max_total_network_attempts": 450,
+  "manifest_root_fields": ["schema_version", "dataset_id", "created_at", "spec_sha256", "data_range", "symbols", "raw_files", "normalized_files", "quarantine_files", "quality_summary", "limitations"],
+  "data_range": {"start": 1672531200, "end_exclusive": 1793091600},
+  "normalized_entry_examples": [
+    {"symbol": "BTC_USDT", "kind": "candles", "interval_seconds": 3600, "path": "normalized/BTC_USDT-1h.csv", "sha256": "COMPUTED_AFTER_WRITE", "rows": 0, "start_ts": null, "end_ts": null, "columns": ["timestamp", "open", "high", "low", "close", "volume", "available_at", "source_id", "source_row"], "source_ids": [], "units": {"timestamp": "UTC_unix_seconds", "price": "USDT_per_base", "volume": "contracts"}, "availability_basis": "open_plus_interval_proxy_not_observed_arrival"},
+    {"symbol": "ETH_USDT", "kind": "funding", "interval_seconds": null, "path": "normalized/ETH_USDT-funding.csv", "sha256": "COMPUTED_AFTER_WRITE", "rows": 0, "start_ts": null, "end_ts": null, "columns": ["timestamp", "funding_rate", "available_at", "source_id", "source_row"], "source_ids": [], "units": {"timestamp": "UTC_unix_seconds", "funding_rate": "fraction_per_settlement"}, "availability_basis": "source_settlement_proxy_not_observed_arrival"}
+  ],
+  "quality_adapter": {
+    "gaps": "symbol/kind/interval plus explicit missing ranges and counts",
+    "conflicts": "all parsed variants and all one-based raw data-row references quarantined",
+    "duplicate_lineage": "quarantine/duplicate-lineage.json includes all identical source references",
+    "funding_schedule": "observed exact inter-event durations and unresolved deviations; no rounding or inferred fill",
+    "seam_overlaps": "same native records at API page and September/October route joins; old disjoint month boundaries also checked by native coarser-bar QC, not presented as same-row independent funding overlap",
+    "cross_interval_qc": "1h aggregates vs independent native4h/1d; QC only, never replacement"
+  },
+  "training_state": "NOT_READY; QR independently validates data, warmup and any permitted baselines; fresh user permission required before training"
+}

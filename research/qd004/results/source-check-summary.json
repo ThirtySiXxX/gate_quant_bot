@@ -1,0 +1,242 @@
+{
+  "additional_bytes": 17647,
+  "all_v1_files_unchanged": true,
+  "comparison_evidence_sha256": "81aedd5bea6734cfd05fc27d3a9f8402bc3fb9f2c1445ecc131eb2b76dfca373",
+  "diagnostic_manifest_sha256": "784be6cfdece0267abd66c117ad42c15ed7783b82b59bd7e044c5c216d1780d3",
+  "diagnostic_root": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/.data/qd004/source-checks-v1",
+  "fresh_REST_pair_summary": [
+    {
+      "daily_request_id": 7,
+      "differing_fields": [
+        "close",
+        "volume"
+      ],
+      "exact_match": false,
+      "hourly_request_id": 6,
+      "symbol": "BTC_USDT",
+      "timestamp": 1792886400
+    },
+    {
+      "daily_request_id": 9,
+      "differing_fields": [
+        "close",
+        "volume"
+      ],
+      "exact_match": false,
+      "hourly_request_id": 8,
+      "symbol": "ETH_USDT",
+      "timestamp": 1792281600
+    }
+  ],
+  "local_attempts": 11,
+  "original_manifest_sha256": "5f5319175c42ba4a82e25ca128ac58ae3b71be4b82911fd7935cfa3678407cfd",
+  "proposal_revision": "fcf49886af32c13185cf93b621f4c146004d0f17",
+  "proposal_sha256": "7118d0648d3daf6c7ca37d002876b3780923113d1b90e6d1360e703aaa07406d",
+  "reviewed_manifest_sha256": "16035c8f9065ea79e4c572ce444b7af6a6b038f2526e5bda9273bf6580274dac",
+  "schema_version": 1,
+  "shared_total_attempts": 233,
+  "shared_total_bytes": 3558243,
+  "source_preference": "NONE",
+  "state": "DIAGNOSTICS_COMPLETE_NOT_RESOLVED",
+  "summaries": [
+    {
+      "differing_fields_from_retained_native": {
+        "volume": 1
+      },
+      "exact_retained_hourly_aggregate_matches": 186,
+      "exact_retained_native_matches": 185,
+      "frozen_target": {
+        "differing_fields_from_retained_native": [
+          "volume"
+        ],
+        "matches_retained_hourly_aggregate": true,
+        "matches_retained_native": false,
+        "timestamp": 1674345600
+      },
+      "interval_seconds": 14400,
+      "kind": "candles",
+      "request_id": 1,
+      "retained_native_differences": 1,
+      "rows": 186,
+      "symbol": "BTC_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {
+        "volume": 1
+      },
+      "exact_retained_hourly_aggregate_matches": 186,
+      "exact_retained_native_matches": 185,
+      "frozen_target": {
+        "differing_fields_from_retained_native": [
+          "volume"
+        ],
+        "matches_retained_hourly_aggregate": true,
+        "matches_retained_native": false,
+        "timestamp": 1674345600
+      },
+      "interval_seconds": 14400,
+      "kind": "candles",
+      "request_id": 2,
+      "retained_native_differences": 1,
+      "rows": 186,
+      "symbol": "ETH_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {
+        "low": 1,
+        "volume": 1
+      },
+      "exact_retained_hourly_aggregate_matches": 168,
+      "exact_retained_native_matches": 166,
+      "frozen_target": {
+        "differing_fields_from_retained_native": [
+          "low"
+        ],
+        "matches_retained_hourly_aggregate": true,
+        "matches_retained_native": false,
+        "timestamp": 1677268800
+      },
+      "interval_seconds": 14400,
+      "kind": "candles",
+      "request_id": 3,
+      "retained_native_differences": 2,
+      "rows": 168,
+      "symbol": "ETH_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {
+        "close": 2,
+        "volume": 12
+      },
+      "exact_retained_hourly_aggregate_matches": 31,
+      "exact_retained_native_matches": 19,
+      "frozen_target": {
+        "differing_fields_from_retained_native": [
+          "close",
+          "volume"
+        ],
+        "matches_retained_hourly_aggregate": true,
+        "matches_retained_native": false,
+        "timestamp": 1765411200
+      },
+      "interval_seconds": 86400,
+      "kind": "candles",
+      "request_id": 4,
+      "retained_native_differences": 12,
+      "rows": 31,
+      "symbol": "BTC_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {
+        "close": 1,
+        "volume": 7
+      },
+      "exact_retained_hourly_aggregate_matches": 31,
+      "exact_retained_native_matches": 24,
+      "frozen_target": {
+        "differing_fields_from_retained_native": [
+          "close",
+          "volume"
+        ],
+        "matches_retained_hourly_aggregate": true,
+        "matches_retained_native": false,
+        "timestamp": 1765324800
+      },
+      "interval_seconds": 86400,
+      "kind": "candles",
+      "request_id": 5,
+      "retained_native_differences": 7,
+      "rows": 31,
+      "symbol": "ETH_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {},
+      "exact_retained_hourly_aggregate_matches": null,
+      "exact_retained_native_matches": 24,
+      "frozen_target": null,
+      "interval_seconds": 3600,
+      "kind": "candles",
+      "request_id": 6,
+      "retained_native_differences": 0,
+      "rows": 24,
+      "symbol": "BTC_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {},
+      "exact_retained_hourly_aggregate_matches": 0,
+      "exact_retained_native_matches": 1,
+      "frozen_target": null,
+      "interval_seconds": 86400,
+      "kind": "candles",
+      "request_id": 7,
+      "retained_native_differences": 0,
+      "rows": 1,
+      "symbol": "BTC_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {},
+      "exact_retained_hourly_aggregate_matches": null,
+      "exact_retained_native_matches": 24,
+      "frozen_target": null,
+      "interval_seconds": 3600,
+      "kind": "candles",
+      "request_id": 8,
+      "retained_native_differences": 0,
+      "rows": 24,
+      "symbol": "ETH_USDT"
+    },
+    {
+      "differing_fields_from_retained_native": {},
+      "exact_retained_hourly_aggregate_matches": 0,
+      "exact_retained_native_matches": 1,
+      "frozen_target": null,
+      "interval_seconds": 86400,
+      "kind": "candles",
+      "request_id": 9,
+      "retained_native_differences": 0,
+      "rows": 1,
+      "symbol": "ETH_USDT"
+    },
+    {
+      "chronological_rate_sequence_equal": true,
+      "chronological_timestamp_deltas_seconds": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "exact_record_matches": 5,
+      "kind": "funding",
+      "new_rows": 5,
+      "only_new": 0,
+      "only_retained": 0,
+      "request_id": 10,
+      "retained_rows": 5,
+      "symbol": "BTC_USDT"
+    },
+    {
+      "chronological_rate_sequence_equal": true,
+      "chronological_timestamp_deltas_seconds": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "exact_record_matches": 5,
+      "kind": "funding",
+      "new_rows": 5,
+      "only_new": 0,
+      "only_retained": 0,
+      "request_id": 11,
+      "retained_rows": 5,
+      "symbol": "ETH_USDT"
+    }
+  ],
+  "task_id": "QF-DISPATCH-20261028-QD004-SOURCE-CHECKS-1",
+  "training_status": "NOT_READY",
+  "unfinished": [],
+  "v1_file_count": 229,
+  "verification_sha256": "db451b2c4c9cea738bc8f086acfe30b3894cb2235dc1835900a0c4e665d2092f"
+}
