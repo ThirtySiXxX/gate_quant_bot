@@ -993,8 +993,13 @@ class State:
 
 
 def _prepare_config(config):
-    shape(config,'ledger_id trajectory_id scenario_id instruments initial_at_us end_exclusive_us knowledge_end_exclusive_us initial_cash_usdt allocation_quantum_usdt rules expected_snapshots ingestion_mode adapters initial_adapter_states schedule fact_schemas initial_context mark_clocks mark_view_bindings mark_requirements limits random_source')
+    fields='ledger_id trajectory_id scenario_id instruments initial_at_us end_exclusive_us knowledge_end_exclusive_us initial_cash_usdt allocation_quantum_usdt rules expected_snapshots ingestion_mode adapters initial_adapter_states schedule fact_schemas initial_context mark_clocks mark_view_bindings mark_requirements limits random_source'
+    shape(config,fields+(' journal_storage' if 'journal_storage' in config else ''))
     c=deepcopy(config);strict_json(c)
+    if 'journal_storage' in c:
+        from research.qd015 import journal
+        try:journal.validate(c['journal_storage'])
+        except journal.JournalError as e:raise LedgerError('UNSUPPORTED_VERSION','/journal_storage') from e
     for k in ('ledger_id','trajectory_id','scenario_id'):ident(c[k])
     need(c['instruments'] and len(set(c['instruments']))==len(c['instruments']) and set(c['instruments'])<=set(INSTRUMENTS),'OUT_OF_SCOPE_INSTRUMENT')
     need(c['random_source']=='NONE','UNSUPPORTED_RANDOMNESS')
@@ -1075,7 +1080,7 @@ def _prepare_config(config):
     c['_adapters']=adapters;c['_slots']=slots
     from research.qd014.structure import Plan
     c['_plan_index']=Plan(c)
-    causal={k:v for k,v in config.items() if k!='limits'}
+    causal={k:v for k,v in config.items() if k not in ('limits','journal_storage')}
     causal=deepcopy(causal)
     for a in causal['adapters']:a.pop('approval_ref')
     c['_policy_hash']=digest(causal)
@@ -1111,9 +1116,10 @@ def _fsync_directory(path):
     finally:os.close(fd)
 
 
-def _atomic(path,value):
+def _atomic(path,value,*,_raw=None):
     path=Path(path);tmp=path.with_name(path.name+'.'+uuid.uuid4().hex+'.pending')
-    raw=canonical_bytes(value)+b'\n'
+    raw=canonical_bytes(value)+b'\n' if _raw is None else _raw
+    need(type(raw) is bytes,'STORE_INTEGRITY_FAILURE')
     immutable=path.name.startswith(('control-','guard-input-','journal-','manifest-')) or path.parent.name=='audit-rows'
     if immutable and path.exists():
         need(path.is_file() and path.stat().st_size==len(raw) and _file_sha(path)==hashlib.sha256(raw).hexdigest(),'STORE_INTEGRITY_FAILURE')
@@ -1130,6 +1136,17 @@ def _atomic(path,value):
 
 _PORTS={}
 _GUARD=threading.local()
+_JOURNAL_CREATION=threading.local()
+
+
+@contextmanager
+def journal_creation(profile):
+    """Explicit new-store-only binding, persisted in GENESIS; thread local."""
+    need(not hasattr(_JOURNAL_CREATION,'profile'),'UNSUPPORTED_VERSION')
+    from research.qd015 import journal
+    journal.validate(profile);_JOURNAL_CREATION.profile=deepcopy(profile)
+    try:yield
+    finally:del _JOURNAL_CREATION.profile
 
 def _audit_hook(event,args):
     if getattr(_GUARD,'active',False) and (event=='open' or event.startswith(('socket.','subprocess.','os.system','os.listdir','os.scandir'))):
@@ -1266,8 +1283,15 @@ class Ledger:
 
     def _payload(self,seq):
         m=load_json(_safe_path(self.root,f'manifest-{seq:08}.json').read_bytes());need(digest(m)==self.head['audit_prefix'] if seq==self.head['committed_seq'] else True,'STORE_INTEGRITY_FAILURE')
-        ref=m['files'][0];p=_safe_path(self.root,ref['relative_path']);raw=p.read_bytes()
+        ref=m['files'][0];p=_safe_path(self.root,ref['relative_path']);profile=self.config.get('journal_storage')
+        if profile:
+            need(ref['relative_path']==f'journal-{seq:08}.qjz' and ref['bytes']<=profile['max_stored_bytes'] and p.stat().st_size==ref['bytes'],'STORE_INTEGRITY_FAILURE')
+        raw=p.read_bytes()
         need(hashlib.sha256(raw).hexdigest()==ref['sha256'] and len(raw)==ref['bytes'],'STORE_INTEGRITY_FAILURE')
+        if profile:
+            from research.qd015 import journal
+            try:raw=journal.decode(raw,profile)
+            except journal.JournalError as e:raise LedgerError('STORE_INTEGRITY_FAILURE','/journal_decode') from e
         return load_json(raw)
 
     def _load_control(self):
@@ -1526,7 +1550,15 @@ class Ledger:
                 **{k:result[k] for k in ('applied_keys','duplicate_keys','no_op_slots')})
             payload=dict(request=request,receipt=core,roots=self.state.roots,generated=result['generated'],frames=self.state.frames)
             self.state.frames=[]
-            name=f'journal-{seq:08}.json';_atomic(self.root/name,payload);data=(self.root/name).read_bytes()
+            profile=self.config.get('journal_storage')
+            if profile:
+                from research.qd015 import journal
+                try:encoded=journal.encode(canonical_bytes(payload)+b'\n',profile)
+                except journal.JournalError as e:raise LedgerError('RESOURCE_EXHAUSTED','/journal_encode') from e
+                name=f'journal-{seq:08}.qjz';_atomic(self.root/name,None,_raw=encoded)
+            else:
+                name=f'journal-{seq:08}.json';_atomic(self.root/name,payload)
+            data=(self.root/name).read_bytes()
             file=dict(relative_path=name,sha256=hashlib.sha256(data).hexdigest(),bytes=len(data),rows=1)
             manifest=dict(seq=seq,previous_prefix=before['audit_prefix'],request_id=rid,request_sha256=sha,before=before,after=after,files=[file])
             _atomic(self.root/f'manifest-{seq:08}.json',manifest);prefix=digest(manifest)
@@ -2183,6 +2215,10 @@ def genesis_head(request,state):
 
 
 def create(request):
+    selected=getattr(_JOURNAL_CREATION,'profile',None)
+    if selected is not None:
+        need('journal_storage' not in request['config'],'UNSUPPORTED_VERSION')
+        request=dict(request,config=dict(request['config'],journal_storage=deepcopy(selected)))
     shape(request,'namespace schema_version profile request_id config raw_catalogue fact_store source_roots store_root');strict_json(request)
     need(request['namespace']==NS,'UNSUPPORTED_NAMESPACE');need(request['schema_version']==VERSION and request['profile']==PROFILE,'UNSUPPORTED_VERSION')
     config=_prepare_config(request['config']);ident(request['request_id']);root=Path(request['store_root'])
