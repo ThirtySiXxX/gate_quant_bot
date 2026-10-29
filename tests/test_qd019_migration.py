@@ -1,5 +1,10 @@
 """Focused rejection checks; actual relocation is tested on a frozen copy."""
 from pathlib import Path
+from copy import deepcopy
+import json
+import os
+import sqlite3
+import tarfile
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -43,6 +48,53 @@ class MigrationChecks(unittest.TestCase):
                 with self.assertRaises(ValueError):m.admit_runtime(expected)
         with patch.object(m,'runtime',return_value=host),patch.object(m.sys,'platform','win32'):
             with self.assertRaisesRegex(ValueError,'WSL2'):m.admit_runtime(expected)
+
+
+class LocalReturnBundle(unittest.TestCase):
+    def test_only_result_allowlist_and_cached_view_are_returned(self):
+        from research.qd019 import collect as c
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);data=root/'research/.data/qd019-import/qd015';store=data/m.STORE
+            store.mkdir(parents=True);run=data/'migration-run-1';run.mkdir()
+            (root/'.env').write_text('FICTITIOUS_TEST_SENTINEL')
+            head=dict(committed_seq=1,cutoff=dict(at_us=1,slot=5))
+            (store/'HEAD').write_text(json.dumps(head));(run/'failure.json').write_text('{"reason":"synthetic"}')
+            db=sqlite3.connect(store/'cache.sqlite3');db.execute('CREATE TABLE views(b BLOB)')
+            db.execute('INSERT INTO views VALUES (?)',(json.dumps(dict(knowledge_cutoff=head['cutoff'],balance=dict(cash='100'))).encode(),));db.commit();db.close()
+            with patch.object(c,'ROOT',root),patch('builtins.print'):
+                output=c.collect()
+            with tarfile.open(output) as t:
+                names=t.getnames();summary=json.load(t.extractfile('return-summary.json'))
+            self.assertIn('run/failure.json',names);self.assertIn('checkpoint/HEAD',names)
+            self.assertFalse(any('.env' in n or 'sqlite3' in n for n in names))
+            self.assertEqual(summary['cached_view']['balance']['cash'],'100')
+
+
+@unittest.skipUnless(os.environ.get('QD019_FAULT_COPY'), 'requires an explicitly prepared disposable frozen copy')
+class FrozenAccountRejection(unittest.TestCase):
+    def test_numeric_mismatch_stops_before_publication(self):
+        from research.qd009 import streaming_ledger as sl
+        from research.qd012.actual_snapshot_entry import ObservationBudget, network_off
+        from research.qd013.runner import Replay
+        data=Path(os.environ['QD019_FAULT_COPY'])
+        manifest=deepcopy(m.read(os.environ['QD019_TRANSFER_MANIFEST']))
+        manifest['numeric_seals'][0]['economic_state_sha256']='0'*64
+        budget=ObservationBudget(dict(wall_seconds=300,cpu_seconds=240,rss_bytes=1073741824))
+        with network_off():
+            m.install_budgets(data,manifest);ledger=m.open_ledger(data,manifest,budget.check)
+            try:
+                m.activate(ledger,manifest);before=deepcopy(ledger.head)
+                at=manifest['numeric_seals'][0]['cutoff']['at_us']
+                with self.assertRaisesRegex(sl.LedgerError,'MIGRATION_NUMERIC_DIVERGENCE'):
+                    Replay(ledger).advance_chunk(at)
+                self.assertEqual(ledger.head,before)
+                self.assertEqual(ledger.current_head()['status'],'INTEGRITY_STOPPED')
+                self.assertFalse((ledger.root/f"manifest-{before['committed_seq']+1:08}.json").exists())
+                with self.assertRaises(sl.LedgerError):Replay(ledger).advance_chunk(at)
+                (data.parent/'numeric-rejection-result.json').write_text(json.dumps(dict(
+                    status='PASS',head_unchanged=True,new_commit_published=False,
+                    later_advance_rejected=True,head=ledger.head,observed=budget.observed()),sort_keys=True,indent=2)+'\n')
+            finally:ledger.close()
 
 
 if __name__=='__main__':unittest.main()

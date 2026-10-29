@@ -122,6 +122,10 @@ return-to-codex-<UTC时间>.tar.gz
 完成标志是 `FULL_CONTINUOUS_P0_COMPLETED` 和 export manifest；这仍然只是
 研究回放/样本导出完成，不表示已训练或批准任何模型，也不代表未来盈利能力。
 
+发布前已在 Mac 的独立目录副本完成 16 个时点恢复验证，并验证错误数值参考
+不会发布新提交。尚未在你的 Windows 实机上运行；新机首次启动的环境与数值
+检查必须通过后才会继续，检查失败时发送自动收集的结果包。
+
 官方环境说明：[安装 WSL](https://learn.microsoft.com/en-us/windows/wsl/install)、
 [WSL 文件存放](https://learn.microsoft.com/en-us/windows/wsl/filesystems)、
 [uv 安装](https://docs.astral.sh/uv/getting-started/installation/)、

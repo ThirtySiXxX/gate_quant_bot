@@ -1,5 +1,8 @@
 # QF-QD-018 — Windows 迁移与续跑交接
 
+历史前置审计：下文“尚无恢复入口”的状态已由 QF-QD-019 的实现与副本验证
+取代。实际操作请看 `docs/WINDOWS_LOCAL_REPLAY.md` 和 QD019 报告。
+
 日期：2026-10-29，Australia/Melbourne。本文提供迁移准备和恢复要求；
 尚未实现或验证跨机器续跑入口。当前 Mac 回放继续暂停。
 
