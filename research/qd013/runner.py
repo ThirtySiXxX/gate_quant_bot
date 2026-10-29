@@ -27,7 +27,7 @@ def calendar(cache,initial,economic_end,tail_end):
     return sorted(ticks),sorted(funding,key=lambda f:(f['snapshot_at_us'],f['instrument_id']))
 
 
-def create(path,cache,*,initial_us,economic_end_us,tail_end_us,scenario_id='P0',policy_id='ALLOW_ALL',write_budget=None):
+def create(path,cache,*,initial_us,economic_end_us,tail_end_us,scenario_id='P0',policy_id='ALLOW_ALL',write_budget=None,static_plan=False,ledger_limits=None):
     if initial_us%HOUR or economic_end_us%HOUR or not initial_us<economic_end_us or tail_end_us!=economic_end_us+2*HOUR:
         raise InputGap('FIXED_ECONOMIC_AND_TWO_HOUR_TAIL_REQUIRED')
     s=scenario(scenario_id,policy_id);path=Path(path)
@@ -42,6 +42,14 @@ def create(path,cache,*,initial_us,economic_end_us,tail_end_us,scenario_id='P0',
     common=dict(scope=scope,initial_us=initial_us,end_us=economic_end_us,economic_end_us=economic_end_us,tail_end_us=tail_end_us,
         ticks=ticks,funding_schedule=funding,runtime=RUNTIME,input_basis='FROZEN_NATIVE_CAUSAL_CACHE_NOT_ACCOUNT_REPLAY_ACCEPTANCE',
         native_input_version=3,native_schema_id='native-v3',native_context=context,scenario=s)
+    order=('execution','environment','feedback','policy','reserve') if s['fill_first'] else KINDS
+    roles=['valuation','reservation','decision','permitted_fill','funding_snapshot']
+    if static_plan:
+        from research.qd014.structure import wire,reference
+        schedule_wire,requirements_wire=wire(ticks,order,INSTRUMENTS,roles,economic_end_us)
+        common.pop('ticks');common.pop('funding_schedule')
+        common['static_plan_ref']=reference(schedule_wire,requirements_wire,funding)
+    elif ledger_limits is not None:raise InputGap('NEW_LIMIT_PROFILE_REQUIRES_VERSIONED_PLAN')
     defs=definitions(common)
     for d in defs:sl.register_port(d,ControlledPort())
     raw_path=source/'supplied.jsonl';fact_path=source/'facts.pending.jsonl'
@@ -88,7 +96,7 @@ def create(path,cache,*,initial_us,economic_end_us,tail_end_us,scenario_id='P0',
     fact_path.unlink()
     ref=dict(root_id='source',relative_path='facts.jsonl',sha256=h.hexdigest(),bytes=size,rows=fact_rows)
     requirements=[]
-    for at in ticks:
+    for at in ticks if not static_plan else []:
         if at>=economic_end_us:continue
         for i in INSTRUMENTS:
             for role in roles:requirements.append(dict(key=dict(instrument_id=i,clock_id='mark-clock',query_at_us=at,purpose=role),
@@ -108,12 +116,12 @@ def create(path,cache,*,initial_us,economic_end_us,tail_end_us,scenario_id='P0',
         knowledge_end_exclusive_us=tail_end_us,initial_cash_usdt='10000',allocation_quantum_usdt='0.000000000000000001',
         rules=rules,expected_snapshots=funding,ingestion_mode='controlled_adapters',adapters=defs,
         initial_adapter_states=[state(k,dict(timing={}) if k in ('policy','feedback') else None) for k in KINDS],
-        schedule=[dict(at_us=t,slots=[dict(slot_id=k+':'+str(t),adapter_id=k,phase=n) for n,k in enumerate(order)]) for t in ticks],
+        schedule=schedule_wire if static_plan else [dict(at_us=t,slots=[dict(slot_id=k+':'+str(t),adapter_id=k,phase=n) for n,k in enumerate(order)]) for t in ticks],
         fact_schemas=schemas,initial_context=dict(mode='none',from_us=initial_us,schemas=[]),
         mark_clocks=[dict(instrument_id=i,clock_id='mark-clock',valuation_rule_id='valuation:'+i,multiplier_rule_id='multiplier:'+i,
             source_delay_us=s['mark_delay_us'],max_source_age_us=s['mark_max_age_us'],max_available_age_us=s['mark_available_age_us']) for i in INSTRUMENTS],
-        mark_view_bindings=[dict(instrument_id=i,clock_id='mark-clock') for i in INSTRUMENTS],mark_requirements=requirements,
-        limits=deepcopy(sl.LIMITS),random_source='NONE')
+        mark_view_bindings=[dict(instrument_id=i,clock_id='mark-clock') for i in INSTRUMENTS],mark_requirements=requirements_wire if static_plan else requirements,
+        limits=deepcopy(ledger_limits if ledger_limits is not None else sl.LIMITS),random_source='NONE')
     catalogue=dict(namespace='qf009.raw-catalogue',schema_version=1,catalogue_id='qd013:'+scenario_id+':'+policy_id,fact_store=ref,
         qualification_ref=sl.digest([common,cache.meta]),objects=[dict(object_id='supplied',root_id='source',instrument_id=INSTRUMENTS[0],
         sha256=raw_hash,bytes=raw_bytes,relative_path='supplied.jsonl',format='derived_native_v3_jsonl',source_row_basis='physical_line',

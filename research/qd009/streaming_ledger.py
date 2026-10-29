@@ -1041,7 +1041,7 @@ def _prepare_config(config):
     if c['ingestion_mode']=='reference_import':need(not any(c[k] for k in ('adapters','initial_adapter_states','mark_clocks','mark_view_bindings','mark_requirements')) and c['initial_context']['mode']=='none')
     adapters={a['adapter_id']:a for a in c['adapters']};need(len(adapters)==len(c['adapters']))
     slots={};last=-1
-    for t in c['schedule']:
+    for t in c['schedule'] if type(c['schedule']) is list else []:
         shape(t,'at_us slots');need(last<t['at_us']<c['knowledge_end_exclusive_us']);last=t['at_us'];phase=-1
         for j,slot in enumerate(t['slots'],1):
             shape(slot,'slot_id adapter_id phase');need(slot['slot_id'] not in slots and slot['adapter_id'] in adapters and slot['phase']>=phase,'SCHEDULE_MISMATCH')
@@ -1064,7 +1064,7 @@ def _prepare_config(config):
     for binding in c['mark_view_bindings']:
         shape(binding,'instrument_id clock_id');need(binding['instrument_id'] not in seen and (binding['instrument_id'],binding['clock_id']) in clocks);seen.add(binding['instrument_id'])
     seen=set()
-    for r in c['mark_requirements']:
+    for r in c['mark_requirements'] if type(c['mark_requirements']) is list else []:
         shape(r,'key before_slots for_view');k=r['key'];shape(k,'instrument_id clock_id query_at_us purpose');key=canonical_bytes(k)
         need(key not in seen and (k['instrument_id'],k['clock_id']) in clocks and k['purpose'] in PURPOSES);seen.add(key)
         need(c['initial_at_us']<=integer(k['query_at_us'])<c['end_exclusive_us']);need(type(r['for_view']) is bool)
@@ -1073,6 +1073,8 @@ def _prepare_config(config):
     need({a['adapter_id'] for a in c['initial_adapter_states']}==set(adapters),'INPUT_BINDING_MISMATCH')
     for state in c['initial_adapter_states']:_validate_state(state,adapters[state['adapter_id']])
     c['_adapters']=adapters;c['_slots']=slots
+    from research.qd014.structure import Plan
+    c['_plan_index']=Plan(c)
     causal={k:v for k,v in config.items() if k!='limits'}
     causal=deepcopy(causal)
     for a in causal['adapters']:a.pop('approval_ref')
@@ -1350,7 +1352,8 @@ class Ledger:
 
     def _bound(self):
         need((_clock()-self.started)*1000000+self.spent['active_wall_us']<=self.config['limits']['max_wall_us'],'RESOURCE_EXHAUSTED','/wall')
-        need(sum(p.stat().st_size for p in self.root.iterdir() if p.is_file())<=self.config['limits']['max_store_bytes'],'RESOURCE_EXHAUSTED','/store')
+        size=(self.budget.total+(self.budget.book.stat().st_size if self.budget.book.exists() else 0)) if self.config['_plan_index'].compact else sum(p.stat().st_size for p in self.root.iterdir() if p.is_file())
+        need(size<=self.config['limits']['max_store_bytes'],'RESOURCE_EXHAUSTED','/store')
 
     def _envelope(self,e):
         shape(e,'namespace schema_version profile body origin created_at_us')
@@ -1392,7 +1395,7 @@ class Ledger:
     def _queries(self,st,lower,t):
         # Query events are released even at non-tick times. The frozen plan, not
         # a historical Valuation's source time, chooses the active cohort.
-        due=[r for r in self.config['mark_requirements'] if lower<r['key']['query_at_us']<=t]
+        due=self.config['_plan_index'].due(lower,t)
         for requirement in due:
             key=requirement['key'];q=key['query_at_us'];inst=key['instrument_id'];clock=key['clock_id']
             matches=[]
@@ -1421,7 +1424,7 @@ class Ledger:
                 need(reason in QUERY_REASONS and all(v is None for v in values.values()),'NULL_REASON_CONTRACT')
             qs=dict(key=deepcopy(key),fact_key=row['fact_key'],available_at_us=q,status=status,unknown_reason=reason,null_reasons=nr,**values)
             need(row['fact_key']=='mq:'+digest(['qf009.query-fact-v1',inst,clock,q]),'INPUT_BINDING_MISMATCH')
-            expected={r['key']['purpose'] for r in self.config['mark_requirements'] if all(r['key'][k]==key[k] for k in ('instrument_id','clock_id','query_at_us'))}
+            expected=self.config['_plan_index'].purposes(key)
             need({p for p in PURPOSES if cells['role_'+p].get('value') is True}==expected,'INPUT_BINDING_MISMATCH')
             st.set('query_status',[inst,clock,q,key['purpose']],qs)
             if requirement['for_view'] or requirement['before_slots']:st.set('_query_times',[inst,clock,q],True)
@@ -1450,12 +1453,12 @@ class Ledger:
             st.at=(t,0);self._group(envelopes,st,applied,duplicates)
         else:
             need(not imported,'UNSUPPORTED_GENERATOR')
-            points=sorted({x['at_us'] for x in self.config['schedule'] if lower<x['at_us']<=t} |
-                          {r['key']['query_at_us'] for r in self.config['mark_requirements'] if lower<r['key']['query_at_us']<=t} | {t})
+            plan=self.config['_plan_index']
+            points=sorted(set(plan.between(lower,t)) | {r['key']['query_at_us'] for r in plan.due(lower,t)} | {t})
             previous=lower
             for at in points:
                 self._queries(st,previous,at);st.advance_clock(at);st.at=(at,0);self._frame(st,dict(at_us=at,slot=0))
-                tick=next((x for x in self.config['schedule'] if x['at_us']==at),None)
+                tick=plan.tick(at)
                 if tick:
                     for slotno,slot in enumerate(tick['slots'],1):
                         if partial and at==t and slotno>partial['slot']:break
@@ -1562,7 +1565,8 @@ class Ledger:
     def _cutoff(self,cutoff):
         shape(cutoff,'at_us slot');t=integer(cutoff['at_us']);slot=integer(cutoff['slot'])
         need(self.head['committed_seq'] and self.config['initial_at_us']<=t<=self.head['cutoff']['at_us'])
-        maxslot=next((len(x['slots']) for x in self.config['schedule'] if x['at_us']==t),0) if self.config['ingestion_mode']=='controlled_adapters' else 0
+        tick=self.config['_plan_index'].tick(t)
+        maxslot=len(tick['slots']) if tick and self.config['ingestion_mode']=='controlled_adapters' else 0
         need(slot<=maxslot and (t,slot)<=tuple(self.head['cutoff'][x] for x in ('at_us','slot')))
         return t,slot
 
@@ -1658,7 +1662,7 @@ class Ledger:
     def readiness(self,request):
         shape(request,'episode_id cutoff');self._assert_active();s=self._at(request['cutoff']);return s.readiness(request['episode_id'],request['cutoff']['at_us'])
 
-    def _fact_candidates(self,selector,schema,at):
+    def _fact_candidates(self,selector,schema,at,allowed_at=None):
         """Immutable-source selection; fetch only the records the packet exposes.
 
         Closure legality is checked over newly eligible rows before limiting,
@@ -1684,18 +1688,18 @@ class Ledger:
                 need(bad is None,'FUTURE_DEPENDENCY');checked[key]=at
         selected=[]
         for i in insts:
-            where=base;values=args(i)
-            if mode=='qualified_at_slot':where+=' AND at=?';values.append(at)
-            stats['queries']+=1
-            order=' ORDER BY available DESC,k DESC LIMIT 1' if mode=='latest_available' else ' ORDER BY available,k'
-            cursor=self.index.db.execute('SELECT available,k,b FROM facts WHERE '+where+order,values)
-            if mode=='latest_available':
-                row=cursor.fetchone()
-                if row:selected.append(row)
-            else:
-                # Per-instrument sorted cursors merge lazily without retaining a
-                # whole prefix; tuple time/key order matches the old global SQL.
-                selected.append(cursor)
+            sources=allowed_at.get(i,[]) if allowed_at is not None else [None]
+            for source_at in sources:
+                where=base;values=args(i)
+                if mode=='qualified_at_slot' or source_at is not None:
+                    where+=' AND at=?';values.append(at if source_at is None else source_at)
+                stats['queries']+=1
+                order=' ORDER BY available DESC,k DESC LIMIT 1' if mode=='latest_available' else ' ORDER BY available,k'
+                cursor=self.index.db.execute('SELECT available,k,b FROM facts WHERE '+where+order,values)
+                if mode=='latest_available':
+                    row=cursor.fetchone()
+                    if row:selected.append(row)
+                else:selected.append(cursor)
         if mode=='latest_available':records=iter(sorted(selected,key=lambda r:(r[0],r[1])))
         else:
             import heapq
@@ -1715,7 +1719,13 @@ class Ledger:
             shape(selector,'selection_id schema_id instruments mode');schema=self.schema(selector['schema_id']);mode=selector['mode'];need(schema['view_kind'] in allow[definition['role']],'FORBIDDEN_INPUT')
             need((mode=='qualified_at_slot')==(schema['view_kind']=='mark_selection'),'FORBIDDEN_INPUT')
             selected=[];selected_bytes=0;selected_reads=0
-            for (blob,) in self._fact_candidates(selector,schema,at['at_us']):
+            allowed_at=None
+            if mode=='qd014.pending-funding.v1':
+                need(self.config['_plan_index'].compact and definition['adapter_id']=='environment' and schema['view_kind']=='funding_rate','FORBIDDEN_INPUT')
+                allowed_at={i:[] for i in selector['instruments']}
+                for item in self.config['_plan_index'].pending(prior):
+                    allowed_at[item['instrument_id']].append(item['snapshot_at_us'])
+            for (blob,) in self._fact_candidates(selector,schema,at['at_us'],allowed_at=allowed_at):
                 r=load_json(blob)
                 if r['instrument_id'] not in selector['instruments']:continue
                 if at['at_us']>=self.config['end_exclusive_us'] and schema['view_kind'] in ('closed_bar','execution_open','mark_point','mark_selection','synthetic_price'):continue
@@ -1770,7 +1780,7 @@ class Ledger:
             elif kind=='mark_context':
                 for inst in insts:
                     _,keys,_=st.query_cohort(inst,at['at_us'])
-                    due=[r['key'] for r in self.config['mark_requirements'] if slot['slot_id'] in r['before_slots'] and r['key']['instrument_id']==inst]
+                    due=self.config['_plan_index'].for_slot(slot['slot_id'],inst,at['at_us'])
                     for key in sorted({canonical_bytes(x):x for x in keys+due}.values(),key=canonical_bytes):
                         v=st.get('query_status',[inst,key['clock_id'],key['query_at_us'],key['purpose']]);need(v is not None,'INPUT_BINDING_MISMATCH');items.append(dict(kind='query_status',value=v))
                     found=self.index.floor('_reserves',st.root('_reserves'),[inst,at['at_us'],2**63-1,'~'])
@@ -1790,7 +1800,7 @@ class Ledger:
         for state in [prior]+peers:reads.append(dict(kind='state',adapter_id=state['adapter_id'],source_cutoff=before_at,state=state))
         view=st.view(before_at);economic={k:v for k,v in view.items() if k not in ('components','view_sha256')};economic['economic_component_roots']=[x for x in view['components'] if x['component'] in ECONOMIC]
         packet=dict(slot=at,slot_id=slot['slot_id'],causal_policy_sha256=self.config['_policy_hash'],permitted_facts=facts,before=economic,
-                    economic_inputs=selections,peer_states=peers,previous_invocation=previous,prior_state=prior,causal_config=definition['causal_config'])
+                    economic_inputs=selections,peer_states=peers,previous_invocation=previous,prior_state=prior,causal_config=self.config['_plan_index'].window(definition,prior,at['at_us']) if self.config['_plan_index'].compact else definition['causal_config'])
         limits=self.config['limits'];need(len(reads)<=limits['max_adapter_reads'] and len(canonical_bytes(packet))<=limits['max_adapter_input_bytes'],'RESOURCE_EXHAUSTED')
         start=_clock();_GUARD.active=True
         try:
@@ -1904,9 +1914,9 @@ class Ledger:
     def _query_cursors(self,st,at):
         out=[]
         for c in self.config['mark_clocks']:
-            inst,clock=c['instrument_id'],c['clock_id'];requirements=[r for r in self.config['mark_requirements'] if (r['key']['instrument_id'],r['key']['clock_id'])==(inst,clock)]
+            inst,clock=c['instrument_id'],c['clock_id'];plan=self.config['_plan_index']
             admitted=[v['key']['query_at_us'] for _,v in st.rows('query_status',prefix=[inst,clock])];authority=self.index.floor('_query_times',st.root('_query_times'),[inst,clock,at])
-            out.append(dict(instrument_id=inst,clock_id=clock,next_requirement_index=sum(r['key']['query_at_us']<=at for r in requirements),last_admitted_query_us=max(admitted) if admitted else None,
+            out.append(dict(instrument_id=inst,clock_id=clock,next_requirement_index=plan.cursor_count(inst,clock,at),last_admitted_query_us=max(admitted) if admitted else None,
                             last_authoritative_query_us=authority[0][2] if authority and authority[0][:2]==[inst,clock] else None))
         return out
 
@@ -1942,7 +1952,7 @@ class Ledger:
             inventory=deepcopy(cached);start_seq=self._export_upto+1
         else:inventory=[];start_seq=1
         if start_seq==1:
-            base={'config':[self.request['config']],'raw_catalogue':[self.request['raw_catalogue']],'adapters':self.config['adapters'],'schedule':self.config['schedule']}
+            base={'config':[self.request['config']],'raw_catalogue':[self.request['raw_catalogue']],'adapters':self.config['adapters'],'schedule':iter(self.config['_plan_index'])}
             for component,rows in base.items():inventory.append(self._write_rows('exports/base-'+component+'.jsonl',iter(rows),component))
             def facts():
                 for (blob,) in self.index.db.execute('SELECT b FROM facts ORDER BY available,k'):yield load_json(blob)
@@ -2013,7 +2023,7 @@ class Ledger:
            committed_seq=h['committed_seq'],cutoff=h['cutoff'],audit_prefix=h['audit_prefix'],economic_state_sha256=h['economic_state_sha256'],config_sha256=digest(self.request['config']),
            causal_policy_sha256=c['_policy_hash'],raw_catalogue_sha256=digest(self.request['raw_catalogue']),fact_store_sha256=self.request['fact_store']['sha256'],adapters_sha256=digest(c['adapters']),schedule_sha256=digest(c['schedule']),
            journal_prefix_sha256=h['audit_prefix'],registry_prefix_sha256=self.state.root('registry'),calendar_cursor=sum(self.state.meta('calendar:'+i,0) for i in c['instruments']),
-           next_tick_index=sum(t['at_us']<=h['cutoff']['at_us'] for t in c['schedule']) if h['committed_seq'] else 0,registry_next_seq=self.state.meta('registry_next',1),files=inventory,
+           next_tick_index=bisect.bisect_right(c['_plan_index'].times,h['cutoff']['at_us']) if h['committed_seq'] else 0,registry_next_seq=self.state.meta('registry_next',1),files=inventory,
            context_receipt=self.state.meta('context_receipt'),fact_cursors=fact_cursors,adapter_cursors=adapter_cursors,query_cursors=query_cursors,
            control_seq=self.control['seq'],control_sha256=self.control['hash'],resource_spent=deepcopy(self.spent),runner_state_coverage='CAPTURED_DECLARED_ADAPTER_STATE_NOT_R3_ACCEPTANCE')
         cp['checkpoint_sha256']=digest(cp);return cp
@@ -2213,7 +2223,7 @@ def restore(request):
         expected_queries=ledger._query_cursors(st,at)
         need(cp['fact_cursors']==expected_facts and cp['adapter_cursors']==expected_adapters and cp['query_cursors']==expected_queries,'CHECKPOINT_MISMATCH')
         need(cp['calendar_cursor']==sum(st.meta('calendar:'+i,0) for i in ledger.config['instruments']) and cp['registry_next_seq']==st.meta('registry_next',1),'CHECKPOINT_MISMATCH')
-        need(cp['next_tick_index']==(sum(t['at_us']<=at for t in ledger.config['schedule']) if seq else 0),'CHECKPOINT_MISMATCH')
+        need(cp['next_tick_index']==(bisect.bisect_right(ledger.config['_plan_index'].times,at) if seq else 0),'CHECKPOINT_MISMATCH')
         need(cp['registry_prefix_sha256']==st.root('registry') and cp['journal_prefix_sha256']==cp['audit_prefix'],'CHECKPOINT_MISMATCH')
         need(cp['control_seq']<=ledger.control['seq'],'CHECKPOINT_MISMATCH')
         control_hash=load_json(_safe_path(ledger.root,f'control-{cp["control_seq"]:08}.json').read_bytes())['control_sha256'] if cp['control_seq'] else digest(['qf009.control-v3',ledger.config['ledger_id'],PROFILE,'genesis'])

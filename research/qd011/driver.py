@@ -96,7 +96,7 @@ def pinned_files():
            'research/qd008/repair_history.py',
            'research/qd010/episode_export.py','research/qd011/export.py','research/qd009/streaming_ledger.py',
            'research/qd012/sources.py','research/qd012/native.py','research/qd012/queries.py','research/qd012/prepare.py',
-           'research/qd013/compact.py','research/qd013/scenarios.py','research/qd013/market.py','research/qd013/runner.py','research/qd013/exports.py','research/qd013/inputs.py')
+           'research/qd013/compact.py','research/qd013/scenarios.py','research/qd013/market.py','research/qd013/runner.py','research/qd013/exports.py','research/qd013/inputs.py','research/qd014/structure.py','research/qd014/runner.py')
     return [dict(relative_path=s,sha256=hashlib.sha256((root/s).read_bytes()).hexdigest()) for s in paths]
 
 
@@ -115,6 +115,8 @@ def definitions(common):
         ftypes={'environment':['rate'],'execution':['native','open'],'feedback':['native'],'policy':['native'],'reserve':[]}[kind]
         facts=[dict(selection_id=s,schema_id=common['native_schema_id'] if s=='native' else s,instruments=list(INSTRUMENTS),
                     mode='latest_available' if kind in ('execution','feedback') or (common['native_input_version']==3 and s=='native') else 'available_prefix') for s in ftypes]
+        if common.get('static_plan_ref') and kind=='environment':
+            facts[0]['mode']='qd014.pending-funding.v1'
         peers={'policy':['feedback'],'feedback':['policy','execution'],'environment':[],'execution':[],'reserve':[]}[kind]
         causal=deepcopy(common)
         if kind!='policy':causal.pop('native_context',None)
@@ -292,11 +294,11 @@ class Continuous:
         # Keep every same-time phase atomic without serializing several hours'
         # registry/frames into one large temporary journal. This does not grant
         # extra source input, a retry, or a second opportunity within a tick.
-        times=[t['at_us'] for t in self.ledger.config['schedule']]
-        if through_us not in times:
+        plan=self.ledger.config['_plan_index']
+        if plan.tick(through_us) is None:
             raise InputGap('DRIVER_CUTOFF_MUST_BE_A_DECLARED_TICK')
         lower=self.ledger.head['cutoff']['at_us'] if self.ledger.head['committed_seq'] else self.ledger.config['initial_at_us']-1
-        due=[t for t in times if lower<t<=through_us]
+        due=plan.between(lower,through_us)
         if not due:raise InputGap('NO_NEW_DECLARED_TICK')
         for at in due:
             receipt=self.ledger.advance(dict(request_id='advance:'+str(at),expected_audit_prefix=self.ledger.head['audit_prefix'],
@@ -304,7 +306,9 @@ class Continuous:
         return receipt
 
     def view(self,at_us):
-        slots=next(len(t['slots']) for t in self.ledger.config['schedule'] if t['at_us']==at_us)
+        tick=self.ledger.config['_plan_index'].tick(at_us)
+        if tick is None:raise InputGap('DRIVER_CUTOFF_MUST_BE_A_DECLARED_TICK')
+        slots=len(tick['slots'])
         return self.ledger.as_known(dict(cutoff=dict(at_us=at_us,slot=slots)))
 
     def states(self,at_us):

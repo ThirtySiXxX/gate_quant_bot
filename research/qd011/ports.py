@@ -214,6 +214,9 @@ class ControlledPort:
     def validate_input(self,p):
         sl.shape(p,'slot slot_id causal_policy_sha256 permitted_facts before economic_inputs peer_states previous_invocation prior_state causal_config')
         validate(p['prior_state'])
+        if p['causal_config'].get('static_plan_ref'):
+            from research.qd014.structure import validate_window
+            validate_window(p)
         sl.need(p['causal_config']['runtime']==RUNTIME,'UNSUPPORTED_GENERATOR')
         sl.need(all(f['scenario_available_at_us']<=p['slot']['at_us'] for f in p['permitted_facts']),'FUTURE_DEPENDENCY')
         for s in p['peer_states']:validate(s)
@@ -235,6 +238,9 @@ class ControlledPort:
         episodes=set(p['prior_state']['tracked_episode_ids'])
         with native_context():
             globals()['_'+kind](p,d,r,episodes)
+        if kind=='environment' and p['causal_config'].get('static_plan_ref'):
+            from research.qd014.structure import compact_receipts
+            compact_receipts(d,p['causal_config']['static_plan_ref'])
         r['outcome']='emit' if r['events'] else 'noop'
         r['next_state']=state(kind,d,episodes)
         return r
