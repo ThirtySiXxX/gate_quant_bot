@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "spec_id": "QF-QR-004-r1",
+  "state": "READY_FOR_QD",
+  "date": "2026-10-28",
+  "scope": {
+    "venue": "gate",
+    "market": "linear_perpetual",
+    "settle": "usdt",
+    "symbols": [
+      "BTC_USDT",
+      "ETH_USDT"
+    ],
+    "price_type": "trade",
+    "intervals_seconds": {
+      "1h": 3600,
+      "4h": 14400,
+      "1d": 86400
+    },
+    "funding_type": "settled_funding_applies",
+    "volume_unit": "contracts",
+    "price_unit": "USDT_per_base"
+  },
+  "calendar": {
+    "raw_start": 1672531200,
+    "raw_end_exclusive": 1793091600,
+    "baseline_start": 1704067200,
+    "warmup_end_exclusive": 1704067200,
+    "seed_train_end_exclusive": 1735689600,
+    "validation_edges": [
+      1735689600,
+      1751328000,
+      1767225600
+    ],
+    "retrospective_audit_end_exclusive": 1793091600,
+    "new_holdout": "NONE_RESERVED; freeze prospectively before any model fitting; no new acquisition beyond cutoff",
+    "already_viewed": "All QR001/QR003 windows; all newly expanded data is development/retrospective for this phase"
+  },
+  "sources": {
+    "docs": [
+      "https://www.gate.com/developer/historical_quotes",
+      "https://www.gate.com/announcements/article/21688",
+      "https://www.gate.com/docs/developers/apiv4/en/futures/"
+    ],
+    "allowed_hosts": [
+      "download.gatedata.org",
+      "api.gateio.ws"
+    ],
+    "allowed_archive_types": [
+      "candlesticks_1h",
+      "candlesticks_4h",
+      "candlesticks_1d",
+      "funding_applies"
+    ],
+    "archive_business": "futures_usdt",
+    "api_public_routes": [
+      "/api/v4/futures/usdt/candlesticks",
+      "/api/v4/futures/usdt/funding_rate",
+      "/api/v4/futures/usdt/contracts/BTC_USDT",
+      "/api/v4/futures/usdt/contracts/ETH_USDT",
+      "/api/v4/futures/usdt/risk_limit_tiers"
+    ],
+    "archive_last_full_month": "202609",
+    "recent_api_start": 1790812800,
+    "fallback": "Official same-venue same-product API/archive only with explicit provenance and overlap conflict checks; no bypass of unavailable/denied sources"
+  },
+  "intake_budget": {
+    "max_requests": 450,
+    "max_concurrent": 2,
+    "max_retries_per_request": 2,
+    "max_compressed_bytes_per_file": 10485760,
+    "max_total_compressed_bytes": 262144000,
+    "max_uncompressed_bytes_per_file": 104857600,
+    "no_live_credentials": true,
+    "no_other_symbols": true,
+    "request_count_rule": "450 total network attempts including failed attempts, retries, redirects, probes and final overlap checks; retries never multiply budget"
+  },
+  "normalization": {
+    "candle_columns": [
+      "timestamp",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "available_at",
+      "source_id",
+      "source_row"
+    ],
+    "funding_columns": [
+      "timestamp",
+      "funding_rate",
+      "available_at",
+      "source_id",
+      "source_row"
+    ],
+    "timestamp_unit": "UTC_unix_seconds",
+    "candle_timestamp": "open",
+    "candle_available_at": "open_plus_interval_proxy_not_observed_arrival",
+    "funding_timestamp": "actual_source_settlement_timestamp_unrounded",
+    "funding_available_at": "source_settlement_proxy_not_observed_arrival",
+    "exact_duplicate_policy": "deduplicate identical parsed numeric records, retain all source references in lineage/quarantine ledger",
+    "conflict_policy": "quarantine all conflicting versions; never overwrite/select last or average",
+    "gap_policy": "report every missing interval; no forward_fill/interpolate/zero funding; no silent date shrink",
+    "outlier_policy": "flag for source verification; never clip real crashes",
+    "cross_interval_policy": "check 1h aggregates against independently sourced4h/1d as QC only, do not replace inputs",
+    "boundary_policy": "exclude candles whose close exceeds cutoff and funding at/after cutoff"
+  },
+  "manifest_contract": {
+    "version": 1,
+    "owner": "QR semantics; QD manifest writer",
+    "required_root_fields": [
+      "schema_version",
+      "dataset_id",
+      "created_at",
+      "spec_sha256",
+      "data_range",
+      "symbols",
+      "raw_files",
+      "normalized_files",
+      "quarantine_files",
+      "quality_summary",
+      "limitations"
+    ],
+    "raw_required_fields": [
+      "source_id",
+      "path",
+      "sha256",
+      "url",
+      "retrieved_at",
+      "http_status",
+      "format",
+      "bytes"
+    ],
+    "normalized_required_fields": [
+      "symbol",
+      "kind",
+      "interval_seconds",
+      "path",
+      "sha256",
+      "rows",
+      "start_ts",
+      "end_ts",
+      "columns",
+      "source_ids",
+      "units",
+      "availability_basis"
+    ],
+    "quarantine_required_fields": [
+      "path",
+      "sha256",
+      "reason",
+      "rows",
+      "source_ids"
+    ],
+    "kind_values": [
+      "candles",
+      "funding",
+      "contract_metadata",
+      "risk_tiers"
+    ],
+    "path_rule": "relative beneath explicit dataset root; no traversal/symlink escape; raw/ normalized/ quarantine/ are separate immutable partitions",
+    "metadata_rule": "current snapshots retained separately; observed_at actual retrieval, historical_effective_at null unless documented; never backdate current multiplier/tier/funding_interval"
+  },
+  "warmup": {
+    "must_check_native_functions": true,
+    "full_trend_raw_scale_observations": 1500,
+    "max_ema_span": 256,
+    "fdm_observations": 500,
+    "full_carry_raw_observations": 1000,
+    "daily_regime_min": 205,
+    "ml_hourly_contiguous_bars": 169,
+    "finite_minimum_is_not_full_window": true,
+    "funding_interval_rule": "retain observed inter-settlement durations and document interval schedule; distinguish schedule change from missing record; unresolved regime/gap prevents unchanged constant-interval replay"
+  },
+  "baseline_label_budget": {
+    "max_full_replays_per_coin": 1,
+    "skip_variants": 0,
+    "parameter_variants": 0,
+    "model_fits": 0,
+    "start": 1704067200,
+    "end_exclusive": 1793091600,
+    "preconditions": [
+      "no unresolved required-input conflict or gap in warmup/scored range",
+      "full native warmup verified",
+      "same unchanged QR003 research config; frozen metadata approximation explicitly acknowledged",
+      "historical interval schedule compatible with native single interval or blocker reported"
+    ],
+    "state_policy": "one uninterrupted account per coin; no fold resets or forced split exits; bankruptcy/terminal censoring retained",
+    "label_policy": "reuse QR003 actual exit cash-flow accounting; terminal/missing/unknown labels null; actual label_end plus86400 strictly before next stage"
+  },
+  "readiness": {
+    "G1_raw": "all raw/source/status/hash/decompression/row integrity checks pass; failures retained",
+    "G2_normalized": "exact universe/product/units/closed-time/cutoff; zero unresolved conflicts or missing required intervals; proven lineage; actual funding plus declared interval semantics; realistic arrival caveat",
+    "G3_events": "full warmup, permitted two baselines, label quality and maturity checked; each asset has identifiable nonconstant targets/features and multiple separated market periods; report cross-asset/time clusters and uncertainty; bars/branches never independent label counts",
+    "G4_protocol": "proposed chronological splits, six named features, one fixed linear model and train-prior documented; no fit; prospective holdout and economic effect/precision acceptance remain explicit decisions at training confirmation",
+    "G5_permission": "fresh direct user confirmation immediately before training",
+    "ready_status": "READY_FOR_USER_TRAINING_CONFIRMATION means G1-G3 supported and G4 proposal reviewable, not generalization proven; final G4 choices and fresh G5 required before any fit",
+    "otherwise": "NOT_READY with exact missing coverage or evidence, never grow search until profitability"
+  },
+  "proposed_training_only": {
+    "model": "ridge linear regression, fixed alpha1, train-only zscore, intercept",
+    "features": [
+      "return_4h",
+      "return_24h",
+      "volatility_24h",
+      "efficiency_24h",
+      "volume_relative_24h",
+      "proposed_side_sign"
+    ],
+    "comparators": [
+      "training mean for same exit target",
+      "ML-off existing policy"
+    ],
+    "target": "natural exit net_pnl / initial actual filled_notional, conditional continuation policy",
+    "candidate_gate": "predicted net return >0; threshold fixed before fit",
+    "max_model_families": 1,
+    "hyperparameter_search": false,
+    "fees_slippage_sensitivity": [
+      1,
+      2
+    ],
+    "uncertainty": "paired common-calendar time blocks across assets; disclose cluster dependence and interval width; required economic effect and acceptable interval width must be accepted at training-confirmation decision",
+    "not_authorized": [
+      "fit",
+      "feature_selection",
+      "threshold_selection",
+      "deep_learning",
+      "activation"
+    ]
+  }
+}

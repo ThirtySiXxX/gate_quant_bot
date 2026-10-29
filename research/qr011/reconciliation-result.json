@@ -1,0 +1,1458 @@
+{
+  "actual_usage": {
+    "active_seconds": 49.902709210113464,
+    "disk_bytes": 181915995,
+    "max_single_request_seconds": 2.064311,
+    "peak_rss_bytes": 166903808,
+    "received_bytes": 48632063,
+    "requests": 2
+  },
+  "base_commit": "88168f34c8c2855e9e65510bcde749cc459ff12a",
+  "boundary_results": [
+    {
+      "arithmetic": "decimal50 shadow; negative/precision discrepancies never clipped",
+      "code_sha256": "8ab9733e6225fb9330deeb588165a6d09244cd02a7993006842b5128840f1987",
+      "counts": {
+        "abs_error_ge_0_1": 0,
+        "exact_levels": 44067,
+        "nonzero_presence_disagreement": 0,
+        "nonzero_union_levels": 44067
+      },
+      "current_aligned_cursor": 123746036996,
+      "current_id": "R22",
+      "current_line": 2705755,
+      "exact_source_id_boundary_found": true,
+      "examples": [],
+      "maximum_absolute_quantity_difference": "0",
+      "next_id": "N01",
+      "next_initial_id": 123746036996,
+      "next_object_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 164297327,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 3493854,
+        "trailing_line_bytes": 0
+      },
+      "no_training_feature_promotion": true
+    },
+    {
+      "arithmetic": "decimal50 shadow; negative/precision discrepancies never clipped",
+      "code_sha256": "8ab9733e6225fb9330deeb588165a6d09244cd02a7993006842b5128840f1987",
+      "counts": {
+        "abs_error_ge_0_1": 0,
+        "exact_levels": 35064,
+        "nonzero_presence_disagreement": 2059,
+        "nonzero_union_levels": 39951
+      },
+      "current_aligned_cursor": 107316992580,
+      "current_id": "R27",
+      "current_line": 2613213,
+      "exact_source_id_boundary_found": true,
+      "examples": [
+        {
+          "current_shadow": "9.996E-14",
+          "difference": "9.996E-14",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.35",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "4.22E-12",
+          "difference": "4.22E-12",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.51",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "-1E-13",
+          "difference": "-1E-13",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.54",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "-1E-13",
+          "difference": "-1E-13",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.55",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "-1E-13",
+          "difference": "-1E-13",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.6",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "1.85E-12",
+          "difference": "1.85E-12",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.66",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "1E-15",
+          "difference": "1E-15",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.69",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "-2E-14",
+          "difference": "-2E-14",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.72",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "1E-13",
+          "difference": "1E-13",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.75",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "2.004E-13",
+          "difference": "2.004E-13",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.76",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "-5.5E-13",
+          "difference": "-5.5E-13",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.79",
+          "side": "asks"
+        },
+        {
+          "current_shadow": "-1.9E-12",
+          "difference": "-1.9E-12",
+          "next_initial": "0",
+          "next_line": null,
+          "price": "2464.8",
+          "side": "asks"
+        }
+      ],
+      "maximum_absolute_quantity_difference": "2.908E-11",
+      "next_id": "N02",
+      "next_initial_id": 107316992580,
+      "next_object_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 160200339,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 3417217,
+        "trailing_line_bytes": 0
+      },
+      "no_training_feature_promotion": true
+    }
+  ],
+  "branch": "codex/qr-validation-baseline",
+  "conclusion": {
+    "btc_archive_internal_boundary": "44067/44067 levels exact",
+    "eth_archive_internal_boundary": "35064/39951 exact; max difference 2.908e-11",
+    "eth_numerical_source_issue": "Raw decimal lexemes directly produce first -1e-13 residual",
+    "legacy_floor_bounds": "conditional source-specific intervals only; no hidden fraction reconstruction",
+    "model_fit": false,
+    "normalization_approved": false,
+    "proved_failure": "Archive and snapshot quantities differ both before any level updates and between ID-bracketed snapshots; cannot use as one exact public book",
+    "public_exact_l2_recovered": false,
+    "rpi_explanation": "POSSIBLE_UNPROVEN_NO_ARCHIVE_SCOPE_FLAGS",
+    "strategy_or_account_replay": false,
+    "training_ready": false,
+    "training_requires_fresh_human_confirmation": true,
+    "upstream_vendor_root_cause": "UNPROVEN"
+  },
+  "created_at_utc": "2026-10-28T10:37:59.505785+00:00",
+  "diagnostics": [
+    {
+      "analysis_path": "diagnostic-v1/R02/analysis.json",
+      "analysis_sha256": "89e702c7f58957d2d7260513c79d4c38b4336d0366ae9c5eb3b71d2179e74cc6",
+      "book_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 41127942,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 945022,
+        "trailing_line_bytes": 0
+      },
+      "book_id": "R02",
+      "book_sha256": "c8c2559eaa3766fa06a02c1ead8bb6ee91ecfcd3e074086e156314d2d10acaa4",
+      "code_sha256": "a75d47045a9559599b72f8faacacca082ce90db297fe91732226aad84f5d5336",
+      "counts": {
+        "exact_boundary_snapshots": 3091,
+        "identical_duplicates": 1,
+        "interior_snapshot_ids": 248,
+        "level_exact": 61820,
+        "make_rows": 480037,
+        "observed_levels": 61820,
+        "residual_level_keys": 691,
+        "revisited_constant_residual_keys": 673,
+        "revisited_level_keys": 673,
+        "revisited_nonzero_constant_residual_keys": 0,
+        "rows": 945022,
+        "set_rows": 6224,
+        "take_rows": 458761,
+        "transition_present_both": 55894,
+        "transition_present_both_exact": 55894,
+        "transition_present_both_integer_censoring_compatible": 55894,
+        "transition_present_both_reverse_sign_exact": 0,
+        "transition_prior_visible_zero": 2933,
+        "transition_prior_visible_zero_exact": 2933,
+        "transition_prior_visible_zero_integer_censoring_compatible": 2933,
+        "transition_prior_visible_zero_reverse_sign_exact": 0
+      },
+      "diagnostic": "fixed-additive-shadow-and-adjacent-snapshot-differences",
+      "diagnostic_does_not_emit_qualified_features": true,
+      "examples": {},
+      "first_delta": {
+        "line": 6225,
+        "raw": "1672531200.2,take,16799.2,-6305,25643689766,1"
+      },
+      "first_negative": null,
+      "historical_availability_qualified": false,
+      "initial_id": 25643689765,
+      "initial_state_independent_of_snapshot": true,
+      "numeric_lexeme_precision": {
+        "make_decimal_places_0": 480037,
+        "set_decimal_places_0": 6224,
+        "take_decimal_places_0": 458761
+      },
+      "qr010_code_sha256": "fa9ccfb18d316abc385ad472c7c8a1179a2d2232424be1d0a356db9cb7629b5c",
+      "schema_version": 1,
+      "sequence_contiguous_after_exact_dedup": true,
+      "shadow_negative_states_are_invalid": true,
+      "snapshot_gzip": {
+        "blank_lines": 3339,
+        "decompressed_bytes": 1956630,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 6678,
+        "trailing_line_bytes": 0
+      },
+      "snapshot_id": "R03",
+      "snapshot_sha256": "fbfa64b80a53c9a3c7ba7a70d2c0a3f09e181698693f039e138799e175ee2011",
+      "transition_file": "diagnostic-v1/R02/transitions.jsonl",
+      "transition_sha256": "a9b057550a14feebdb73e02747ddc9aaacf4db49905cb475fcb42d7ba84c4275"
+    },
+    {
+      "analysis_path": "diagnostic-v1/R17/analysis.json",
+      "analysis_sha256": "14dd6eeee0eb4b767cfeb558a80f979a4e4ffba157aa732bb835c8bdf0f824e4",
+      "book_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 40975586,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 943531,
+        "trailing_line_bytes": 0
+      },
+      "book_id": "R17",
+      "book_sha256": "8b2c40891a5fe7391f95a21d2a23feeb0c06d608f396b8ed33131011a4c652d5",
+      "code_sha256": "a75d47045a9559599b72f8faacacca082ce90db297fe91732226aad84f5d5336",
+      "counts": {
+        "exact_boundary_snapshots": 3292,
+        "interior_snapshot_ids": 30,
+        "level_exact": 65840,
+        "make_rows": 469428,
+        "observed_levels": 65840,
+        "residual_level_keys": 567,
+        "revisited_constant_residual_keys": 564,
+        "revisited_level_keys": 564,
+        "revisited_nonzero_constant_residual_keys": 0,
+        "rows": 943531,
+        "set_rows": 8004,
+        "take_rows": 466099,
+        "transition_present_both": 55297,
+        "transition_present_both_exact": 55297,
+        "transition_present_both_integer_censoring_compatible": 55297,
+        "transition_present_both_reverse_sign_exact": 0,
+        "transition_prior_visible_zero": 2244,
+        "transition_prior_visible_zero_exact": 2244,
+        "transition_prior_visible_zero_integer_censoring_compatible": 2244,
+        "transition_prior_visible_zero_reverse_sign_exact": 0
+      },
+      "diagnostic": "fixed-additive-shadow-and-adjacent-snapshot-differences",
+      "diagnostic_does_not_emit_qualified_features": true,
+      "examples": {},
+      "first_delta": {
+        "line": 8005,
+        "raw": "1719792000.5,make,3438.75,-29,52453866272,1"
+      },
+      "first_negative": null,
+      "historical_availability_qualified": false,
+      "initial_id": 52453866271,
+      "initial_state_independent_of_snapshot": true,
+      "numeric_lexeme_precision": {
+        "make_decimal_places_0": 469428,
+        "set_decimal_places_0": 8004,
+        "take_decimal_places_0": 466099
+      },
+      "qr010_code_sha256": "fa9ccfb18d316abc385ad472c7c8a1179a2d2232424be1d0a356db9cb7629b5c",
+      "schema_version": 1,
+      "sequence_contiguous_after_exact_dedup": true,
+      "shadow_negative_states_are_invalid": true,
+      "snapshot_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 1834678,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 3322,
+        "trailing_line_bytes": 0
+      },
+      "snapshot_id": "R18",
+      "snapshot_sha256": "48b8d2e35a0006ed56aa5923e33dbf1b3577e72f8cacdcb6c6a2b315fe20782b",
+      "transition_file": "diagnostic-v1/R17/transitions.jsonl",
+      "transition_sha256": "d7b65d53275ba5ca92d6004e76fadabead8d6cbf783c509191b1555addc59290"
+    },
+    {
+      "analysis_path": "diagnostic-v1/R22/analysis.json",
+      "analysis_sha256": "a0599c1c322450f474230b7bef935128b516dd78ed4938859ad6b8530d83a661",
+      "book_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 126679689,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 2705755,
+        "trailing_line_bytes": 0
+      },
+      "book_id": "R22",
+      "book_sha256": "18e93c25f0c7a50fca867f3cf17a521ca70255801d0b5f3d1b7ecf983efb97e5",
+      "code_sha256": "a75d47045a9559599b72f8faacacca082ce90db297fe91732226aad84f5d5336",
+      "counts": {
+        "exact_boundary_snapshots": 3275,
+        "interior_snapshot_ids": 109,
+        "level_exact": 40585,
+        "make_rows": 1328757,
+        "observed_levels": 65500,
+        "residual_level_keys": 5450,
+        "revisited_constant_residual_keys": 1660,
+        "revisited_level_keys": 4790,
+        "revisited_nonzero_constant_residual_keys": 168,
+        "rows": 2705755,
+        "set_rows": 44061,
+        "take_rows": 1332937,
+        "transition_present_both": 49502,
+        "transition_present_both_exact": 42191,
+        "transition_present_both_integer_censoring_compatible": 42191,
+        "transition_present_both_reverse_sign_exact": 1,
+        "transition_prior_visible_zero": 6693,
+        "transition_prior_visible_zero_exact": 5519,
+        "transition_prior_visible_zero_integer_censoring_compatible": 5519,
+        "transition_prior_visible_zero_reverse_sign_exact": 1
+      },
+      "diagnostic": "fixed-additive-shadow-and-adjacent-snapshot-differences",
+      "diagnostic_does_not_emit_qualified_features": true,
+      "examples": {
+        "first_snapshot_untouched_initial_mismatch": [
+          {
+            "book_line": 44461,
+            "delta_rows_at_this_level": 0,
+            "initial_id": 123743115561,
+            "initial_line": 24591,
+            "initial_q": "12877.0",
+            "price": "78544.5",
+            "residual": "12863.0",
+            "shadow_q": "12877.0",
+            "side": "bids",
+            "snapshot_id": 123743116006,
+            "snapshot_line": 1,
+            "snapshot_q": "14",
+            "source_current_s": "1788220801.274"
+          },
+          {
+            "book_line": 44461,
+            "delta_rows_at_this_level": 0,
+            "initial_id": 123743115561,
+            "initial_line": 24581,
+            "initial_q": "5815.0",
+            "price": "78540.9",
+            "residual": "3638.0",
+            "shadow_q": "5815.0",
+            "side": "bids",
+            "snapshot_id": 123743116006,
+            "snapshot_line": 1,
+            "snapshot_q": "2177",
+            "source_current_s": "1788220801.274"
+          }
+        ],
+        "large_transition_mismatch": [
+          {
+            "book_line": 48034,
+            "error": "-130.0",
+            "exact": false,
+            "integer_censoring_compatible": false,
+            "previous_id": 123743118849,
+            "previous_line": 3,
+            "previous_q": "6599",
+            "price": "78540.7",
+            "raw_delta_rows": 34,
+            "raw_examples": [
+              {
+                "line": 47042,
+                "raw": "1788220803.4,make,78540.7,2030.0,123743118852,1"
+              },
+              {
+                "line": 47047,
+                "raw": "1788220803.4,take,78540.7,935.0,123743118857,1"
+              },
+              {
+                "line": 47106,
+                "raw": "1788220803.5,take,78540.7,1.0,123743118922,1"
+              },
+              {
+                "line": 47171,
+                "raw": "1788220803.6,make,78540.7,2200.0,123743118994,1"
+              },
+              {
+                "line": 47175,
+                "raw": "1788220803.6,make,78540.7,3044.0,123743118998,2"
+              },
+              {
+                "line": 47177,
+                "raw": "1788220803.6,make,78540.7,982.0,123743119002,1"
+              },
+              {
+                "line": 47183,
+                "raw": "1788220803.6,make,78540.7,1064.0,123743119008,1"
+              },
+              {
+                "line": 47186,
+                "raw": "1788220803.6,make,78540.7,1782.0,123743119011,2"
+              }
+            ],
+            "raw_net_delta": "8172.0",
+            "residual": "130.0",
+            "reverse_sign_exact": false,
+            "scope": "PRESENT_BOTH",
+            "shadow_q": "14771.0",
+            "side": "bids",
+            "snapshot_id": 123743119963,
+            "snapshot_line": 4,
+            "snapshot_q": "14641",
+            "source_current_s": "1788220804.523"
+          },
+          {
+            "book_line": 48034,
+            "error": "-128.0",
+            "exact": false,
+            "integer_censoring_compatible": false,
+            "previous_id": 123743118849,
+            "previous_line": 3,
+            "previous_q": "2258",
+            "price": "78538.9",
+            "raw_delta_rows": 3,
+            "raw_examples": [
+              {
+                "line": 47538,
+                "raw": "1788220803.8,make,78538.9,16.0,123743119402,1"
+              },
+              {
+                "line": 47559,
+                "raw": "1788220803.8,take,78538.9,16.0,123743119424,1"
+              },
+              {
+                "line": 47668,
+                "raw": "1788220804.0,make,78538.9,128.0,123743119543,1"
+              }
+            ],
+            "raw_net_delta": "128.0",
+            "residual": "128.0",
+            "reverse_sign_exact": false,
+            "scope": "PRESENT_BOTH",
+            "shadow_q": "2386.0",
+            "side": "bids",
+            "snapshot_id": 123743119963,
+            "snapshot_line": 4,
+            "snapshot_q": "2258",
+            "source_current_s": "1788220804.523"
+          }
+        ]
+      },
+      "first_delta": {
+        "line": 44062,
+        "raw": "1788220800.0,take,60863.5,1.0,123743115562,1"
+      },
+      "first_negative": null,
+      "historical_availability_qualified": false,
+      "initial_id": 123743115561,
+      "initial_state_independent_of_snapshot": true,
+      "numeric_lexeme_precision": {
+        "make_decimal_places_1": 1328757,
+        "set_decimal_places_1": 44061,
+        "take_decimal_places_1": 1332937
+      },
+      "qr010_code_sha256": "fa9ccfb18d316abc385ad472c7c8a1179a2d2232424be1d0a356db9cb7629b5c",
+      "schema_version": 1,
+      "sequence_contiguous_after_exact_dedup": true,
+      "shadow_negative_states_are_invalid": true,
+      "snapshot_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 1906708,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 3384,
+        "trailing_line_bytes": 0
+      },
+      "snapshot_id": "R23",
+      "snapshot_sha256": "15a92718ff9d391f83bb55be3f8afd629dc8d223e47566740c171afa2725c412",
+      "transition_file": "diagnostic-v1/R22/transitions.jsonl",
+      "transition_sha256": "2dce5ab3938e3f322d3acd238487b9e06e6cc256e0beb2700a013d6ad31a0fe9"
+    },
+    {
+      "analysis_path": "diagnostic-v1/R27/analysis.json",
+      "analysis_sha256": "d39559bb82b8e34054a756a53dc15332edb5c79d510acd0fa35a16efe34f124c",
+      "book_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 122584610,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 2613213,
+        "trailing_line_bytes": 0
+      },
+      "book_id": "R27",
+      "book_sha256": "48b345e85eb4eed259a05fa409d87971641d139b980e1c741d77c1136978b747",
+      "code_sha256": "a75d47045a9559599b72f8faacacca082ce90db297fe91732226aad84f5d5336",
+      "counts": {
+        "exact_boundary_snapshots": 3303,
+        "interior_snapshot_ids": 81,
+        "level_exact": 4508,
+        "make_rows": 1243599,
+        "negative_shadow_events": 44806,
+        "observed_levels": 66060,
+        "residual_level_keys": 2313,
+        "revisited_constant_residual_keys": 88,
+        "revisited_level_keys": 2201,
+        "revisited_nonzero_constant_residual_keys": 67,
+        "rows": 2613213,
+        "set_rows": 36689,
+        "take_rows": 1332925,
+        "transition_present_both": 50086,
+        "transition_present_both_exact": 36627,
+        "transition_present_both_integer_censoring_compatible": 42928,
+        "transition_present_both_reverse_sign_exact": 0,
+        "transition_prior_visible_zero": 5238,
+        "transition_prior_visible_zero_exact": 1466,
+        "transition_prior_visible_zero_integer_censoring_compatible": 4392,
+        "transition_prior_visible_zero_reverse_sign_exact": 0
+      },
+      "diagnostic": "fixed-additive-shadow-and-adjacent-snapshot-differences",
+      "diagnostic_does_not_emit_qualified_features": true,
+      "examples": {
+        "first_snapshot_untouched_initial_mismatch": [
+          {
+            "book_line": 38250,
+            "delta_rows_at_this_level": 0,
+            "initial_id": 107314023639,
+            "initial_line": 20522,
+            "initial_q": "410.8",
+            "price": "2466.46",
+            "residual": "367.8",
+            "shadow_q": "410.8",
+            "side": "bids",
+            "snapshot_id": 107314025459,
+            "snapshot_line": 1,
+            "snapshot_q": "43",
+            "source_current_s": "1788220801.355"
+          },
+          {
+            "book_line": 38250,
+            "delta_rows_at_this_level": 0,
+            "initial_id": 107314023639,
+            "initial_line": 20514,
+            "initial_q": "1477.8",
+            "price": "2466.33",
+            "residual": "0.8",
+            "shadow_q": "1477.8",
+            "side": "bids",
+            "snapshot_id": 107314025459,
+            "snapshot_line": 1,
+            "snapshot_q": "1477",
+            "source_current_s": "1788220801.355"
+          }
+        ],
+        "large_transition_mismatch": [
+          {
+            "book_line": 39519,
+            "error": "1012.8",
+            "exact": false,
+            "integer_censoring_compatible": false,
+            "previous_id": 107314025459,
+            "previous_line": 1,
+            "previous_q": "0",
+            "price": "2466.29",
+            "raw_delta_rows": 4,
+            "raw_examples": [
+              {
+                "line": 38383,
+                "raw": "1788220801.2,take,2466.29,1013.6,107314025599,1"
+              },
+              {
+                "line": 39093,
+                "raw": "1788220801.9,make,2466.29,716.8,107314026377,1"
+              },
+              {
+                "line": 39517,
+                "raw": "1788220802.2,make,2466.29,330.0,107314026820,1"
+              },
+              {
+                "line": 39518,
+                "raw": "1788220802.2,take,2466.29,330.0,107314026821,1"
+              }
+            ],
+            "raw_net_delta": "-296.8",
+            "residual": "0.8",
+            "reverse_sign_exact": false,
+            "scope": "PRIOR_VISIBLE_ZERO",
+            "shadow_q": "716.8",
+            "side": "bids",
+            "snapshot_id": 107314026822,
+            "snapshot_line": 2,
+            "snapshot_q": "716",
+            "source_current_s": "1788220802.428"
+          },
+          {
+            "book_line": 39519,
+            "error": "-46055.8",
+            "exact": false,
+            "integer_censoring_compatible": false,
+            "previous_id": 107314025459,
+            "previous_line": 1,
+            "previous_q": "9",
+            "price": "2466.25",
+            "raw_delta_rows": 7,
+            "raw_examples": [
+              {
+                "line": 38849,
+                "raw": "1788220801.8,take,2466.25,1.0,107314026121,1"
+              },
+              {
+                "line": 38850,
+                "raw": "1788220801.8,make,2466.25,52294.7,107314026122,8"
+              },
+              {
+                "line": 38994,
+                "raw": "1788220801.9,take,2466.25,0.8,107314026273,1"
+              },
+              {
+                "line": 39174,
+                "raw": "1788220801.9,take,2466.25,1855.2,107314026461,1"
+              },
+              {
+                "line": 39209,
+                "raw": "1788220801.9,take,2466.25,1477.9,107314026501,1"
+              },
+              {
+                "line": 39217,
+                "raw": "1788220801.9,take,2466.25,842.4,107314026509,1"
+              },
+              {
+                "line": 39251,
+                "raw": "1788220801.9,take,2466.25,2063.6,107314026543,1"
+              }
+            ],
+            "raw_net_delta": "46053.8",
+            "residual": "46056.5000000000001",
+            "reverse_sign_exact": false,
+            "scope": "PRESENT_BOTH",
+            "shadow_q": "46063.5000000000001",
+            "side": "bids",
+            "snapshot_id": 107314026822,
+            "snapshot_line": 2,
+            "snapshot_q": "7",
+            "source_current_s": "1788220802.428"
+          }
+        ],
+        "negative_shadow_events": [
+          {
+            "after": "-1E-13",
+            "line": 38349,
+            "prior": "21.2999999999999",
+            "raw": "1788220801.2,take,2466.47,21.3,107314025564,1"
+          },
+          {
+            "after": "-1E-12",
+            "line": 38732,
+            "prior": "12532.9",
+            "raw": "1788220801.7,take,2466.35,12532.900000000001,107314025984,2"
+          }
+        ],
+        "positive_raw_depth_reported_zero": [
+          {
+            "book_line": 547185,
+            "error": "-0.4",
+            "exact": false,
+            "integer_censoring_compatible": true,
+            "previous_id": 107314609407,
+            "previous_line": 585,
+            "previous_q": "0",
+            "price": "2470.5",
+            "raw_delta_rows": 1,
+            "raw_examples": [
+              {
+                "line": 547154,
+                "raw": "1788221420.2,make,2470.5,0.4,107314609556,1"
+              }
+            ],
+            "raw_net_delta": "0.4",
+            "residual": "0.399999999999",
+            "reverse_sign_exact": false,
+            "scope": "PRIOR_VISIBLE_ZERO",
+            "shadow_q": "0.399999999999",
+            "side": "bids",
+            "snapshot_id": 107314609599,
+            "snapshot_line": 586,
+            "snapshot_q": "0",
+            "source_current_s": "1788221420.777"
+          }
+        ],
+        "subunit_transition_difference": [
+          {
+            "book_line": 39519,
+            "error": "-0.3",
+            "exact": false,
+            "integer_censoring_compatible": true,
+            "previous_id": 107314025459,
+            "previous_line": 1,
+            "previous_q": "0",
+            "price": "2466.55",
+            "raw_delta_rows": 1,
+            "raw_examples": [
+              {
+                "line": 38603,
+                "raw": "1788220801.7,make,2466.55,-239.3,107314025843,1"
+              }
+            ],
+            "raw_net_delta": "239.3",
+            "residual": "0.3",
+            "reverse_sign_exact": false,
+            "scope": "PRIOR_VISIBLE_ZERO",
+            "shadow_q": "239.3",
+            "side": "asks",
+            "snapshot_id": 107314026822,
+            "snapshot_line": 2,
+            "snapshot_q": "239",
+            "source_current_s": "1788220802.428"
+          },
+          {
+            "book_line": 44839,
+            "error": "-0.3",
+            "exact": false,
+            "integer_censoring_compatible": true,
+            "previous_id": 107314026822,
+            "previous_line": 2,
+            "previous_q": "0",
+            "price": "2466.01",
+            "raw_delta_rows": 1,
+            "raw_examples": [
+              {
+                "line": 42442,
+                "raw": "1788220803.2,make,2466.01,707.3,107314029992,1"
+              }
+            ],
+            "raw_net_delta": "707.3",
+            "residual": "0.3",
+            "reverse_sign_exact": false,
+            "scope": "PRIOR_VISIBLE_ZERO",
+            "shadow_q": "707.3",
+            "side": "bids",
+            "snapshot_id": 107314032731,
+            "snapshot_line": 4,
+            "snapshot_q": "707",
+            "source_current_s": "1788220804.557"
+          }
+        ]
+      },
+      "first_delta": {
+        "line": 36690,
+        "raw": "1788220800.0,take,2220.03,0.5,107314023640,1"
+      },
+      "first_negative": {
+        "after": "-1E-13",
+        "line": 38349,
+        "prior": "21.2999999999999",
+        "raw": "1788220801.2,take,2466.47,21.3,107314025564,1"
+      },
+      "historical_availability_qualified": false,
+      "initial_id": 107314023639,
+      "initial_state_independent_of_snapshot": true,
+      "numeric_lexeme_precision": {
+        "make_decimal_places_1": 1220945,
+        "make_decimal_places_11": 107,
+        "make_decimal_places_12": 517,
+        "make_decimal_places_13": 1141,
+        "make_decimal_places_14": 923,
+        "make_decimal_places_15": 454,
+        "make_decimal_places_16": 3619,
+        "make_decimal_places_17": 15893,
+        "set_decimal_places_1": 34265,
+        "set_decimal_places_10": 1,
+        "set_decimal_places_11": 28,
+        "set_decimal_places_12": 150,
+        "set_decimal_places_13": 290,
+        "set_decimal_places_14": 321,
+        "set_decimal_places_15": 603,
+        "set_decimal_places_16": 803,
+        "set_decimal_places_17": 228,
+        "take_decimal_places_1": 1316258,
+        "take_decimal_places_11": 88,
+        "take_decimal_places_12": 515,
+        "take_decimal_places_13": 1795,
+        "take_decimal_places_14": 1671,
+        "take_decimal_places_15": 495,
+        "take_decimal_places_16": 318,
+        "take_decimal_places_17": 11785
+      },
+      "qr010_code_sha256": "fa9ccfb18d316abc385ad472c7c8a1179a2d2232424be1d0a356db9cb7629b5c",
+      "schema_version": 1,
+      "sequence_contiguous_after_exact_dedup": true,
+      "shadow_negative_states_are_invalid": true,
+      "snapshot_gzip": {
+        "blank_lines": 0,
+        "decompressed_bytes": 1893591,
+        "gzip_complete": true,
+        "gzip_error": null,
+        "physical_lines": 3384,
+        "trailing_line_bytes": 0
+      },
+      "snapshot_id": "R28",
+      "snapshot_sha256": "c59fc93e010722a2dc717411ac8c2c01af13ac77f1bf1d32a6429bd8ec184996",
+      "transition_file": "diagnostic-v1/R27/transitions.jsonl",
+      "transition_sha256": "b0f85f942496ae3369b246224f2ff65f4fc2f698d1044dd60b8ce7689cb962a9"
+    }
+  ],
+  "dispatch_id": "QF-DISPATCH-20261028-QR011-MICRO-RECONCILIATION-1",
+  "documentation_browsing": {
+    "find_operations": 2,
+    "notes": "Official RPI scope/channel and legacy decimal migration queries; no private API or current orderbook request; RPI documents do not identify archive contents",
+    "primary_sources": [
+      "https://www.gate.com/docs/developers/futures/ws/en/",
+      "https://www.gate.com/docs/developers/futures/ws/zh_CN/",
+      "https://www.gate.com/docs/developers/apiv4/en/",
+      "https://www.gate.com/docs/developers/apiv4/en/futures/",
+      "https://www.gate.com/zh/help/annlist/others/48788/gate-announcement-on-usdt-perpetual-contract-order-quantity-field-type-changes-and-feature-rollout-plan"
+    ],
+    "search_batches": 4,
+    "search_queries_count": 12,
+    "separate_from_data_budget": true
+  },
+  "evidence_inventory": [
+    {
+      "bytes": 813,
+      "path": "boundary-R22.json",
+      "sha256": "068d0212fd06ddc7a8710610b594b4fbe3c52b1a2beb08fc05f9a45e4a73597a"
+    },
+    {
+      "bytes": 2960,
+      "path": "boundary-R27.json",
+      "sha256": "e4a46ac3bd004fcf48c8c9c083ac22f1e7d2d2b1988d79d81e1b77c24ffe504d"
+    },
+    {
+      "bytes": 1048,
+      "path": "diagnostic-scope.json",
+      "sha256": "1916878522b5319d8e5f623c762a0b10f472095477f557917ce16fc11d437218"
+    },
+    {
+      "bytes": 2448,
+      "path": "diagnostic-v1/R02/analysis.json",
+      "sha256": "89e702c7f58957d2d7260513c79d4c38b4336d0366ae9c5eb3b71d2179e74cc6"
+    },
+    {
+      "bytes": 30689228,
+      "path": "diagnostic-v1/R02/transitions.jsonl",
+      "sha256": "a9b057550a14feebdb73e02747ddc9aaacf4db49905cb475fcb42d7ba84c4275"
+    },
+    {
+      "bytes": 2411,
+      "path": "diagnostic-v1/R17/analysis.json",
+      "sha256": "14dd6eeee0eb4b767cfeb558a80f979a4e4ffba157aa732bb835c8bdf0f824e4"
+    },
+    {
+      "bytes": 36361518,
+      "path": "diagnostic-v1/R17/transitions.jsonl",
+      "sha256": "d7b65d53275ba5ca92d6004e76fadabead8d6cbf783c509191b1555addc59290"
+    },
+    {
+      "bytes": 14309,
+      "path": "diagnostic-v1/R22/analysis.json",
+      "sha256": "a0599c1c322450f474230b7bef935128b516dd78ed4938859ad6b8530d83a661"
+    },
+    {
+      "bytes": 33260326,
+      "path": "diagnostic-v1/R22/transitions.jsonl",
+      "sha256": "2dce5ab3938e3f322d3acd238487b9e06e6cc256e0beb2700a013d6ad31a0fe9"
+    },
+    {
+      "bytes": 25303,
+      "path": "diagnostic-v1/R27/analysis.json",
+      "sha256": "d39559bb82b8e34054a756a53dc15332edb5c79d510acd0fa35a16efe34f124c"
+    },
+    {
+      "bytes": 32893411,
+      "path": "diagnostic-v1/R27/transitions.jsonl",
+      "sha256": "b0f85f942496ae3369b246224f2ff65f4fc2f698d1044dd60b8ce7689cb962a9"
+    },
+    {
+      "bytes": 718,
+      "path": "eth-first-negative-chain.json",
+      "sha256": "c0af5e641e24c2f90a2845f3141914c1c81c2bd7d0fdb83adfac170c404d5f17"
+    },
+    {
+      "bytes": 75,
+      "path": "operations/boundary-R22.json",
+      "sha256": "da9b73a33f1ae91037722bf62750cceaf2185139b49e80dbb063ce79517a618b"
+    },
+    {
+      "bytes": 74,
+      "path": "operations/boundary-R27.json",
+      "sha256": "c3f153150fbb6c86ddea74201d3250082a22dc978efe988d3ce0e03216675e9f"
+    },
+    {
+      "bytes": 75,
+      "path": "operations/diagnose-R02.json",
+      "sha256": "4b5221ef94d2b7d39ad595875bc7c8b7636e8c1013a3628f324129f793fa36c0"
+    },
+    {
+      "bytes": 73,
+      "path": "operations/diagnose-R17.json",
+      "sha256": "b589633a84abbbd500cdc9cfc37fd2cd8ab598a79d4d786fd95988e6b91277eb"
+    },
+    {
+      "bytes": 75,
+      "path": "operations/diagnose-R22.json",
+      "sha256": "efaff23d9d07ab4cb1914e29741104ea880a9720687bd971cb32873785369ccf"
+    },
+    {
+      "bytes": 74,
+      "path": "operations/diagnose-R27.json",
+      "sha256": "8b5fa46b194e2248c8ff6736c976efe2b65b6abd54a958811c47b07c7af4b40f"
+    },
+    {
+      "bytes": 75,
+      "path": "operations/first-negative-chain.json",
+      "sha256": "aeb967cfd45ddb92ca41b3727aca64952cbe036ed3e8f639398841547b42139f"
+    },
+    {
+      "bytes": 73,
+      "path": "operations/precision-and-bounds.json",
+      "sha256": "c3fd2f61c16ba1bc75fa0f8bab6d9d65fdd02ef5d20d031988571a8d22f9751d"
+    },
+    {
+      "bytes": 161,
+      "path": "operations/preflight-bounded-read.json",
+      "sha256": "8b4ae8f8cd1ffe9591ea58979f8efaf2aea72a7cd17c284ea48544401179073f"
+    },
+    {
+      "bytes": 75,
+      "path": "operations/preservation-hash-verification.json",
+      "sha256": "3e6adc8a76c45cb48a45223facf06c8832ca334be165265250eb198624ed14b5"
+    },
+    {
+      "bytes": 76,
+      "path": "operations/targeted-trade-check.json",
+      "sha256": "c0c1c4aff4ba658ea3ada1ab99439a681107ff938c8123a7afe8f938fee09a5f"
+    },
+    {
+      "bytes": 6782,
+      "path": "precision-and-snapshot-bounds.json",
+      "sha256": "4367caaabb3907703478ee6ef7ced968a5a550631a9dddfb0698fa9f47ca8d80"
+    },
+    {
+      "bytes": 24926143,
+      "path": "raw/N01.bin",
+      "sha256": "ab215a229488b634f7b6353abf541b9ef26f3d1e17852aa94a1e8099feaf40b5"
+    },
+    {
+      "bytes": 23704818,
+      "path": "raw/N02.bin",
+      "sha256": "e8f58db184028c3c913bc983ebcd3605d07a18d9d7ced2fd7ed63752d3c1f24a"
+    },
+    {
+      "bytes": 1756,
+      "path": "receipts/N01.json",
+      "sha256": "7b77ee2a3aa0bbfed5a2f6daae8ac8031a1c3d6573350da38775aad73008bd7d"
+    },
+    {
+      "bytes": 1756,
+      "path": "receipts/N02.json",
+      "sha256": "dabd9b76c0143816252d44ed575a66ff0ec12788d05068725c44003c75497c69"
+    },
+    {
+      "bytes": 1619,
+      "path": "request-plan.json",
+      "sha256": "5502eed0b4dd1bfcac60cda0eb0f5b2f01e96fde850cf19d30796acb1bed4079"
+    },
+    {
+      "bytes": 2806,
+      "path": "targeted-trade-check.json",
+      "sha256": "37bd41834ff817815d258ee162c81eca201c3b52d1588d6c2b3decc68bd34224"
+    },
+    {
+      "bytes": 505,
+      "path": "validation/frozen-evidence-preservation.json",
+      "sha256": "1c43f889eeff1a02d50e42aed20d7bbf03c077018c04ac7dd912bbd1b712ce4f"
+    },
+    {
+      "bytes": 1900,
+      "path": "validation/offline-tests.json",
+      "sha256": "134413a1bee4f0170bd7a2df324eb82a5d2e5338bc55815b262889f61c84ac50"
+    },
+    {
+      "bytes": 12511,
+      "path": "versions/diagnostic-v1.py",
+      "sha256": "a75d47045a9559599b72f8faacacca082ce90db297fe91732226aad84f5d5336"
+    }
+  ],
+  "evidence_root": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr011/reconciliation",
+  "evidence_root_relative": "research/.data/qr011/reconciliation",
+  "first_negative_raw_chain": {
+    "arithmetic": "exact Decimal50; no float or epsilon",
+    "chain": [
+      {
+        "after": "1238.3999999999999",
+        "before": "0",
+        "line": 20523,
+        "raw": "1788220800,set,2466.47,1238.3999999999999,107314023639,0"
+      },
+      {
+        "after": "21.2999999999999",
+        "before": "1238.3999999999999",
+        "line": 36813,
+        "raw": "1788220800.0,take,2466.47,1217.1,107314023769,1"
+      },
+      {
+        "after": "-1E-13",
+        "before": "21.2999999999999",
+        "line": 38349,
+        "raw": "1788220801.2,take,2466.47,21.3,107314025564,1"
+      }
+    ],
+    "price": "2466.47",
+    "side": "bids",
+    "source": "QR010 R27",
+    "source_sha256": "48b345e85eb4eed259a05fa409d87971641d139b980e1c741d77c1136978b747"
+  },
+  "frozen_dependencies": {
+    "qr010_commit": "88168f34c8c2855e9e65510bcde749cc459ff12a",
+    "qr010_evidence_root": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr010/historical-micro",
+    "qr010_manifest_sha256": "3476bdab44da4631f600c1b99ba41c96a474f05bb6a303e45a8ad868350b3338",
+    "qr010_probe_sha256": "fa9ccfb18d316abc385ad472c7c8a1179a2d2232424be1d0a356db9cb7629b5c"
+  },
+  "offline_tests": {
+    "elapsed_seconds": 0.046495874878019094,
+    "errors": 0,
+    "failures": 0,
+    "network_blocked": true,
+    "output": "test_boundary_preserves_small_decimal_discrepancy (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_boundary_preserves_small_decimal_discrepancy) ... ok\ntest_censored_depth_returns_bounds_not_fabricated_fraction (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_censored_depth_returns_bounds_not_fabricated_fraction) ... ok\ntest_censoring_compatibility_does_not_mean_exact (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_censoring_compatibility_does_not_mean_exact) ... ok\ntest_floor_bound_requires_explicit_encoding_evidence (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_floor_bound_requires_explicit_encoding_evidence) ... ok\ntest_known_zero_requires_visible_corridor (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_known_zero_requires_visible_corridor) ... ok\ntest_neighbor_plan_is_two_new_public_objects_only (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_neighbor_plan_is_two_new_public_objects_only) ... ok\ntest_raw_negative_residual_is_never_epsilon_repaired (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_raw_negative_residual_is_never_epsilon_repaired) ... ok\ntest_shadow_counterexample_cannot_be_promoted_to_recovery (tests.qr_research.test_qr011_micro_reconciliation.ReconciliationTests.test_shadow_counterexample_cannot_be_promoted_to_recovery) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 0.014s\n\nOK\n",
+    "passed": true,
+    "source_sha256": "8ab9733e6225fb9330deeb588165a6d09244cd02a7993006842b5128840f1987",
+    "test_sha256": "86c6f7d315e3d280529637fb9969bae317d1bfd37fde2eff0a6841a74945e0ae",
+    "tests_run": 8
+  },
+  "precision_and_snapshot_bounds": {
+    "code_sha256": "8ab9733e6225fb9330deeb588165a6d09244cd02a7993006842b5128840f1987",
+    "examples": [
+      {
+        "difference": "1E-12",
+        "line": 54,
+        "nearest_tenth": "8066.4",
+        "raw": "1788220800,set,2.0,8066.400000000001,107314023639,0"
+      },
+      {
+        "difference": "2E-15",
+        "line": 112,
+        "nearest_tenth": "29.4",
+        "raw": "1788220800,set,12.89,29.400000000000002,107314023639,0"
+      },
+      {
+        "difference": "2E-15",
+        "line": 114,
+        "nearest_tenth": "29.4",
+        "raw": "1788220800,set,13.12,29.400000000000002,107314023639,0"
+      },
+      {
+        "difference": "3E-15",
+        "line": 139,
+        "nearest_tenth": "28.8",
+        "raw": "1788220800,set,16.04,28.799999999999997,107314023639,0"
+      },
+      {
+        "difference": "3E-15",
+        "line": 141,
+        "nearest_tenth": "28.8",
+        "raw": "1788220800,set,16.32,28.799999999999997,107314023639,0"
+      },
+      {
+        "difference": "3E-15",
+        "line": 151,
+        "nearest_tenth": "28.2",
+        "raw": "1788220800,set,19.86,28.200000000000003,107314023639,0"
+      },
+      {
+        "difference": "3E-15",
+        "line": 153,
+        "nearest_tenth": "28.2",
+        "raw": "1788220800,set,20.21,28.200000000000003,107314023639,0"
+      },
+      {
+        "difference": "2E-15",
+        "line": 167,
+        "nearest_tenth": "27.6",
+        "raw": "1788220800,set,24.9,27.599999999999998,107314023639,0"
+      }
+    ],
+    "first_negative_exact_counterexample": {
+      "difference": "-0.0000000000001",
+      "prior": "21.2999999999999",
+      "take": "21.3"
+    },
+    "legacy_floor_condition": "official legacy integer semantics plus observed integer archive; archive request header not retained, so bounds conditional",
+    "maximum_distance_to_tenth": "1E-10",
+    "minimum_positive_raw_size": "0.1",
+    "no_exact_quantity_recovery": true,
+    "normalization_status": "NOT_AUTHORIZED_NO_HISTORICAL_QUANTUM_OR_PRODUCER_ERROR_BOUND",
+    "raw_eth_counts": {
+      "negative_shadow_events_after_tenth_rounding": 0,
+      "off_tenth_grid": 41745,
+      "rows": 2613213
+    },
+    "rounding_experiment": "diagnostic only; not a normalized dataset",
+    "snapshots": {
+      "R23": {
+        "conditional_max_imbalance_width": "0.0009761811792268645060523233",
+        "counts": {
+          "snapshots": 3384,
+          "top_quote_zero_quantity": 0,
+          "zero_depth_levels": 0
+        },
+        "examples": [
+          {
+            "conditional_depth_bounds": {
+              "ask_depth_lower": "46896",
+              "ask_depth_upper_exclusive": "46901",
+              "bid_depth_lower": "12888",
+              "bid_depth_upper_exclusive": "12893",
+              "imbalance_lower": "-0.5688839084112462158591045176",
+              "imbalance_upper": "-0.5687166535650370469484353309",
+              "status": "CONDITIONAL_LEGACY_FLOOR",
+              "zero_floor_does_not_prove_empty": true
+            },
+            "historical_available_at": null,
+            "line": 1,
+            "snapshot_id": 123743116006,
+            "source_current_s": "1788220801.274",
+            "spread_bps": "0.01273075285216604211714966082"
+          },
+          {
+            "conditional_depth_bounds": {
+              "ask_depth_lower": "24672",
+              "ask_depth_upper_exclusive": "24677",
+              "bid_depth_lower": "6995",
+              "bid_depth_upper_exclusive": "7000",
+              "imbalance_lower": "-0.5582849204344531447335185653",
+              "imbalance_upper": "-0.5579691841374084364738570346",
+              "status": "CONDITIONAL_LEGACY_FLOOR",
+              "zero_floor_does_not_prove_empty": true
+            },
+            "historical_available_at": null,
+            "line": 2,
+            "snapshot_id": 123743116824,
+            "source_current_s": "1788220802.398",
+            "spread_bps": "0.5729582790879777437539589826"
+          },
+          {
+            "conditional_depth_bounds": {
+              "ask_depth_lower": "17589",
+              "ask_depth_upper_exclusive": "17594",
+              "bid_depth_lower": "20819",
+              "bid_depth_upper_exclusive": "20824",
+              "imbalance_lower": "0.08395595241194387316793793768",
+              "imbalance_upper": "0.08421628094655455184442766772",
+              "status": "CONDITIONAL_LEGACY_FLOOR",
+              "zero_floor_does_not_prove_empty": true
+            },
+            "historical_available_at": null,
+            "line": 3,
+            "snapshot_id": 123743118849,
+            "source_current_s": "1788220803.459",
+            "spread_bps": "0.01273224408985144654208165825"
+          }
+        ]
+      },
+      "R28": {
+        "conditional_max_imbalance_width": "0.0019964064683569574765422240",
+        "counts": {
+          "snapshots": 3384,
+          "top_quote_zero_quantity": 3,
+          "zero_depth_levels": 1099
+        },
+        "examples": [
+          {
+            "conditional_depth_bounds": {
+              "ask_depth_lower": "9811",
+              "ask_depth_upper_exclusive": "9816",
+              "bid_depth_lower": "2530",
+              "bid_depth_upper_exclusive": "2535",
+              "imbalance_lower": "-0.5901506560829418435120686862",
+              "imbalance_upper": "-0.5893406771423942977482585453",
+              "status": "CONDITIONAL_LEGACY_FLOOR",
+              "zero_floor_does_not_prove_empty": true
+            },
+            "historical_available_at": null,
+            "line": 1,
+            "snapshot_id": 107314025459,
+            "source_current_s": "1788220801.355",
+            "spread_bps": "0.04054270464436953053575157052"
+          },
+          {
+            "conditional_depth_bounds": {
+              "ask_depth_lower": "10441",
+              "ask_depth_upper_exclusive": "10446",
+              "bid_depth_lower": "1975",
+              "bid_depth_upper_exclusive": "1980",
+              "imbalance_lower": "-0.6819901779244827308590290637",
+              "imbalance_upper": "-0.6811850897673295225827228081",
+              "status": "CONDITIONAL_LEGACY_FLOOR",
+              "zero_floor_does_not_prove_empty": true
+            },
+            "historical_available_at": null,
+            "line": 2,
+            "snapshot_id": 107314026822,
+            "source_current_s": "1788220802.428",
+            "spread_bps": "0.2027316056545899449178227436"
+          },
+          {
+            "conditional_depth_bounds": {
+              "ask_depth_lower": "5844",
+              "ask_depth_upper_exclusive": "5849",
+              "bid_depth_lower": "2484",
+              "bid_depth_upper_exclusive": "2489",
+              "imbalance_lower": "-0.4038161526461058442337693508",
+              "imbalance_upper": "-0.4026161046441857674306972279",
+              "status": "CONDITIONAL_LEGACY_FLOOR",
+              "zero_floor_does_not_prove_empty": true
+            },
+            "historical_available_at": null,
+            "line": 3,
+            "snapshot_id": 107314030024,
+            "source_current_s": "1788220803.491",
+            "spread_bps": "0.04054944497947184347914237924"
+          }
+        ]
+      }
+    }
+  },
+  "preservation": {
+    "index_sha256": "7b518de8325f6f420207fcd49f1821a8fddbe76ffc214fea922180b006c1cf80",
+    "main_head": "cae0d2395adf2cd3905e41cb1c16748c8247c32c",
+    "qr010_evidence_files_verified": 180,
+    "qr010_manifest_sha256": "3476bdab44da4631f600c1b99ba41c96a474f05bb6a303e45a8ad868350b3338",
+    "qr010_source_files_verified": 4,
+    "staged_diff_sha256": "c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce",
+    "unstaged_diff_sha256": "35d57c81948f2de4c2c6e56db9cda60a507b06e0aa39583585cdb30505d8fc2d"
+  },
+  "public_trade_counterexample_check": {
+    "path": "targeted-trade-check.json",
+    "scope": "first ten seconds, selected discrepant prices; no public trade at BTC78538.9; no inference about unrecorded/internal classes"
+  },
+  "request_plan": {
+    "path": "request-plan.json",
+    "plan": {
+      "created_at_utc": "2026-10-28T10:26:59.633355+00:00",
+      "credentials": false,
+      "limits": {
+        "active_seconds": 1200,
+        "decompressed_bytes": 268435456,
+        "disk_bytes": 1073741824,
+        "object_bytes": 134217728,
+        "received_bytes": 536870912,
+        "request_seconds": 60,
+        "requests": 16,
+        "rss_bytes": 536870912
+      },
+      "no_redownload_qr010": true,
+      "planned_request_count": 2,
+      "redirects": false,
+      "requests": [
+        {
+          "id": "N01",
+          "kind": "orderbooks",
+          "max_body_bytes": 33554432,
+          "method": "GET",
+          "purpose": "Compare full next-hour initial state with current archive at identical source ID; distinguish boundary seed failure from cross-feed inconsistency",
+          "representative_utc": "2026090101",
+          "symbol": "BTC_USDT",
+          "url": "https://download.gatedata.org/futures_usdt/orderbooks/202609/BTC_USDT-2026090101.csv.gz"
+        },
+        {
+          "id": "N02",
+          "kind": "orderbooks",
+          "max_body_bytes": 33554432,
+          "method": "GET",
+          "purpose": "Compare full next-hour initial state with current archive at identical source ID; distinguish boundary seed failure from cross-feed inconsistency",
+          "representative_utc": "2026090101",
+          "symbol": "ETH_USDT",
+          "url": "https://download.gatedata.org/futures_usdt/orderbooks/202609/ETH_USDT-2026090101.csv.gz"
+        }
+      ],
+      "reserved_slots_unused": 14,
+      "retries": false,
+      "schema_version": 1,
+      "task_id": "QF-QR-011-MICRO-RECONCILIATION",
+      "trigger": "Existing samples cannot establish adjacent-file seed continuity; initial-only explanation already rejected by differential failures"
+    },
+    "sha256": "5502eed0b4dd1bfcac60cda0eb0f5b2f01e96fde850cf19d30796acb1bed4079"
+  },
+  "requests": [
+    {
+      "body_bytes": 24926143,
+      "complete_transport": true,
+      "completed_at_utc": "2026-10-28T10:27:17.587096+00:00",
+      "elapsed_seconds": 2.064311,
+      "error": null,
+      "header_bytes": 551,
+      "historical_receive_clock_available": false,
+      "peak_rss_bytes": 38322176,
+      "plan_sha256": "5502eed0b4dd1bfcac60cda0eb0f5b2f01e96fde850cf19d30796acb1bed4079",
+      "range_requested": "bytes=0-33554431",
+      "raw_path": "raw/N01.bin",
+      "request": {
+        "id": "N01",
+        "kind": "orderbooks",
+        "max_body_bytes": 33554432,
+        "method": "GET",
+        "purpose": "Compare full next-hour initial state with current archive at identical source ID; distinguish boundary seed failure from cross-feed inconsistency",
+        "representative_utc": "2026090101",
+        "symbol": "BTC_USDT",
+        "url": "https://download.gatedata.org/futures_usdt/orderbooks/202609/BTC_USDT-2026090101.csv.gz"
+      },
+      "requested_at_utc": "2026-10-28T10:27:15.522842+00:00",
+      "response_headers": {
+        "accept-ranges": "bytes",
+        "connection": "close",
+        "content-length": "24926143",
+        "content-range": "bytes 0-24926142/24926143",
+        "content-type": "text/csv",
+        "date": "Wed, 28 Oct 2026 10:27:15 GMT",
+        "etag": "\"ef3342f59f074cc9e1cb5984b6327170-3\"",
+        "last-modified": "Tue, 01 Sep 2026 03:46:52 GMT",
+        "server": "AmazonS3",
+        "via": "1.1 374c0c91adcf2ab1668235a83345a762.cloudfront.net (CloudFront)",
+        "x-amz-cf-id": "2lc3f5mnRdUT_K3UNCf1syNsJJjM7PyRbKJDkYfjtiQRlaiSpy3Hsg==",
+        "x-amz-cf-pop": "MEL52-P1",
+        "x-amz-server-side-encryption": "AES256",
+        "x-amz-version-id": "MjUCRTdksWi8WE_UePJrYU1iOKm0Mph6",
+        "x-cache": "Miss from cloudfront"
+      },
+      "sha256": "ab215a229488b634f7b6353abf541b9ef26f3d1e17852aa94a1e8099feaf40b5",
+      "status": 206,
+      "stopped": null
+    },
+    {
+      "body_bytes": 23704818,
+      "complete_transport": true,
+      "completed_at_utc": "2026-10-28T10:27:19.340552+00:00",
+      "elapsed_seconds": 1.748457,
+      "error": null,
+      "header_bytes": 551,
+      "historical_receive_clock_available": false,
+      "peak_rss_bytes": 39174144,
+      "plan_sha256": "5502eed0b4dd1bfcac60cda0eb0f5b2f01e96fde850cf19d30796acb1bed4079",
+      "range_requested": "bytes=0-33554431",
+      "raw_path": "raw/N02.bin",
+      "request": {
+        "id": "N02",
+        "kind": "orderbooks",
+        "max_body_bytes": 33554432,
+        "method": "GET",
+        "purpose": "Compare full next-hour initial state with current archive at identical source ID; distinguish boundary seed failure from cross-feed inconsistency",
+        "representative_utc": "2026090101",
+        "symbol": "ETH_USDT",
+        "url": "https://download.gatedata.org/futures_usdt/orderbooks/202609/ETH_USDT-2026090101.csv.gz"
+      },
+      "requested_at_utc": "2026-10-28T10:27:17.592141+00:00",
+      "response_headers": {
+        "accept-ranges": "bytes",
+        "connection": "close",
+        "content-length": "23704818",
+        "content-range": "bytes 0-23704817/23704818",
+        "content-type": "text/csv",
+        "date": "Wed, 28 Oct 2026 10:27:17 GMT",
+        "etag": "\"30594dfa51d4ac19cb4706462c5f9dd0-3\"",
+        "last-modified": "Tue, 01 Sep 2026 03:46:55 GMT",
+        "server": "AmazonS3",
+        "via": "1.1 703d430db53e570051ae469334692bb4.cloudfront.net (CloudFront)",
+        "x-amz-cf-id": "n492mvQjgr4gdBvHI_kO_a1bXTsBQb0wuKbY475n4ulyEkjhIZJrdw==",
+        "x-amz-cf-pop": "MEL52-P1",
+        "x-amz-server-side-encryption": "AES256",
+        "x-amz-version-id": ".JdU3nlsE0lKS9CXXmF5Xr.Fu68wUIDJ",
+        "x-cache": "Miss from cloudfront"
+      },
+      "sha256": "e8f58db184028c3c913bc983ebcd3605d07a18d9d7ced2fd7ed63752d3c1f24a",
+      "status": 206,
+      "stopped": null
+    }
+  ],
+  "research_disposition": {
+    "archive_depth_liquidity": "SOURCE_INVESTIGATION_ONLY_NOT_EXECUTION_CAPACITY",
+    "exact_delta_snapshot_public_book": "NOT_SUITABLE_IN_CURRENT_FORM",
+    "exact_ofi": "DEFER_PENDING_EVIDENCE",
+    "snapshot_quantity_features": "CONDITIONAL_INTERVAL_RESEARCH_ONLY_PENDING_ENCODING_SCOPE",
+    "standalone_indicative_snapshot_prices": "INCLUDE_RETROSPECTIVE_WITH_CLOCK_AND_ZERO_BEST_SIZE_FLAGS",
+    "standalone_trades": "RETAIN_CANDIDATE_FULL_CRC_COVERAGE_AND_TIMING_PENDING"
+  },
+  "resource_accounting": "Serialized HTTP headers plus received bodies; no TLS framing; timed persisted acquisition/parse/hash operations plus conservative two-second preflight; test/report/doc browser time separate",
+  "resource_limits": {
+    "active_seconds": 1200,
+    "decompressed_bytes": 268435456,
+    "disk_bytes": 1073741824,
+    "object_bytes": 134217728,
+    "received_bytes": 536870912,
+    "request_seconds": 60,
+    "requests": 16,
+    "rss_bytes": 536870912
+  },
+  "schema_version": 1,
+  "scope": {
+    "new_data_requests": 2,
+    "new_neighbor_anchor_utc": "2026-09-01T01:00:00Z",
+    "no_existing_object_redownload": true,
+    "older_control_pairs": [
+      "R02:R03",
+      "R17:R18"
+    ],
+    "original_anchor_utc": "2026-09-01T00:00:00Z",
+    "symbols": [
+      "BTC_USDT",
+      "ETH_USDT"
+    ]
+  },
+  "sources": [
+    {
+      "path": "research/qr011/reconcile_microstructure.py",
+      "sha256": "8ab9733e6225fb9330deeb588165a6d09244cd02a7993006842b5128840f1987"
+    },
+    {
+      "path": "tests/qr_research/test_qr011_micro_reconciliation.py",
+      "sha256": "86c6f7d315e3d280529637fb9969bae317d1bfd37fde2eff0a6841a74945e0ae"
+    },
+    {
+      "path": "research/qr011/reconciliation-findings.md",
+      "sha256": "ead0eaad923ae53b98611fd24964e94640144f33a4cb56b4d7d4f2efed143a2a"
+    }
+  ],
+  "task_id": "QF-QR-011-MICRO-RECONCILIATION"
+}

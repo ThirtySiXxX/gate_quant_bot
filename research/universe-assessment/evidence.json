@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "task_id": "QF-QR-UNIVERSE-ASSESS",
+  "dispatch_id": "QF-DISPATCH-20261028-QR-UNIVERSE-ASSESS-1",
+  "date": "2026-10-28",
+  "timezone": "Australia/Melbourne",
+  "status": "ASSESSMENT_COMPLETE_STOP",
+  "qr_base_commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+  "qd_review_commit": "9bb3c0ec2b57e7154a51e56d795645c273c1308d",
+  "scope": "Gate crypto-underlying USDT linear perpetuals only; coin-margined/inverse and delivery futures outside scope",
+  "recommendation": "Keep BTC/ETH baseline for current readiness work; optional preregistered PIT-qualified subset after separate authorization; all-qualified contracts not necessary now.",
+  "user_decision_pending": true,
+  "local_sources": [
+    {
+      "id": "L01",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/src/universe.py",
+      "repository_path": "src/universe.py",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "1f19c427288fd8860053083ea3ab8682cbed97ab711e7c5a9df7d0323320f4df",
+      "claim": "Current public catalogue/ticker scan and candidate scoring; not a historical PIT training catalogue.",
+      "limitation": "Read-only source inspection; no scanner execution.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L02",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/docs/universe-model.md",
+      "repository_path": "docs/universe-model.md",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "71b12f76cd6ea0020ed9cb1f145fcf20b666c06615fe466fb14481d31b469d21",
+      "claim": "Current engineering eligibility/ranking assumptions and snapshot audit intent.",
+      "limitation": "Prior public-response checks are historical documentation; this assessment did not query a catalogue.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L03",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/qr001/MODEL_CARD.md",
+      "repository_path": "research/qr001/MODEL_CARD.md",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "3ac87bdd52c575297e34c5ab6f0b71c2a57077a75740c868e93476c75230c07f",
+      "claim": "Five-asset isolated calibrated GBT training existed; promotion rejected.",
+      "limitation": "Older four-hour classification objective; not the accepted QR006 episode target or a universe comparison.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L04",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/results/qr001/README.md",
+      "repository_path": "research/results/qr001/README.md",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "d3a26b426401e6f832044cbb89f14206ce4aa5649e0673d83589084160bceddd",
+      "claim": "Primary candidate had zero ETH replay entries; asset/regime negatives and concentration retained.",
+      "limitation": "Previously viewed selected history; performance not recomputed here and not used to select new coins.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L05",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/docs/agent-reports/qr/qr-001.md",
+      "repository_path": "docs/agent-reports/qr/qr-001.md",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "f550737d9ada17cb3fe1fd07b9ca5762f69bf60cf21f0575b0e086006e4a6f09",
+      "claim": "Old QR001 completed fitting/calibration under its prior authorization and failed trading suitability.",
+      "limitation": "Does not authorize this phase to fit or promote a model.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L06",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/docs/agent-reports/qr/QF-QR-005-data-readiness.md",
+      "repository_path": "docs/agent-reports/qr/QF-QR-005-data-readiness.md",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "ad82e92e14fe1e08a7841bff69a76ca10d862e780823cd77fdfc867fbdb398f9",
+      "claim": "BTC/ETH canonical-hourly consistency passed with limitations; economic-label/training gates remained.",
+      "limitation": "Acceptance of internal consistency is not historical truth, complete execution evidence or label readiness.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L07",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/qr006/protocol.md",
+      "repository_path": "research/qr006/protocol.md",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "4957875f25168ea33d630fb63be00a712d86ac049b932bdc11f731e8b980e270",
+      "claim": "Accepted qf006-proposal-r2 execution/cost/maturity and causal evaluation semantics.",
+      "limitation": "Integer contract scope and explicit scenario assumptions require per-contract coverage verification; document acceptance is not implementation.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L08",
+      "path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/qr006/acceptance.json",
+      "repository_path": "research/qr006/acceptance.json",
+      "commit": "c7e9a2492247fa31e216035f87e8bb20cca6e6ad",
+      "sha256": "d75fb7d7274ab2da41c71cd097f27982a3d2a7d103b5c1146d84da2429f9058c",
+      "claim": "34 stable synthetic design acceptance criteria.",
+      "limitation": "No contract implementation or market-label test is run by this assessment.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L09",
+      "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/qd006/implementation-plan.md",
+      "repository_path": "research/qd006/implementation-plan.md",
+      "commit": "9bb3c0ec2b57e7154a51e56d795645c273c1308d",
+      "sha256": "199833b1d6d187efe12b153ea10772c123558844b9a9e7b4e9231fb0fb3d5838",
+      "claim": "Bounded ledger, coverage, replay and QD producer/QR independent-validator allocation.",
+      "limitation": "Future paths and separate permissions; no implementation starts here.",
+      "inspection": "read_only_no_application_import"
+    },
+    {
+      "id": "L10",
+      "path": "/Users/lzh/.codex/worktrees/qd-cache-safety/gate_quant_bot/research/qd006/review.json",
+      "repository_path": "research/qd006/review.json",
+      "commit": "9bb3c0ec2b57e7154a51e56d795645c273c1308d",
+      "sha256": "3bedf35faa9195d3dbe523d374358ae53ab546eaed7ae7ec83b0b043111dfc82",
+      "claim": "Final exact r2 protocol design ACCEPT, all 34 criteria accepted, no remaining requested revisions.",
+      "limitation": "Acceptance_scope explicitly excludes implementation-tested/data/training readiness.",
+      "inspection": "read_only_no_application_import"
+    }
+  ],
+  "web_sources": [
+    {
+      "id": "W01",
+      "url": "https://www.gate.com/docs/developers/apiv4/en/futures/",
+      "title": "Gate API perpetual futures: contract schema",
+      "publication_time": null,
+      "claim": "Current schema describes direct/inverse types, multiplier, decimal-size capability and contract states. create_time is creation; delisting_time is reduce-only; delisted_time is delisting. launch_time description says contract expiry, so first-tradable meaning is unresolved.",
+      "locator": "Contract response schema; enable_decimal, order_size_min/max, create_time, launch_time, delisting_time, delisted_time.",
+      "limitations": [
+        "Living documentation, not historical contract metadata or a current API response.",
+        "Examples do not establish BTC/ETH or all-contract current settings/count.",
+        "Minimum order quantity is not automatically a quantity increment.",
+        "No complete historical catalogue, effective metadata or arrival evidence obtained."
+      ],
+      "type": "primary_official_public_document",
+      "access_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "verification_recorded_at": "2026-10-28T11:53:29+11:00",
+      "full_source_payload_archived": false,
+      "evidence_form": "paraphrased_document_observation_not_market_data"
+    },
+    {
+      "id": "W02",
+      "url": "https://www.gate.com/announcements/article/49639",
+      "title": "enable_decimal field added to futures contract APIs",
+      "publication_time": "2026-02-02 09:53 UTC",
+      "claim": "Contract-level boolean indicates support for decimal contract size in string format; some contracts support fractional size.",
+      "locator": "New field and additional notes.",
+      "limitations": [
+        "Does not identify every contract or its complete historical rollout.",
+        "No market/contract API requested to verify a specific contract."
+      ],
+      "type": "primary_official_public_document",
+      "access_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "verification_recorded_at": "2026-10-28T11:53:29+11:00",
+      "full_source_payload_archived": false,
+      "evidence_form": "paraphrased_document_observation_not_market_data"
+    },
+    {
+      "id": "W03",
+      "url": "https://www.gate.com/announcements/article/48788",
+      "title": "USDT perpetual order quantity type changes and rollout plan",
+      "publication_time": "2025-12-18 11:53 UTC",
+      "claim": "Describes phased string/decimal migration, compatibility truncation risk and later contract-specific rollout; full enablement timing is to be separately announced.",
+      "locator": "Sections 1.1-1.3.",
+      "limitations": [
+        "A rollout plan is not proof that every contract already completed migration.",
+        "Effective per-contract quantity and raw volume semantics still need dated evidence."
+      ],
+      "type": "primary_official_public_document",
+      "access_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "verification_recorded_at": "2026-10-28T11:53:29+11:00",
+      "full_source_payload_archived": false,
+      "evidence_form": "paraphrased_document_observation_not_market_data"
+    },
+    {
+      "id": "W04",
+      "url": "https://www.gate.com/announcements/article/45399",
+      "title": "Handling the LAUSDT perpetual futures market",
+      "publication_time": "2025-06-04 13:28 UTC",
+      "claim": "Official event notice describes mark-price deviation, suspension/delisting and termination of open positions.",
+      "locator": "Event notice body.",
+      "limitations": [
+        "One event is not a universal delisting/compensation/settlement policy.",
+        "Does not establish the numeric history, causal availability or completeness of other events."
+      ],
+      "type": "primary_official_public_document",
+      "access_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "verification_recorded_at": "2026-10-28T11:53:29+11:00",
+      "full_source_payload_archived": false,
+      "evidence_form": "paraphrased_document_observation_not_market_data"
+    }
+  ],
+  "unusable_source_attempts": [
+    {
+      "url": "https://www.nber.org/papers/w25882",
+      "access_date": "2026-10-28",
+      "result": "403 Forbidden",
+      "used_for_claims": false,
+      "action": "No paper claim made; no further literature search."
+    }
+  ],
+  "search_boundary": {
+    "queries": 2,
+    "current_market_catalogue_requests": 0,
+    "market_data_downloads": 0,
+    "notes": "Search results led to canonical official pages. Mirrors, Reddit, Gate US and unrelated regulatory results were not relied upon. No further search after bounded-close instruction."
+  },
+  "source_preservation_baseline": {
+    "head": "cae0d2395adf2cd3905e41cb1c16748c8247c32c",
+    "branch": "main",
+    "staged_diff_sha256": "c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce",
+    "index_sha256": "7b518de8325f6f420207fcd49f1821a8fddbe76ffc214fea922180b006c1cf80",
+    "unstaged_diff_sha256": "35d57c81948f2de4c2c6e56db9cda60a507b06e0aa39583585cdb30505d8fc2d",
+    "status_sha256": "2a358fa935fea949c6c34fba46c5f07d6e08f6f1ed5066da7e6f12c570904649",
+    "status_entry_count": 72
+  },
+  "new_execution_counts": {
+    "implementation_files": 0,
+    "market_replays": 0,
+    "market_labels": 0,
+    "model_fits": 0,
+    "scaler_or_calibrator_fits": 0,
+    "benchmarks": 0,
+    "runtime_or_service_operations": 0
+  },
+  "limitations": [
+    "No exact current contract count or complete historical PIT universe.",
+    "No new sample adequacy, economic effect, hardware runtime or storage benchmark measured.",
+    "Existing source evidence was read and hashed, not rerun.",
+    "Quantity-decimal compatibility is a separate prospective contract-review dependency; accepted QR006 files unchanged.",
+    "Training authorization remains absent for the new protocol."
+  ]
+}

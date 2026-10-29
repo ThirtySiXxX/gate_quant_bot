@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "task": "QF-QR-004-DATA-READINESS",
+  "decision": "NOT_READY",
+  "gates": {
+    "G1": "PASS",
+    "G2": "BLOCKED",
+    "G3": "NO_BASELINE_OR_LABEL_RUNS",
+    "G4": "PROPOSED_NOT_ACCEPTED",
+    "G5": "NO_TRAINING_PERMISSION"
+  },
+  "QR_tests_passed": 23,
+  "QD_tests_independently_rerun_passed": 17,
+  "QD_latest_reported_focused_tests": 18,
+  "QD_latest_reported_full_tests": 215,
+  "QD_final_intake_commit": "6c0c5c8bf6ec91c50e4850148b847cba7ba6570e",
+  "QD_final_diagnostic_commit": "fabe12f883a803e1e98fb7d59621b561d1a92816",
+  "QR_diagnostic_code_commit": "5ec3e076d0305fe7c367af603364dc2760806d64",
+  "network_requests_by_QR": 0,
+  "total_shared_attempts": 233,
+  "total_shared_bytes": 3558243,
+  "baseline_replays": 0,
+  "model_fits": 0,
+  "artifacts": [
+    {
+      "path": "research/qr004/data-acceptance.json",
+      "bytes": 8892,
+      "sha256": "6e3d4fb99c62d0658fcb3bb779a35b072d65b29df399e9b287fa315943687862"
+    },
+    {
+      "path": "research/qr004/data-protocol.md",
+      "bytes": 12734,
+      "sha256": "4b1e732eee37c7d1461864b08ec2922bcc1ad85ad7d8f4f2af56eeef8f0775ef"
+    },
+    {
+      "path": "research/qr004/validate_history.py",
+      "bytes": 41154,
+      "sha256": "a8b90118cc164143cfb30d01d46f93d7ad46a297dbb1c481ee24687afe5a18ee"
+    },
+    {
+      "path": "tests/qr_research/test_qr004_history.py",
+      "bytes": 21070,
+      "sha256": "2442cd98d1c51c9b380f35d0cd495c4e39370d9d3dc3de4aeb309b72fd8a56b4"
+    },
+    {
+      "path": "docs/agent-reports/qr/QF-QR-004-data-readiness.md",
+      "bytes": 23984,
+      "sha256": "a8d0bcac0c620ebc75e3fe84a47418194dbd0920a5001228604d84d893eb2a81"
+    },
+    {
+      "path": "research/qr004/results/history-v1-diagnostics.json",
+      "bytes": 3293430,
+      "sha256": "1f6316d400233b7cbbad5a068257beff614e9aecb907313b15b82891cadf14fa"
+    },
+    {
+      "path": "research/qr004/results/history-v1-independent-validation.json",
+      "bytes": 257716,
+      "sha256": "c4a9174eeb0212d3bfb74530070f419788ed6164e5bb4813a00edfb094afa1e7"
+    },
+    {
+      "path": "research/qr004/results/reviewed-supplement-audit.json",
+      "bytes": 749,
+      "sha256": "d642b2a48523ac7027e6f55d0bf63a8c5c7785595f3664745491ed14b4bc544c"
+    },
+    {
+      "path": "research/qr004/results/source-check-independent-review.json",
+      "bytes": 23238,
+      "sha256": "00c406699c397635fb7244ad29127d0cf302b44d608af8d3bdd4ae8cf3043d64"
+    },
+    {
+      "path": "research/qr004/results/source-check-proposal.json",
+      "bytes": 5609,
+      "sha256": "7118d0648d3daf6c7ca37d002876b3780923113d1b90e6d1360e703aaa07406d"
+    }
+  ]
+}

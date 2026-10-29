@@ -1,0 +1,905 @@
+{
+  "schema_version": 1,
+  "status": "INDEPENDENT_CHECKS_COMPLETE_G2_STILL_BLOCKED",
+  "diagnostic_manifest_sha256": "784be6cfdece0267abd66c117ad42c15ed7783b82b59bd7e044c5c216d1780d3",
+  "proposal_sha256": "7118d0648d3daf6c7ca37d002876b3780923113d1b90e6d1360e703aaa07406d",
+  "attempt_ledger_sha256": "de4b2db848863cab25da4844191ca2dc124380760aaf8f23af0c2a1d3113156c",
+  "attempts": 11,
+  "shared_attempts": 233,
+  "bytes": 17647,
+  "shared_bytes": 3558243,
+  "original_v1_hashes_unchanged": true,
+  "comparisons": [
+    {
+      "request_id": 1,
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_4h/202301/BTC_USDT-202301.csv.gz",
+      "raw_sha256": "3a5a1350cd699634dcaf572eaa543a9375784319edee11c677f05eaf20d265aa",
+      "symbol": "BTC_USDT",
+      "kind": "candles",
+      "interval_seconds": 14400,
+      "rows": 186,
+      "same_interval_exact_matches": 185,
+      "same_interval_differences": [
+        {
+          "timestamp": 1674345600,
+          "utc": "2023-01-22T00:00:00+00:00",
+          "new_values": [
+            "1674345600",
+            "22775.5",
+            "22969.9",
+            "22600.0",
+            "22759.5",
+            "40802435"
+          ],
+          "base_values": [
+            "1674345600",
+            "22775.5",
+            "22969.9",
+            "22600",
+            "22759.5",
+            "40804278"
+          ],
+          "base_source": {
+            "source_id": "request-00017",
+            "source_row": 127
+          },
+          "new_source_row": 127,
+          "fields": [
+            "volume"
+          ]
+        }
+      ],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 2,
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_4h/202301/ETH_USDT-202301.csv.gz",
+      "raw_sha256": "6ee7cdb81f8cf326a87eaa1f951870fb0617ccb879807e038d920754a27e121a",
+      "symbol": "ETH_USDT",
+      "kind": "candles",
+      "interval_seconds": 14400,
+      "rows": 186,
+      "same_interval_exact_matches": 185,
+      "same_interval_differences": [
+        {
+          "timestamp": 1674345600,
+          "utc": "2023-01-22T00:00:00+00:00",
+          "new_values": [
+            "1674345600",
+            "1627.25",
+            "1637.4",
+            "1603.95",
+            "1622.95",
+            "7675440"
+          ],
+          "base_values": [
+            "1674345600",
+            "1627.25",
+            "1637.4",
+            "1603.95",
+            "1622.95",
+            "7678866"
+          ],
+          "base_source": {
+            "source_id": "request-00028",
+            "source_row": 127
+          },
+          "new_source_row": 127,
+          "fields": [
+            "volume"
+          ]
+        }
+      ],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 3,
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_4h/202302/ETH_USDT-202302.csv.gz",
+      "raw_sha256": "7328b717aecc1389b9db9ccd7ac13e4c57472bf40f89582bbfcea41b20a8de51",
+      "symbol": "ETH_USDT",
+      "kind": "candles",
+      "interval_seconds": 14400,
+      "rows": 168,
+      "same_interval_exact_matches": 166,
+      "same_interval_differences": [
+        {
+          "timestamp": 1676548800,
+          "utc": "2023-02-16T12:00:00+00:00",
+          "new_values": [
+            "1676548800",
+            "1683.55",
+            "1729.85",
+            "1666.0",
+            "1724.3",
+            "19399648"
+          ],
+          "base_values": [
+            "1676548800",
+            "1683.55",
+            "1729.85",
+            "1666",
+            "1724.3",
+            "19454731"
+          ],
+          "base_source": {
+            "source_id": "request-00028",
+            "source_row": 280
+          },
+          "new_source_row": 94,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1677268800,
+          "utc": "2023-02-24T20:00:00+00:00",
+          "new_values": [
+            "1677268800",
+            "1610.35",
+            "1622.35",
+            "1592.85",
+            "1607.3",
+            "4856846"
+          ],
+          "base_values": [
+            "1677268800",
+            "1610.35",
+            "1622.35",
+            "1592.75",
+            "1607.3",
+            "4856846"
+          ],
+          "base_source": {
+            "source_id": "request-00028",
+            "source_row": 330
+          },
+          "new_source_row": 144,
+          "fields": [
+            "low"
+          ]
+        }
+      ],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 4,
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_1d/202512/BTC_USDT-202512.csv.gz",
+      "raw_sha256": "6a8f032c3bba29f70086ff245ef550cb0f5402d55f0693fb0298f4d2f71808ad",
+      "symbol": "BTC_USDT",
+      "kind": "candles",
+      "interval_seconds": 86400,
+      "rows": 31,
+      "same_interval_exact_matches": 19,
+      "same_interval_differences": [
+        {
+          "timestamp": 1764547200,
+          "utc": "2025-12-01T00:00:00+00:00",
+          "new_values": [
+            "1764547200",
+            "90322.1",
+            "90387.7",
+            "83780.3",
+            "86230.7",
+            "1466953344"
+          ],
+          "base_values": [
+            "1764547200",
+            "90322.1",
+            "90387.7",
+            "83780.3",
+            "86230.7",
+            "1467144422"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 67
+          },
+          "new_source_row": 1,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1764633600,
+          "utc": "2025-12-02T00:00:00+00:00",
+          "new_values": [
+            "1764633600",
+            "86230.8",
+            "92265",
+            "86116.4",
+            "91246",
+            "1127022407"
+          ],
+          "base_values": [
+            "1764633600",
+            "86230.8",
+            "92265",
+            "86116.4",
+            "91246",
+            "1127030442"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 68
+          },
+          "new_source_row": 2,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1765324800,
+          "utc": "2025-12-10T00:00:00+00:00",
+          "new_values": [
+            "1765324800",
+            "92638.2",
+            "94435.3",
+            "91521",
+            "91975.1",
+            "868521251"
+          ],
+          "base_values": [
+            "1765324800",
+            "92638.2",
+            "94435.3",
+            "91521",
+            "91975.1",
+            "868524488"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 76
+          },
+          "new_source_row": 10,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1765411200,
+          "utc": "2025-12-11T00:00:00+00:00",
+          "new_values": [
+            "1765411200",
+            "91975.1",
+            "93548",
+            "89204.5",
+            "92472",
+            "972233982"
+          ],
+          "base_values": [
+            "1765411200",
+            "91975.1",
+            "93548",
+            "89204.5",
+            "92473.9",
+            "972233978"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 77
+          },
+          "new_source_row": 11,
+          "fields": [
+            "close",
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1765497600,
+          "utc": "2025-12-12T00:00:00+00:00",
+          "new_values": [
+            "1765497600",
+            "92469.1",
+            "92716.5",
+            "89427.2",
+            "90229.1",
+            "769949345"
+          ],
+          "base_values": [
+            "1765497600",
+            "92469.1",
+            "92716.5",
+            "89427.2",
+            "90229.1",
+            "769952420"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 78
+          },
+          "new_source_row": 12,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1765929600,
+          "utc": "2025-12-17T00:00:00+00:00",
+          "new_values": [
+            "1765929600",
+            "87820.9",
+            "90328",
+            "85282.6",
+            "86201.9",
+            "1026586636"
+          ],
+          "base_values": [
+            "1765929600",
+            "87820.9",
+            "90328",
+            "85282.6",
+            "86201.9",
+            "1026591506"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 83
+          },
+          "new_source_row": 17,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1766016000,
+          "utc": "2025-12-18T00:00:00+00:00",
+          "new_values": [
+            "1766016000",
+            "86204",
+            "89452.7",
+            "84408.8",
+            "85456.5",
+            "1103601205"
+          ],
+          "base_values": [
+            "1766016000",
+            "86204",
+            "89452.7",
+            "84408.8",
+            "85456.5",
+            "1103603621"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 84
+          },
+          "new_source_row": 18,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1766361600,
+          "utc": "2025-12-22T00:00:00+00:00",
+          "new_values": [
+            "1766361600",
+            "88620",
+            "90552.3",
+            "87853",
+            "88580.5",
+            "842788461"
+          ],
+          "base_values": [
+            "1766361600",
+            "88620",
+            "90552.3",
+            "87853",
+            "88580.5",
+            "842793119"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 88
+          },
+          "new_source_row": 22,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1766620800,
+          "utc": "2025-12-25T00:00:00+00:00",
+          "new_values": [
+            "1766620800",
+            "87623",
+            "88550",
+            "86892.8",
+            "87185.9",
+            "361137282"
+          ],
+          "base_values": [
+            "1766620800",
+            "87623",
+            "88550",
+            "86892.8",
+            "87185.8",
+            "361130106"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 91
+          },
+          "new_source_row": 25,
+          "fields": [
+            "close",
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1766707200,
+          "utc": "2025-12-26T00:00:00+00:00",
+          "new_values": [
+            "1766707200",
+            "87185.8",
+            "89522.9",
+            "86555.5",
+            "87316",
+            "747614745"
+          ],
+          "base_values": [
+            "1766707200",
+            "87185.8",
+            "89522.9",
+            "86555.5",
+            "87316",
+            "747929041"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 92
+          },
+          "new_source_row": 26,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1766966400,
+          "utc": "2025-12-29T00:00:00+00:00",
+          "new_values": [
+            "1766966400",
+            "87904.5",
+            "90342.5",
+            "86753.9",
+            "87200.1",
+            "942183283"
+          ],
+          "base_values": [
+            "1766966400",
+            "87904.5",
+            "90342.5",
+            "86753.9",
+            "87200.1",
+            "942296058"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 95
+          },
+          "new_source_row": 29,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1767139200,
+          "utc": "2025-12-31T00:00:00+00:00",
+          "new_values": [
+            "1767139200",
+            "88453.6",
+            "89175.2",
+            "87210.1",
+            "87617.7",
+            "517702076"
+          ],
+          "base_values": [
+            "1767139200",
+            "88453.6",
+            "89175.2",
+            "87210.1",
+            "87617.7",
+            "517702078"
+          ],
+          "base_source": {
+            "source_id": "request-00027",
+            "source_row": 97
+          },
+          "new_source_row": 31,
+          "fields": [
+            "volume"
+          ]
+        }
+      ],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 5,
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_1d/202512/ETH_USDT-202512.csv.gz",
+      "raw_sha256": "88cfa9c8ff45674a0b61d776c3f6b9a4cb0ac8637cefbbdb1dd23f01ff6f4396",
+      "symbol": "ETH_USDT",
+      "kind": "candles",
+      "interval_seconds": 86400,
+      "rows": 31,
+      "same_interval_exact_matches": 24,
+      "same_interval_differences": [
+        {
+          "timestamp": 1765065600,
+          "utc": "2025-12-07T00:00:00+00:00",
+          "new_values": [
+            "1765065600",
+            "3036.62",
+            "3148.86",
+            "2913.15",
+            "3058.49",
+            "239897861"
+          ],
+          "base_values": [
+            "1765065600",
+            "3036.62",
+            "3148.86",
+            "2913.15",
+            "3058.49",
+            "241271148"
+          ],
+          "base_source": {
+            "source_id": "request-00038",
+            "source_row": 73
+          },
+          "new_source_row": 7,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1765324800,
+          "utc": "2025-12-10T00:00:00+00:00",
+          "new_values": [
+            "1765324800",
+            "3316.53",
+            "3446",
+            "3286.94",
+            "3322.48",
+            "285312980"
+          ],
+          "base_values": [
+            "1765324800",
+            "3316.53",
+            "3446",
+            "3286.94",
+            "3322.47",
+            "285312604"
+          ],
+          "base_source": {
+            "source_id": "request-00038",
+            "source_row": 76
+          },
+          "new_source_row": 10,
+          "fields": [
+            "close",
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1765843200,
+          "utc": "2025-12-16T00:00:00+00:00",
+          "new_values": [
+            "1765843200",
+            "2963.44",
+            "2982.43",
+            "2875",
+            "2960.59",
+            "238397937"
+          ],
+          "base_values": [
+            "1765843200",
+            "2963.44",
+            "2982.43",
+            "2875",
+            "2960.59",
+            "238398272"
+          ],
+          "base_source": {
+            "source_id": "request-00038",
+            "source_row": 82
+          },
+          "new_source_row": 16,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1765929600,
+          "utc": "2025-12-17T00:00:00+00:00",
+          "new_values": [
+            "1765929600",
+            "2960.62",
+            "3029.24",
+            "2788.6",
+            "2832.52",
+            "304124665"
+          ],
+          "base_values": [
+            "1765929600",
+            "2960.62",
+            "3029.24",
+            "2788.6",
+            "2832.52",
+            "304121405"
+          ],
+          "base_source": {
+            "source_id": "request-00038",
+            "source_row": 83
+          },
+          "new_source_row": 17,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1766016000,
+          "utc": "2025-12-18T00:00:00+00:00",
+          "new_values": [
+            "1766016000",
+            "2832.52",
+            "2997.53",
+            "2773",
+            "2827.13",
+            "296555677"
+          ],
+          "base_values": [
+            "1766016000",
+            "2832.52",
+            "2997.53",
+            "2773",
+            "2827.13",
+            "296555088"
+          ],
+          "base_source": {
+            "source_id": "request-00038",
+            "source_row": 84
+          },
+          "new_source_row": 18,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1767052800,
+          "utc": "2025-12-30T00:00:00+00:00",
+          "new_values": [
+            "1767052800",
+            "2936.3",
+            "3008.89",
+            "2918.18",
+            "2972.24",
+            "192060239"
+          ],
+          "base_values": [
+            "1767052800",
+            "2936.3",
+            "3008.89",
+            "2918.18",
+            "2972.24",
+            "192071014"
+          ],
+          "base_source": {
+            "source_id": "request-00038",
+            "source_row": 96
+          },
+          "new_source_row": 30,
+          "fields": [
+            "volume"
+          ]
+        },
+        {
+          "timestamp": 1767139200,
+          "utc": "2025-12-31T00:00:00+00:00",
+          "new_values": [
+            "1767139200",
+            "2972.25",
+            "3026",
+            "2957",
+            "2970.81",
+            "155312290"
+          ],
+          "base_values": [
+            "1767139200",
+            "2972.25",
+            "3026",
+            "2957",
+            "2970.81",
+            "155317098"
+          ],
+          "base_source": {
+            "source_id": "request-00038",
+            "source_row": 97
+          },
+          "new_source_row": 31,
+          "fields": [
+            "volume"
+          ]
+        }
+      ],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 6,
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=BTC_USDT&interval=1h&from=1792886400&to=1792972799",
+      "raw_sha256": "5fd7b0123d4a3eaf041cb92c39dc4cd04358b803ebfdeaaf04ffea6612d19d23",
+      "symbol": "BTC_USDT",
+      "kind": "candles",
+      "interval_seconds": 3600,
+      "rows": 24,
+      "same_interval_exact_matches": 24,
+      "same_interval_differences": [],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 7,
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=BTC_USDT&interval=1d&from=1792886400&to=1792972799",
+      "raw_sha256": "6955e77e843c08f33742be765edb7122dd8b36eafa20c3bbcb87677efe3f5192",
+      "symbol": "BTC_USDT",
+      "kind": "candles",
+      "interval_seconds": 86400,
+      "rows": 1,
+      "same_interval_exact_matches": 1,
+      "same_interval_differences": [],
+      "hourly_aggregate_differences": [
+        {
+          "timestamp": 1792886400,
+          "utc": "2026-10-25T00:00:00+00:00",
+          "new_values": [
+            "1792886400",
+            "80847.9",
+            "80991.5",
+            "79803.1",
+            "80122.5",
+            "295588887"
+          ],
+          "hourly_aggregate": [
+            "1792886400",
+            "80847.9",
+            "80991.5",
+            "79803.1",
+            "80117.1",
+            "295589905"
+          ],
+          "fields": [
+            "close",
+            "volume"
+          ]
+        }
+      ],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 8,
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=ETH_USDT&interval=1h&from=1792281600&to=1792367999",
+      "raw_sha256": "e9998371a6719ebea29ba1d72d4edd0765945fa6ce3097af0dd7bfa08863a548",
+      "symbol": "ETH_USDT",
+      "kind": "candles",
+      "interval_seconds": 3600,
+      "rows": 24,
+      "same_interval_exact_matches": 24,
+      "same_interval_differences": [],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 9,
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=ETH_USDT&interval=1d&from=1792281600&to=1792367999",
+      "raw_sha256": "13d63c5cccc1a629ca665f9cede98d97a056a7209d065285fb86dde6c7efcea1",
+      "symbol": "ETH_USDT",
+      "kind": "candles",
+      "interval_seconds": 86400,
+      "rows": 1,
+      "same_interval_exact_matches": 1,
+      "same_interval_differences": [],
+      "hourly_aggregate_differences": [
+        {
+          "timestamp": 1792281600,
+          "utc": "2026-10-18T00:00:00+00:00",
+          "new_values": [
+            "1792281600",
+            "2401.48",
+            "2430",
+            "2327.53",
+            "2409.14",
+            "190467680"
+          ],
+          "hourly_aggregate": [
+            "1792281600",
+            "2401.48",
+            "2430",
+            "2327.53",
+            "2409.23",
+            "190467869"
+          ],
+          "fields": [
+            "close",
+            "volume"
+          ]
+        }
+      ],
+      "funding_rows_exact": null
+    },
+    {
+      "request_id": 10,
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&from=1789948800&to=1790064003&limit=10",
+      "raw_sha256": "a390cd0ef25fdbdcfdda9f5497c698f405dbf4f492f834f38502068aa2c1549d",
+      "symbol": "BTC_USDT",
+      "kind": "funding",
+      "interval_seconds": 0,
+      "rows": 5,
+      "same_interval_exact_matches": 5,
+      "same_interval_differences": [],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": [
+        [
+          "1790064000",
+          "0.0001"
+        ],
+        [
+          "1790035201",
+          "0.000083"
+        ],
+        [
+          "1790006401",
+          "-0.000019"
+        ],
+        [
+          "1789977601",
+          "0.000069"
+        ],
+        [
+          "1789948801",
+          "0.000039"
+        ]
+      ]
+    },
+    {
+      "request_id": 11,
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=ETH_USDT&from=1789948800&to=1790064003&limit=10",
+      "raw_sha256": "48bc8cb74790ac31a1f609539478722ce31e5126b3ae60e627c98007d2ec9062",
+      "symbol": "ETH_USDT",
+      "kind": "funding",
+      "interval_seconds": 0,
+      "rows": 5,
+      "same_interval_exact_matches": 5,
+      "same_interval_differences": [],
+      "hourly_aggregate_differences": [],
+      "funding_rows_exact": [
+        [
+          "1790064000",
+          "0.0001"
+        ],
+        [
+          "1790035203",
+          "0.000066"
+        ],
+        [
+          "1790006403",
+          "-0.000047"
+        ],
+        [
+          "1789977603",
+          "-0.000038"
+        ],
+        [
+          "1789948803",
+          "0.000027"
+        ]
+      ]
+    }
+  ],
+  "baseline_replays": 0,
+  "model_fits": 0,
+  "further_requests": 0,
+  "limitation": "A repeat agreeing with one existing source does not establish historical truth or authorize a route change."
+}

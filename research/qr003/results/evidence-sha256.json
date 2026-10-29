@@ -1,0 +1,138 @@
+{
+  "code_commit": "5e15b67",
+  "files": {
+    "research/runs/qr003-phase-a/BTC_USDT-allow_all-ledger-audit.json": {
+      "bytes": 46082,
+      "sha256": "d82383c7f2cd51462fe11544d880d715b62affefed4e64135f732504a8d6e55c"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-allow_all-opportunities.json": {
+      "bytes": 1380447,
+      "sha256": "d612cf238fc31360806f43481b2ceaed181e0ad98822fbe502026c5ce5c767c6"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-allow_all.json": {
+      "bytes": 10054564,
+      "sha256": "bde30dbf16264e6f369b14ca43161413c54ecd66f414e711c286038a88ed8996"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-quality.json": {
+      "bytes": 2405,
+      "sha256": "a1809f487b281ef7a1e2ccc8e9d1851a07a945e7d4e3875c40aa264859a558a4"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip-selection.json": {
+      "bytes": 361,
+      "sha256": "28698197d823ed18aec799b4dc350d4f945a25d1593c70612386463cb37d14bd"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_1-ledger-audit.json": {
+      "bytes": 46680,
+      "sha256": "e24096e758e8fa9bcb8462be0b4f3444881494c657eafeba5eb58fb2df83dbb4"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_1-opportunities.json": {
+      "bytes": 1384679,
+      "sha256": "a450c0ab6b12abd51559b05b79854ead2abe5aa1a16de57473f0f6d655605688"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_1.json": {
+      "bytes": 10064193,
+      "sha256": "c98c91f94a2ddffca8aa5143515f31f87a427568c0f717abf77585b754f9d7cc"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_2-ledger-audit.json": {
+      "bytes": 46715,
+      "sha256": "1370a9d6f98b57457faccfbc24718d2365e2fa6721e7860554340d5bb6c4b26a"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_2-opportunities.json": {
+      "bytes": 1384678,
+      "sha256": "136402223b67b49433e183dc9895169ff476bf13e674718f0e7a480e5eaf735d"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_2.json": {
+      "bytes": 10063993,
+      "sha256": "85c23988f628ccc2700031de404c66d51f5fa418d91547c043ca117db5519a4c"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_3-ledger-audit.json": {
+      "bytes": 46716,
+      "sha256": "f79ff0fa5586b227cdc16cae64721ee802ab98d966d41228db7798dffd128963"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_3-opportunities.json": {
+      "bytes": 1384678,
+      "sha256": "5eb1546faf48ceb56e4c8108c1f8d85204cccfee57643f61ecc81c2238f2f172"
+    },
+    "research/runs/qr003-phase-a/BTC_USDT-skip_fold_3.json": {
+      "bytes": 10064019,
+      "sha256": "0388fe6a592488c2233bbbd45ec9e3666bd0e11d807201ecace5d6f1e50099eb"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-allow_all-ledger-audit.json": {
+      "bytes": 44705,
+      "sha256": "1b999fa987702ae02d57e448b75b09eb7fb60e9e4f94591b8862c2d017c3809a"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-allow_all-opportunities.json": {
+      "bytes": 1374222,
+      "sha256": "b9dcdd03304f1382f5ddd5232662f0967e755952de46994538506e9275afc120"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-allow_all.json": {
+      "bytes": 10108552,
+      "sha256": "3931446cefe538b695f2c51a2703a16e3316b440eb1070e999decb3bbb0e5f6c"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-quality.json": {
+      "bytes": 2405,
+      "sha256": "ca4bc28e758e38604bc7246ba8646841aadce59319662d502cec3ab2c6bbfdc3"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip-selection.json": {
+      "bytes": 361,
+      "sha256": "2de4d5dc2e1b943b3a91f56d2f091cb3c4e934d4529c1fc69f888d01c2021779"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_1-ledger-audit.json": {
+      "bytes": 45314,
+      "sha256": "50b5348198463cdc183ce66855ddbc59ce2a009a55e0e52c01c813ffd239e5b8"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_1-opportunities.json": {
+      "bytes": 1378509,
+      "sha256": "367889dc49728fb00af1282e780731f641c8e58fb0e2c70795ba829eaf710b07"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_1.json": {
+      "bytes": 10119582,
+      "sha256": "e2b8a2ffeb025a6b9201bb3a63a8faf64cdbbdbbe94256242f8eb1997f819128"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_2-ledger-audit.json": {
+      "bytes": 45292,
+      "sha256": "7a6a3ab92f03ba3de5f668b66773c208881dcaf7830b019f5a06583deb2cbd38"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_2-opportunities.json": {
+      "bytes": 1378453,
+      "sha256": "900bc597033e8cdb9a2c93cebed0c0c5563602e7db33ead80376a26cd259185f"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_2.json": {
+      "bytes": 10118166,
+      "sha256": "9b1efd4b88f982ddb12fa8099b6d4a69cf90818d4019e01d00e1971cf57c7c38"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_3-ledger-audit.json": {
+      "bytes": 45304,
+      "sha256": "3cb3a85851400c01ce74fe9bc8e8cded48777b1b2922ffca2f934f8e33085790"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_3-opportunities.json": {
+      "bytes": 1378453,
+      "sha256": "3732fe38362d1b877e5f740647b975272976577b8322f2b7e67a82aa816a1cdf"
+    },
+    "research/runs/qr003-phase-a/ETH_USDT-skip_fold_3.json": {
+      "bytes": 10117816,
+      "sha256": "ba565e9b4b253d6ef7c8497ba1725d1b65dfe3af6f533b2f426a21f10804a518"
+    },
+    "research/runs/qr003-phase-a/input-spec.json": {
+      "bytes": 27319,
+      "sha256": "fd179a1d36fd1286ba2feddb960393844cfca729a9615d8d27a6b60fd2ba177d"
+    },
+    "research/runs/qr003-phase-a/ledger-summary.json": {
+      "bytes": 390023,
+      "sha256": "0db9410845940bf01b1081db6e57ba087c968292591881ed61f71e67f25273b4"
+    }
+  },
+  "outputs": {
+    "archived-eth-preflight.json": "6910a8c8480fa1ed87531df696be2e7a92bd26e43dbad72d27b61e9663e4066f",
+    "btc-input-quality.json": "a1809f487b281ef7a1e2ccc8e9d1851a07a945e7d4e3875c40aa264859a558a4",
+    "candidate-events.json": "8a7ee7300eb19cc57f7079d2b4aa74201020e7079aa8995fcc6bb3a524e5c0a3",
+    "carry-readiness.json": "ad6b5bf407383f29aec02e90420c80c31974408617066b027da99e924e27040c",
+    "eth-input-quality.json": "e00945d3db9c9b3bcbe11f35ef5335b23d6ba97c612be8793f4b61a624ed7fe5",
+    "phase-a-input-spec-pending-probe.json": "0e8da4567ded43de7cc95c76ece6354eef3e040b0fc0475892312e1ae7c87b60",
+    "phase-a-input-spec.json": "fd179a1d36fd1286ba2feddb960393844cfca729a9615d8d27a6b60fd2ba177d",
+    "position-labels.json": "cb06938e83b7b1ec6e5553429d57968668819d041c62d49e2362f18b0e8e6e71",
+    "summary.json": "86f6d5f78c8cfc9598ada8e6c3c406c5d4267d3215dff38ed740738531ea7b40"
+  },
+  "qd_probe_commit": "1a2bf705050a0fdc4f47da7e834487f3c37cd800",
+  "run_root": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/runs/qr003-phase-a"
+}

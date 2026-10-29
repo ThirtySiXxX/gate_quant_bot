@@ -1,0 +1,789 @@
+{
+  "actual_usage": {
+    "acquisition_to_manifest_wall_envelope_seconds": 612.705269,
+    "active_seconds": 289.9087294570636,
+    "disk_bytes": 561928885,
+    "evidence_disk_bytes": 561928885,
+    "evidence_files": 28,
+    "largest_compressed_object_bytes": 295034158,
+    "largest_decompressed_object_bytes": 1243902808,
+    "longest_request_seconds": 8.794920874992386,
+    "peak_recorded_rss_bytes": 62849024,
+    "received_bytes": 486461306,
+    "requests": 4,
+    "source_report_git_metadata_reserve_bytes": 1048576,
+    "test_seconds": 0.035203584004193544
+  },
+  "aggregate_verification": {
+    "all_passed": true,
+    "symbols": {
+      "BTC_USDT": {
+        "all_direction_and_historical_clocks_null": true,
+        "decision_eligible_minutes": 0,
+        "hours_verified": 720,
+        "max_minute_trade_count": 24891,
+        "min_minute_trade_count": 2,
+        "minutes_verified": 43200,
+        "retrospective_structural_pass_minutes": 43200,
+        "source_line_partitions_exact": true,
+        "source_rows_reconciled": 20458327,
+        "total_observed_contracts": "18287292734"
+      },
+      "ETH_USDT": {
+        "all_direction_and_historical_clocks_null": true,
+        "decision_eligible_minutes": 0,
+        "hours_verified": 720,
+        "max_minute_trade_count": 37389,
+        "min_minute_trade_count": 7,
+        "minutes_verified": 43200,
+        "retrospective_structural_pass_minutes": 43200,
+        "source_line_partitions_exact": true,
+        "source_rows_reconciled": 30927796,
+        "total_observed_contracts": "6246062318.6"
+      }
+    },
+    "verified_at_utc": "2026-10-28T11:05:44.758814+00:00"
+  },
+  "analyses": {
+    "BTC_USDT": {
+      "aggressor_status": "UNKNOWN_ARCHIVE_TO_PUBLIC_FEED_BINDING",
+      "availability_scenario": null,
+      "calendar_hours": 720,
+      "calendar_minutes": 43200,
+      "code_sha256": "396aef1a0abc3c56ca8ff9590d03d86153f824faf01f21c55af12ad8409716c9",
+      "complete_transport_and_gzip": true,
+      "compressed_bytes": 195488136,
+      "counts": {
+        "fractional_quantity_rows": 0,
+        "id_adjacent_steps_gt1": 0,
+        "physical_rows": 20458327,
+        "raw_negative_sign_rows": 10241980,
+        "raw_positive_sign_rows": 10216347,
+        "unobserved_integer_ids_between_adjacent_rows": 0,
+        "valid_rows": 20458327
+      },
+      "end_boundary_without_observed_trade_s": "1.052902",
+      "error": null,
+      "exchange_event_completeness_proven": false,
+      "first_event_s": "1788220801.740144",
+      "gzip": {
+        "decompressed_bytes": 809365829,
+        "gzip_complete": true,
+        "physical_lines": 20458327
+      },
+      "hours_sha256": "4c0c55e0d49a256a1238f72fc503d31a56a90f63a02bcaf2c2ccf6480ec3b83d",
+      "identity_resolution_complete": true,
+      "last_event_s": "1790812798.947098",
+      "maximum_interevent_gap_s": "48.674222",
+      "minutes_sha256": "dd45db6efc473414f1ee50c67256735611e5883059e2a992b5ca27362322e1d3",
+      "minutes_with_records": 43200,
+      "no_observed_trade_minutes": 0,
+      "schema_version": 1,
+      "signed_flow_emitted": false,
+      "source_sha256": "21bc62a4ced59aee8cb5f593a8bc783e3b8c67ed1076a54ca8891aa25e9959cc",
+      "start_boundary_without_observed_trade_s": "1.740144",
+      "symbol": "BTC_USDT",
+      "training_ready": false
+    },
+    "ETH_USDT": {
+      "aggressor_status": "UNKNOWN_ARCHIVE_TO_PUBLIC_FEED_BINDING",
+      "availability_scenario": null,
+      "calendar_hours": 720,
+      "calendar_minutes": 43200,
+      "code_sha256": "396aef1a0abc3c56ca8ff9590d03d86153f824faf01f21c55af12ad8409716c9",
+      "complete_transport_and_gzip": true,
+      "compressed_bytes": 295034158,
+      "counts": {
+        "fractional_quantity_rows": 17457765,
+        "id_adjacent_steps_gt1": 0,
+        "physical_rows": 30927796,
+        "raw_negative_sign_rows": 15292828,
+        "raw_positive_sign_rows": 15634968,
+        "unobserved_integer_ids_between_adjacent_rows": 0,
+        "valid_rows": 30927796
+      },
+      "end_boundary_without_observed_trade_s": "0.904629",
+      "error": null,
+      "exchange_event_completeness_proven": false,
+      "first_event_s": "1788220800.389037",
+      "gzip": {
+        "decompressed_bytes": 1243902808,
+        "gzip_complete": true,
+        "physical_lines": 30927796
+      },
+      "hours_sha256": "2fd9ba0c692657cbe434af65ffbd5e74d1b74eca7cb28ecd23017d0529f5827f",
+      "identity_resolution_complete": true,
+      "last_event_s": "1790812799.095371",
+      "maximum_interevent_gap_s": "49.570751",
+      "minutes_sha256": "5e070a674fa7a60dd8ed51819343b787810bcf8abf3ed96e90f6c894bf628cf4",
+      "minutes_with_records": 43200,
+      "no_observed_trade_minutes": 0,
+      "schema_version": 1,
+      "signed_flow_emitted": false,
+      "source_sha256": "4cb318a4fee52f68089046d05937bd9406bbf7e548521c20d65b7bd78099981b",
+      "start_boundary_without_observed_trade_s": "0.389037",
+      "symbol": "ETH_USDT",
+      "training_ready": false
+    }
+  },
+  "availability": {
+    "decision_eligible": false,
+    "historical_available_at": null,
+    "historical_receive_at": null,
+    "scenario": null,
+    "structural_mask": "Retrospective full-file structural quality, not causal availability or exchange event completeness"
+  },
+  "base_commit": "3b97e4f56588574e9fd7231e8ffac88c2952378f",
+  "branch": "codex/qr-validation-baseline",
+  "calendar": {
+    "final_decision_owner": "human",
+    "pilot_role": "structural sample only",
+    "qr_candidate_not_approved": "2024 train / 2025-H1 validation / 2025-H2 test",
+    "split_applied": false,
+    "user_prior_direction": "2024 train / 2025 validation"
+  },
+  "calibrator_fit_performed": false,
+  "collector_started": false,
+  "created_at_utc": "2026-10-28T11:10:18.571993+00:00",
+  "dispatch_id": "QF-DISPATCH-20261028-QR012-COMPLETE-TRADES-1",
+  "disposition": {
+    "aggressor_binding": "UNKNOWN_ARCHIVE_TO_PUBLIC_FEED_BINDING",
+    "exact_public_l2": "QR011_FINDINGS_UNCHANGED",
+    "exchange_event_completeness": "NOT_INDEPENDENTLY_PROVEN",
+    "historical_availability": "UNKNOWN",
+    "neutral_minute_hour_aggregates": "PASS_BOTH",
+    "object_transport_crc": "PASS_BOTH",
+    "training": "NOT_READY"
+  },
+  "documentation_browsing": {
+    "conclusion": "Public feed taker-sign convention is documented; archive-specific producer mapping/internal-event inclusion not established.",
+    "find_commands": 3,
+    "official_sources": [
+      "https://www.gate.com/announcements/article/21688",
+      "https://www.gate.com/docs/developers/futures/ws/en/",
+      "https://www.gate.com/docs/futures/ws/en/index.html",
+      "https://www.gate.com/docs/developers/futures/ws/zh_CN/"
+    ],
+    "open_commands": 2,
+    "search_queries": 2,
+    "separate_from_data_http_receipts": true,
+    "tool_calls": 2
+  },
+  "evidence_inventory": [
+    {
+      "bytes": 1474,
+      "path": "derived/BTC_USDT/analysis.json",
+      "sha256": "6842cfa525c310f5f8354c18e394468edf8a5617caa86c17f70e6c95c6609a0f"
+    },
+    {
+      "bytes": 140718,
+      "path": "derived/BTC_USDT/hours.json",
+      "sha256": "4c0c55e0d49a256a1238f72fc503d31a56a90f63a02bcaf2c2ccf6480ec3b83d"
+    },
+    {
+      "bytes": 59,
+      "path": "derived/BTC_USDT/identity-anomalies.json",
+      "sha256": "b96cf8977dd02cccfe6ec00c5a9771acbd93d8a8c02cdd08c4bc6f24b7f27a22"
+    },
+    {
+      "bytes": 35405579,
+      "path": "derived/BTC_USDT/minutes.jsonl",
+      "sha256": "dd45db6efc473414f1ee50c67256735611e5883059e2a992b5ca27362322e1d3"
+    },
+    {
+      "bytes": 105,
+      "path": "derived/BTC_USDT/quality-issues.json",
+      "sha256": "0d6c23ecc929a95517126494c07b2b5790416033d656b157da7143b185590717"
+    },
+    {
+      "bytes": 1482,
+      "path": "derived/ETH_USDT/analysis.json",
+      "sha256": "bf27870f14f554bd39444a2f547dffdffe6b3994fa50bd797f35c88f4bc70a44"
+    },
+    {
+      "bytes": 142041,
+      "path": "derived/ETH_USDT/hours.json",
+      "sha256": "2fd9ba0c692657cbe434af65ffbd5e74d1b74eca7cb28ecd23017d0529f5827f"
+    },
+    {
+      "bytes": 59,
+      "path": "derived/ETH_USDT/identity-anomalies.json",
+      "sha256": "b96cf8977dd02cccfe6ec00c5a9771acbd93d8a8c02cdd08c4bc6f24b7f27a22"
+    },
+    {
+      "bytes": 35568151,
+      "path": "derived/ETH_USDT/minutes.jsonl",
+      "sha256": "5e070a674fa7a60dd8ed51819343b787810bcf8abf3ed96e90f6c894bf628cf4"
+    },
+    {
+      "bytes": 105,
+      "path": "derived/ETH_USDT/quality-issues.json",
+      "sha256": "0d6c23ecc929a95517126494c07b2b5790416033d656b157da7143b185590717"
+    },
+    {
+      "bytes": 123,
+      "path": "objects/BTC_USDT.json",
+      "sha256": "3e76303c4f6998887d2cbfb87ff8c97fd4784d000f26ffc1de28854bad1b0849"
+    },
+    {
+      "bytes": 123,
+      "path": "objects/ETH_USDT.json",
+      "sha256": "6190d673851d96994d439ce679cd8cb03b6621a7ccf534e7076d2be1d125d9a3"
+    },
+    {
+      "bytes": 75,
+      "path": "operations/aggregate-check.json",
+      "sha256": "6cfc5fca0d14a8cd2a9d7193a08007a2613b89b156e5eb5e27aacb09dc96e38a"
+    },
+    {
+      "bytes": 74,
+      "path": "operations/analysis-BTC_USDT.json",
+      "sha256": "ed12cecc0e025199a67d9c52069a2cb167d5a20c35240ebbee95c8c27ac2a6c0"
+    },
+    {
+      "bytes": 74,
+      "path": "operations/analysis-ETH_USDT.json",
+      "sha256": "96d8a5e4c712c6fd11ff07cf7f65c6ecd9f0d00a258bd307ab9093a57e683edf"
+    },
+    {
+      "bytes": 74,
+      "path": "operations/preservation.json",
+      "sha256": "0391e3091d409291b9db3c49d189bfc97efa20ee530236f3f5a33942adf1475c"
+    },
+    {
+      "bytes": 65536,
+      "path": "raw/BTC_USDT-probe.bin",
+      "sha256": "7acaaa49c846fc990a79e49b4fed6ca05a331655c4da03093d0218e9981ad4d2"
+    },
+    {
+      "bytes": 195488136,
+      "path": "raw/BTC_USDT-tail.bin",
+      "sha256": "21bc62a4ced59aee8cb5f593a8bc783e3b8c67ed1076a54ca8891aa25e9959cc"
+    },
+    {
+      "bytes": 65536,
+      "path": "raw/ETH_USDT-probe.bin",
+      "sha256": "68d5f47b7872e22d2bf116155fafa575c9f367260979f2bea12f04aec860604a"
+    },
+    {
+      "bytes": 295034158,
+      "path": "raw/ETH_USDT-tail.bin",
+      "sha256": "4cb318a4fee52f68089046d05937bd9406bbf7e548521c20d65b7bd78099981b"
+    },
+    {
+      "bytes": 1854,
+      "path": "receipts/BTC_USDT-probe.json",
+      "sha256": "bebc2f1f16d96fba3c3ab107dc3339f5b789a87f300b5d09b0ae43ec7261fb73"
+    },
+    {
+      "bytes": 1915,
+      "path": "receipts/BTC_USDT-tail.json",
+      "sha256": "91f182f9c8ad9bebce0d50033fdbf91804bd8332bfb773a079f56b595847ed96"
+    },
+    {
+      "bytes": 1855,
+      "path": "receipts/ETH_USDT-probe.json",
+      "sha256": "60bf203c8c09058e9643f4d09aba9d8c566ad0d7b4be88f464eeebd7d93b6ca7"
+    },
+    {
+      "bytes": 1914,
+      "path": "receipts/ETH_USDT-tail.json",
+      "sha256": "77da2ce429fc9a7d60d534f91e33c5edeb39ca5210f0a3c8f610a5162cf55ebb"
+    },
+    {
+      "bytes": 3978,
+      "path": "request-plan.json",
+      "sha256": "af82581cd9f88dc1cbf610e9a871c8e236fde8d8bfe668be846a35983ef74e73"
+    },
+    {
+      "bytes": 988,
+      "path": "validation/aggregate-check.json",
+      "sha256": "a36a32318585391c7a4211b2f934ae1b4ff13acd7f79c35d01a225e4c7331ea9"
+    },
+    {
+      "bytes": 885,
+      "path": "validation/preservation.json",
+      "sha256": "0cce4ae13cf94b4e5ba26270f487661b6234670fd948c5f43512e95cdbd15871"
+    },
+    {
+      "bytes": 1814,
+      "path": "validation/tests-1.json",
+      "sha256": "59b07e7fe00694ab9e1490199f3fc3351e969223d32a24d72708aec2f83fe7f6"
+    }
+  ],
+  "evidence_root_absolute": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr012/tmp",
+  "evidence_root_relative": "research/.data/qr012/tmp",
+  "model_fit_performed": false,
+  "next_steps": [
+    "Archive-specific aggressor/event-scope evidence if directional features are required",
+    "Reviewed historical availability or explicitly approved simulated timing",
+    "Prospectively scoped contiguous BTC/ETH coverage and final human calendar choice",
+    "QD shared-account cost/label acceptance",
+    "Report all readiness gates, then ask human before any fitting"
+  ],
+  "offline_validation": {
+    "elapsed_seconds": 0.035203584004193544,
+    "errors": 0,
+    "failures": 0,
+    "network_blocked": true,
+    "output": "test_boundary_and_empty_minute_do_not_claim_no_trading (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_boundary_and_empty_minute_do_not_claim_no_trading) ... ok\ntest_exact_decimal_and_invalid_fields (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_exact_decimal_and_invalid_fields) ... ok\ntest_exact_duplicates_and_conflicts_are_explicit (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_exact_duplicates_and_conflicts_are_explicit) ... ok\ntest_partial_transport_is_rejected_before_analysis (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_partial_transport_is_rejected_before_analysis) ... ok\ntest_range_response_requires_exact_version_and_status (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_range_response_requires_exact_version_and_status) ... ok\ntest_tail_assembly_and_unexpected_full_body_rejection (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_tail_assembly_and_unexpected_full_body_rejection) ... ok\ntest_truncated_gzip_cannot_pass_full_source_mask (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_truncated_gzip_cannot_pass_full_source_mask) ... ok\ntest_unknown_side_never_becomes_pressure (tests.qr_research.test_qr012_complete_trades.CompleteTradesTests.test_unknown_side_never_becomes_pressure) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 0.012s\n\nOK\n",
+    "passed": true,
+    "source_sha256": "396aef1a0abc3c56ca8ff9590d03d86153f824faf01f21c55af12ad8409716c9",
+    "test_sha256": "eb2d1496135d77727644dd8f7141a00237ecb132f433cf2a5d5524d453437ed3",
+    "tests_run": 8
+  },
+  "operations": [
+    {
+      "elapsed_seconds": 0.41720949998125434,
+      "path": "operations/aggregate-check.json",
+      "peak_rss_bytes": 34897920
+    },
+    {
+      "elapsed_seconds": 109.93821262498386,
+      "path": "operations/analysis-BTC_USDT.json",
+      "peak_rss_bytes": 62816256
+    },
+    {
+      "elapsed_seconds": 163.35971666616388,
+      "path": "operations/analysis-ETH_USDT.json",
+      "peak_rss_bytes": 62849024
+    },
+    {
+      "elapsed_seconds": 0.3374751249793917,
+      "path": "operations/preservation.json",
+      "peak_rss_bytes": 35504128
+    }
+  ],
+  "preservation": {
+    "all_verified": true,
+    "checked_at_utc": "2026-10-28T11:03:28.965427+00:00",
+    "frozen_tasks": {
+      "qr010": {
+        "evidence_files_verified": 180,
+        "manifest_sha256": "3476bdab44da4631f600c1b99ba41c96a474f05bb6a303e45a8ad868350b3338",
+        "source_files_verified": 4
+      },
+      "qr011": {
+        "evidence_files_verified": 33,
+        "manifest_sha256": "403613fc98461f2137620bb36bfbc89cf7423f51346927390306442861a8dd92",
+        "source_files_verified": 3
+      }
+    },
+    "primary_source": {
+      "index_sha256": "7b518de8325f6f420207fcd49f1821a8fddbe76ffc214fea922180b006c1cf80",
+      "main_head": "cae0d2395adf2cd3905e41cb1c16748c8247c32c",
+      "staged_diff_sha256": "c8dbdd039635d01220423816909d3b87f04bfe550ee8c79efc078bc6a1e144ce",
+      "unstaged_diff_sha256": "35d57c81948f2de4c2c6e56db9cda60a507b06e0aa39583585cdb30505d8fc2d"
+    },
+    "source_index_staging_preserved": true
+  },
+  "qd_dependency": "QD retains QF-QD-009-STREAM-REPAIR-1; runtime adapter and shared account labels require separate reviewed handoff",
+  "request_plan": {
+    "aggressor_status": "UNKNOWN_ARCHIVE_TO_PUBLIC_FEED_BINDING",
+    "assets": [
+      {
+        "expected_etag": "\"169b6e8bbb9185e51ce6ca6d61e45a64\"",
+        "expected_s3_version": "4RAfw7Jv5MV39wzwEJjL5S7FrmgiQHhy",
+        "expected_size": 195488136,
+        "old_id": "R25",
+        "prefix_bytes": 2097152,
+        "prefix_path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr010/historical-micro/raw/R25.bin",
+        "prefix_sha256": "0a86d2e5be377466b05be13ed7ad3bdc062aca9693f3263805f740a8424ef950",
+        "requests": [
+          {
+            "id": "BTC_USDT-probe",
+            "kind": "probe",
+            "max_body_bytes": 65536,
+            "method": "GET",
+            "range": [
+              0,
+              65535
+            ]
+          },
+          {
+            "id": "BTC_USDT-tail",
+            "kind": "tail",
+            "max_body_bytes": 193390984,
+            "method": "GET",
+            "range": [
+              2097152,
+              195488135
+            ]
+          },
+          {
+            "condition": "Only if probe/tail cannot be safely continued and remaining byte/time/disk budget suffices",
+            "id": "BTC_USDT-full",
+            "kind": "full",
+            "max_body_bytes": 402653184,
+            "method": "GET",
+            "range": null
+          }
+        ],
+        "symbol": "BTC_USDT",
+        "url": "https://download.gatedata.org/futures_usdt/trades/202609/BTC_USDT-202609.csv.gz"
+      },
+      {
+        "expected_etag": "\"fbd00e1492cdf36d4ac6d610615285fa\"",
+        "expected_s3_version": "MSLmiQbjmYZ7oMpWzPZaB.wjYQIyVRAl",
+        "expected_size": 295034158,
+        "old_id": "R30",
+        "prefix_bytes": 2097152,
+        "prefix_path": "/Users/lzh/.codex/worktrees/qr-validation-baseline/gate_quant_bot/research/.data/qr010/historical-micro/raw/R30.bin",
+        "prefix_sha256": "3061d6918637ecb579806603c5f1057b5e79828df7706fdbc97aceb41e905cb3",
+        "requests": [
+          {
+            "id": "ETH_USDT-probe",
+            "kind": "probe",
+            "max_body_bytes": 65536,
+            "method": "GET",
+            "range": [
+              0,
+              65535
+            ]
+          },
+          {
+            "id": "ETH_USDT-tail",
+            "kind": "tail",
+            "max_body_bytes": 292937006,
+            "method": "GET",
+            "range": [
+              2097152,
+              295034157
+            ]
+          },
+          {
+            "condition": "Only if probe/tail cannot be safely continued and remaining byte/time/disk budget suffices",
+            "id": "ETH_USDT-full",
+            "kind": "full",
+            "max_body_bytes": 402653184,
+            "method": "GET",
+            "range": null
+          }
+        ],
+        "symbol": "ETH_USDT",
+        "url": "https://download.gatedata.org/futures_usdt/trades/202609/ETH_USDT-202609.csv.gz"
+      }
+    ],
+    "availability_at": null,
+    "base_commit": "3b97e4f56588574e9fd7231e8ffac88c2952378f",
+    "calendar": "2026-09 UTC only; no training split applied; prior QR calendar remains candidate pending user decision",
+    "conditional_full_requests": 2,
+    "created_at_utc": "2026-10-28T10:53:41.972218+00:00",
+    "etag_is_not_md5": true,
+    "limits": {
+      "active_seconds": 1800,
+      "decompressed_bytes": 2147483648,
+      "disk_bytes": 2147483648,
+      "minimum_free_bytes": 10737418240,
+      "object_bytes": 402653184,
+      "received_bytes": 671088640,
+      "request_seconds": 60,
+      "requests": 12,
+      "rss_bytes": 536870912,
+      "test_seconds": 120
+    },
+    "no_credentials": true,
+    "no_redirects": true,
+    "no_retries": true,
+    "partial_rule": "Keep failed/partial bytes and receipts; never count partial as complete or reset budget",
+    "planned_normal_requests": 4,
+    "schema_gate": "PASS_FOUR_FIELDS_TIMESTAMP_ID_PRICE_SIGNED_CONTRACTS_ON_FROZEN_PREFIX_AND_OFFICIAL_ARCHIVE_FORMAT",
+    "schema_version": 1,
+    "task_id": "QF-QR-012-COMPLETE-TRADES",
+    "unassigned_slots": 6,
+    "version_rule": "Reuse prefix only after local SHA, exact strong ETag, S3 version, total length and first64KiB byte match; every tail response repeats version checks"
+  },
+  "request_plan_sha256": "af82581cd9f88dc1cbf610e9a871c8e236fde8d8bfe668be846a35983ef74e73",
+  "requests": [
+    {
+      "body_bytes": 65536,
+      "complete_transport": true,
+      "completed_at_utc": "2026-10-28T11:00:06.041073+00:00",
+      "elapsed_seconds": 0.174365125130862,
+      "error": null,
+      "header_bytes": 548,
+      "peak_rss_bytes": 40009728,
+      "plan_sha256": "af82581cd9f88dc1cbf610e9a871c8e236fde8d8bfe668be846a35983ef74e73",
+      "raw_path": "raw/BTC_USDT-probe.bin",
+      "received_body_sha256": "7acaaa49c846fc990a79e49b4fed6ca05a331655c4da03093d0218e9981ad4d2",
+      "request": {
+        "id": "BTC_USDT-probe",
+        "kind": "probe",
+        "max_body_bytes": 65536,
+        "method": "GET",
+        "range": [
+          0,
+          65535
+        ]
+      },
+      "request_headers": {
+        "Accept-Encoding": "identity",
+        "If-Match": "\"169b6e8bbb9185e51ce6ca6d61e45a64\"",
+        "Range": "bytes=0-65535",
+        "User-Agent": "QR012-public-trades-pilot/1"
+      },
+      "request_id": "BTC_USDT-probe",
+      "requested_at_utc": "2026-10-28T11:00:05.866724+00:00",
+      "response_headers": {
+        "age": "6009",
+        "connection": "close",
+        "content-length": "65536",
+        "content-range": "bytes 0-65535/195488136",
+        "content-type": "application/octet-stream",
+        "date": "Wed, 28 Oct 2026 09:19:57 GMT",
+        "etag": "\"169b6e8bbb9185e51ce6ca6d61e45a64\"",
+        "last-modified": "Thu, 01 Oct 2026 04:54:03 GMT",
+        "server": "AmazonS3",
+        "via": "1.1 27a6a82433446264563fb43cf9cbd98a.cloudfront.net (CloudFront)",
+        "x-amz-cf-id": "bcBG0R_enC_vgMljx6Nu0mxp8kvVXKLkOTnNZCUPc0Vs7j8WugZfqA==",
+        "x-amz-cf-pop": "MEL52-P1",
+        "x-amz-server-side-encryption": "AES256",
+        "x-amz-version-id": "4RAfw7Jv5MV39wzwEJjL5S7FrmgiQHhy",
+        "x-cache": "Hit from cloudfront"
+      },
+      "reused_prefix_bytes": 0,
+      "status": 206,
+      "stored_bytes": 65536,
+      "stored_sha256": "7acaaa49c846fc990a79e49b4fed6ca05a331655c4da03093d0218e9981ad4d2",
+      "url": "https://download.gatedata.org/futures_usdt/trades/202609/BTC_USDT-202609.csv.gz"
+    },
+    {
+      "body_bytes": 193390984,
+      "complete_transport": true,
+      "completed_at_utc": "2026-10-28T11:00:12.858769+00:00",
+      "elapsed_seconds": 6.8160314578562975,
+      "error": null,
+      "header_bytes": 574,
+      "peak_rss_bytes": 43057152,
+      "plan_sha256": "af82581cd9f88dc1cbf610e9a871c8e236fde8d8bfe668be846a35983ef74e73",
+      "raw_path": "raw/BTC_USDT-tail.bin",
+      "received_body_sha256": "e1eba548dbddfb49d1e5c3f5cf95939fe1a65aa2506c67d2a4dd171a19912af6",
+      "request": {
+        "id": "BTC_USDT-tail",
+        "kind": "tail",
+        "max_body_bytes": 193390984,
+        "method": "GET",
+        "range": [
+          2097152,
+          195488135
+        ]
+      },
+      "request_headers": {
+        "Accept-Encoding": "identity",
+        "If-Match": "\"169b6e8bbb9185e51ce6ca6d61e45a64\"",
+        "Range": "bytes=2097152-195488135",
+        "User-Agent": "QR012-public-trades-pilot/1"
+      },
+      "request_id": "BTC_USDT-tail",
+      "requested_at_utc": "2026-10-28T11:00:06.042910+00:00",
+      "response_headers": {
+        "accept-ranges": "bytes",
+        "connection": "close",
+        "content-length": "193390984",
+        "content-range": "bytes 2097152-195488135/195488136",
+        "content-type": "application/octet-stream",
+        "date": "Wed, 28 Oct 2026 11:00:07 GMT",
+        "etag": "\"169b6e8bbb9185e51ce6ca6d61e45a64\"",
+        "last-modified": "Thu, 01 Oct 2026 04:54:03 GMT",
+        "server": "AmazonS3",
+        "via": "1.1 2bad0f8721f684d2cecfa70e6a0c741a.cloudfront.net (CloudFront)",
+        "x-amz-cf-id": "JocJ2FyiHznV8XMCQGWeQb_jtnn2eyLM5hpCwSpCTuFp0--VcOC8yQ==",
+        "x-amz-cf-pop": "MEL52-P1",
+        "x-amz-server-side-encryption": "AES256",
+        "x-amz-version-id": "4RAfw7Jv5MV39wzwEJjL5S7FrmgiQHhy",
+        "x-cache": "Miss from cloudfront"
+      },
+      "reused_prefix_bytes": 2097152,
+      "status": 206,
+      "stored_bytes": 195488136,
+      "stored_sha256": "21bc62a4ced59aee8cb5f593a8bc783e3b8c67ed1076a54ca8891aa25e9959cc",
+      "url": "https://download.gatedata.org/futures_usdt/trades/202609/BTC_USDT-202609.csv.gz"
+    },
+    {
+      "body_bytes": 65536,
+      "complete_transport": true,
+      "completed_at_utc": "2026-10-28T11:00:13.063566+00:00",
+      "elapsed_seconds": 0.0707980829756707,
+      "error": null,
+      "header_bytes": 548,
+      "peak_rss_bytes": 43057152,
+      "plan_sha256": "af82581cd9f88dc1cbf610e9a871c8e236fde8d8bfe668be846a35983ef74e73",
+      "raw_path": "raw/ETH_USDT-probe.bin",
+      "received_body_sha256": "68d5f47b7872e22d2bf116155fafa575c9f367260979f2bea12f04aec860604a",
+      "request": {
+        "id": "ETH_USDT-probe",
+        "kind": "probe",
+        "max_body_bytes": 65536,
+        "method": "GET",
+        "range": [
+          0,
+          65535
+        ]
+      },
+      "request_headers": {
+        "Accept-Encoding": "identity",
+        "If-Match": "\"fbd00e1492cdf36d4ac6d610615285fa\"",
+        "Range": "bytes=0-65535",
+        "User-Agent": "QR012-public-trades-pilot/1"
+      },
+      "request_id": "ETH_USDT-probe",
+      "requested_at_utc": "2026-10-28T11:00:12.992789+00:00",
+      "response_headers": {
+        "age": "6010",
+        "connection": "close",
+        "content-length": "65536",
+        "content-range": "bytes 0-65535/295034158",
+        "content-type": "application/octet-stream",
+        "date": "Wed, 28 Oct 2026 09:20:03 GMT",
+        "etag": "\"fbd00e1492cdf36d4ac6d610615285fa\"",
+        "last-modified": "Thu, 01 Oct 2026 04:53:42 GMT",
+        "server": "AmazonS3",
+        "via": "1.1 fae26dfbbe5624af35914afb4b9e6b96.cloudfront.net (CloudFront)",
+        "x-amz-cf-id": "ZLsddddcc4_6rmArgY8jMUV0HjNd3EWZulQhizeW6TrtusltfkFsKw==",
+        "x-amz-cf-pop": "MEL52-P1",
+        "x-amz-server-side-encryption": "AES256",
+        "x-amz-version-id": "MSLmiQbjmYZ7oMpWzPZaB.wjYQIyVRAl",
+        "x-cache": "Hit from cloudfront"
+      },
+      "reused_prefix_bytes": 0,
+      "status": 206,
+      "stored_bytes": 65536,
+      "stored_sha256": "68d5f47b7872e22d2bf116155fafa575c9f367260979f2bea12f04aec860604a",
+      "url": "https://download.gatedata.org/futures_usdt/trades/202609/ETH_USDT-202609.csv.gz"
+    },
+    {
+      "body_bytes": 292937006,
+      "complete_transport": true,
+      "completed_at_utc": "2026-10-28T11:00:21.860580+00:00",
+      "elapsed_seconds": 8.794920874992386,
+      "error": null,
+      "header_bytes": 574,
+      "peak_rss_bytes": 43057152,
+      "plan_sha256": "af82581cd9f88dc1cbf610e9a871c8e236fde8d8bfe668be846a35983ef74e73",
+      "raw_path": "raw/ETH_USDT-tail.bin",
+      "received_body_sha256": "99fe9616871ddf4ff10887245dbb3e4c1fedc6f1f5f2a73289bdfd7d95848c04",
+      "request": {
+        "id": "ETH_USDT-tail",
+        "kind": "tail",
+        "max_body_bytes": 292937006,
+        "method": "GET",
+        "range": [
+          2097152,
+          295034157
+        ]
+      },
+      "request_headers": {
+        "Accept-Encoding": "identity",
+        "If-Match": "\"fbd00e1492cdf36d4ac6d610615285fa\"",
+        "Range": "bytes=2097152-295034157",
+        "User-Agent": "QR012-public-trades-pilot/1"
+      },
+      "request_id": "ETH_USDT-tail",
+      "requested_at_utc": "2026-10-28T11:00:13.065957+00:00",
+      "response_headers": {
+        "accept-ranges": "bytes",
+        "connection": "close",
+        "content-length": "292937006",
+        "content-range": "bytes 2097152-295034157/295034158",
+        "content-type": "application/octet-stream",
+        "date": "Wed, 28 Oct 2026 11:00:14 GMT",
+        "etag": "\"fbd00e1492cdf36d4ac6d610615285fa\"",
+        "last-modified": "Thu, 01 Oct 2026 04:53:42 GMT",
+        "server": "AmazonS3",
+        "via": "1.1 c2e8cf5b8be4f21e5cb43183b2749484.cloudfront.net (CloudFront)",
+        "x-amz-cf-id": "DZhJSLSLc5mxT2Rz0Uu7EVKSrl1HEea9Wo_4Pe3GYjYS23qvM9mnHA==",
+        "x-amz-cf-pop": "MEL52-P1",
+        "x-amz-server-side-encryption": "AES256",
+        "x-amz-version-id": "MSLmiQbjmYZ7oMpWzPZaB.wjYQIyVRAl",
+        "x-cache": "Miss from cloudfront"
+      },
+      "reused_prefix_bytes": 2097152,
+      "status": 206,
+      "stored_bytes": 295034158,
+      "stored_sha256": "4cb318a4fee52f68089046d05937bd9406bbf7e548521c20d65b7bd78099981b",
+      "url": "https://download.gatedata.org/futures_usdt/trades/202609/ETH_USDT-202609.csv.gz"
+    }
+  ],
+  "research_local_record_schema": 1,
+  "resource_accounting": "Received application bodies plus serialized headers, excluding TLS framing. active_seconds sums persisted request and operation timers. Conservative wall envelope includes inter-command idle and final inventory hashing outside those timers. Test time is separate. Evidence disk includes raw, partial, receipts, derived and validation; an additional 1 MiB reserve bounds the five tracked artifacts and local Git metadata.",
+  "resource_limit_checks": {
+    "active_time": true,
+    "conservative_wall_envelope": true,
+    "decompressed_bytes": true,
+    "disk_with_reserve": true,
+    "object_bytes": true,
+    "offline_test_time": true,
+    "peak_rss": true,
+    "per_request_time": true,
+    "received_bytes": true,
+    "request_count": true
+  },
+  "resource_limits": {
+    "active_seconds": 1800,
+    "decompressed_bytes": 2147483648,
+    "disk_bytes": 2147483648,
+    "minimum_free_bytes": 10737418240,
+    "object_bytes": 402653184,
+    "received_bytes": 671088640,
+    "request_seconds": 60,
+    "requests": 12,
+    "rss_bytes": 536870912,
+    "test_seconds": 120
+  },
+  "reused_prefixes": [
+    {
+      "bytes": 2097152,
+      "proof": "local complete prefix SHA plus exact strong ETag/S3 version/length and 64KiB byte overlap, repeated tail header checks",
+      "qr010_receipt": "R25",
+      "sha256": "0a86d2e5be377466b05be13ed7ad3bdc062aca9693f3263805f740a8424ef950",
+      "symbol": "BTC_USDT"
+    },
+    {
+      "bytes": 2097152,
+      "proof": "local complete prefix SHA plus exact strong ETag/S3 version/length and 64KiB byte overlap, repeated tail header checks",
+      "qr010_receipt": "R30",
+      "sha256": "3061d6918637ecb579806603c5f1057b5e79828df7706fdbc97aceb41e905cb3",
+      "symbol": "ETH_USDT"
+    }
+  ],
+  "scaler_fit_performed": false,
+  "schema_version": 1,
+  "scope": {
+    "exclusive_end_utc": "2026-10-01T00:00:00Z",
+    "multi_year_sufficiency_established": false,
+    "new_currencies": false,
+    "selection": "Fixed calendar pilot; no strategy outcomes used",
+    "start_utc": "2026-09-01T00:00:00Z",
+    "symbols": [
+      "BTC_USDT",
+      "ETH_USDT"
+    ]
+  },
+  "shared_runtime_contract_changed": false,
+  "sources": [
+    {
+      "path": "research/qr012/complete_trades_pilot.py",
+      "sha256": "396aef1a0abc3c56ca8ff9590d03d86153f824faf01f21c55af12ad8409716c9"
+    },
+    {
+      "path": "tests/qr_research/test_qr012_complete_trades.py",
+      "sha256": "eb2d1496135d77727644dd8f7141a00237ecb132f433cf2a5d5524d453437ed3"
+    },
+    {
+      "path": "research/qr012/complete-trades-findings.md",
+      "sha256": "0dc5bb69e769c90eaae65a44eb16d532e5d4424b735f80e7a7d7bf9b1240e425"
+    }
+  ],
+  "strategy_account_replay_performed": false,
+  "task_id": "QF-QR-012-COMPLETE-TRADES",
+  "training_requires_fresh_human_confirmation": true,
+  "units": {
+    "count": "observed source rows, with explicit deduplication",
+    "historical_multiplier_applied": false,
+    "instrument_id": "gate:usdt:<BTC_USDT|ETH_USDT>",
+    "price": "USDT per base unit",
+    "quantities_rounded": false,
+    "quantity": "signed contracts in source; absolute contracts in neutral aggregates",
+    "timestamp": "UTC Unix seconds, exact decimal source"
+  }
+}

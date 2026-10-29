@@ -1,0 +1,324 @@
+{
+  "strategy_config": {
+    "execution_timing": {
+      "symbols": [
+        "ETH_USDT"
+      ],
+      "require_trend_agreement": true,
+      "trail_atr": 3.0
+    },
+    "initial_capital_usdt": 10000,
+    "position_sizing_mode": "fixed_margin",
+    "ml_model_path": "",
+    "ml_min_entry_probability": 0.45,
+    "trend_weight": 0.8,
+    "carry_weight": 0.2,
+    "short_trend_weight": 0.6,
+    "main_trend_weight": 0.4,
+    "ewmac_horizons": [
+      [
+        8,
+        32
+      ],
+      [
+        16,
+        64
+      ],
+      [
+        32,
+        128
+      ],
+      [
+        64,
+        256
+      ]
+    ],
+    "ewma_lambda": 0.94,
+    "forecast_scale_lookback": 1500,
+    "forecast_scale_min_periods": 100,
+    "fdm_max": 2.5,
+    "fdm_lookback": 500,
+    "fdm_min_periods": 60,
+    "regime_ema_fast": 21,
+    "regime_ema_slow": 55,
+    "regime_ema_long": 200,
+    "regime_adx_period": 14,
+    "regime_adx_trend_threshold": 15,
+    "regime_oppose_dampen": 0.5,
+    "regime_range_dampen": 0.8,
+    "carry_scale_lookback": 1000,
+    "target_annual_vol_pct": 10,
+    "covariance_interval": "4h",
+    "max_leverage": 4,
+    "max_instrument_exposure_pct": 55,
+    "max_correlated_group_exposure_pct": 60,
+    "no_trade_buffer_pct": 25,
+    "exit_buffer_multiplier": 3,
+    "invert_direction": false,
+    "manage_existing_positions": false,
+    "auto_close_removed_symbols": false,
+    "tick_interval_sec": 900,
+    "short_trend_interval": "1h",
+    "main_trend_interval": "4h",
+    "regime_interval": "1d",
+    "min_bars_short": 300,
+    "min_bars_main": 300,
+    "min_bars_regime": 220,
+    "adaptive_risk_enabled": true,
+    "adaptive_er_lookback": 24,
+    "adaptive_er_full_risk": 0.35,
+    "adaptive_vol_fast_lambda": 0.75,
+    "adaptive_vol_slow_lambda": 0.995,
+    "adaptive_vol_ratio_start": 1.1,
+    "adaptive_vol_ratio_full": 1.6,
+    "adaptive_max_risk_reduction": 0.65,
+    "adaptive_multiplier_smoothing_span": 4,
+    "adaptive_fast_reduce_threshold": 0.45,
+    "depth_guard_enabled": true,
+    "depth_levels": 20,
+    "max_entry_spread_bps": 5,
+    "max_entry_slippage_bps": 8,
+    "min_depth_fill_ratio": 1
+  },
+  "cost_config": {
+    "taker_fee_rate": 0.0005,
+    "maker_fee_rate": 0.0002,
+    "use_account_fee_rate": true,
+    "use_contract_fee_rate": false,
+    "slippage_bps": 2,
+    "use_live_funding_rate": true
+  },
+  "risk_config": {
+    "initial_capital_usdt": 10000,
+    "risk_per_trade_pct": 5,
+    "max_leverage": 100,
+    "max_concurrent_positions": 6,
+    "max_portfolio_heat_pct": 20,
+    "daily_loss_limit_enabled": false,
+    "daily_loss_limit_pct": 8,
+    "max_correlated_positions": 3,
+    "atr_stop_multiplier": 1.6,
+    "atr_trail_multiplier": 2.2,
+    "time_stop_bars": 8,
+    "tp1_r_multiple": 1,
+    "tp1_close_ratio": 0.5
+  },
+  "initial_capital": 10000,
+  "start_ts": 1785319200.0,
+  "end_ts": 1793088000.0,
+  "contract": {
+    "funding_rate_indicative": "0.000094",
+    "mark_price_round": "0.01",
+    "funding_offset": 0,
+    "in_delisting": false,
+    "risk_limit_base": "300000",
+    "interest_rate": "0.0003",
+    "index_price": "2302.58",
+    "order_price_round": "0.01",
+    "order_size_min": 0,
+    "enable_decimal": true,
+    "ref_rebate_rate": "0.2",
+    "name": "ETH_USDT",
+    "ref_discount_rate": "0",
+    "order_price_deviate": "0.03",
+    "maintenance_rate": "0.003",
+    "mark_type": "index",
+    "funding_interval": 28800,
+    "type": "direct",
+    "risk_limit_step": "1499700000",
+    "enable_bonus": true,
+    "enable_credit": true,
+    "leverage_min": "1",
+    "funding_rate": "0.000094",
+    "last_price": "2301.8",
+    "mark_price": "2301.93",
+    "order_size_max": 10000000,
+    "funding_next_apply": 1793088000,
+    "short_users": 10360,
+    "config_change_time": 1788234058,
+    "create_time": 1574208000,
+    "trade_size": 186746188943,
+    "position_size": 37272254,
+    "long_users": 24390,
+    "quanto_multiplier": "0.01",
+    "funding_impact_value": "20000",
+    "leverage_max": "200",
+    "cross_leverage_default": "10",
+    "risk_limit_max": "1500000000",
+    "maker_fee_rate": "-0.0001",
+    "taker_fee_rate": "0.00075",
+    "orders_limit": 100,
+    "trade_id": 954005707,
+    "orderbook_id": 112439785633,
+    "funding_cap_ratio": "0.75",
+    "voucher_leverage": "2",
+    "is_pre_market": false,
+    "status": "trading",
+    "launch_time": 1574208000,
+    "enable_circuit_breaker": false,
+    "funding_rate_limit": "0.003",
+    "market_order_slip_ratio": "0.01",
+    "market_order_size_max": "8000000",
+    "contract_type": ""
+  },
+  "risk_limit_tiers": [
+    {
+      "maintenance_rate": "0.003",
+      "tier": 1,
+      "initial_rate": "0.005",
+      "leverage_max": "200",
+      "risk_limit": "300000",
+      "deduction": "0"
+    },
+    {
+      "maintenance_rate": "0.0035",
+      "tier": 2,
+      "initial_rate": "0.006666",
+      "leverage_max": "150.01",
+      "risk_limit": "500000",
+      "deduction": "150"
+    },
+    {
+      "maintenance_rate": "0.004",
+      "tier": 3,
+      "initial_rate": "0.008",
+      "leverage_max": "125",
+      "risk_limit": "1000000",
+      "deduction": "400"
+    },
+    {
+      "maintenance_rate": "0.0045",
+      "tier": 4,
+      "initial_rate": "0.00909",
+      "leverage_max": "110.01",
+      "risk_limit": "2000000",
+      "deduction": "900"
+    },
+    {
+      "maintenance_rate": "0.005",
+      "tier": 5,
+      "initial_rate": "0.01",
+      "leverage_max": "100",
+      "risk_limit": "3000000",
+      "deduction": "1900"
+    },
+    {
+      "maintenance_rate": "0.007",
+      "tier": 6,
+      "initial_rate": "0.0125",
+      "leverage_max": "80",
+      "risk_limit": "5000000",
+      "deduction": "7900"
+    },
+    {
+      "maintenance_rate": "0.0085",
+      "tier": 7,
+      "initial_rate": "0.016666",
+      "leverage_max": "60",
+      "risk_limit": "10000000",
+      "deduction": "15400"
+    },
+    {
+      "maintenance_rate": "0.01",
+      "tier": 8,
+      "initial_rate": "0.02",
+      "leverage_max": "50",
+      "risk_limit": "15000000",
+      "deduction": "30400"
+    },
+    {
+      "maintenance_rate": "0.012",
+      "tier": 9,
+      "initial_rate": "0.025",
+      "leverage_max": "40",
+      "risk_limit": "20000000",
+      "deduction": "60400"
+    },
+    {
+      "maintenance_rate": "0.016",
+      "tier": 10,
+      "initial_rate": "0.033333",
+      "leverage_max": "30",
+      "risk_limit": "30000000",
+      "deduction": "140400"
+    },
+    {
+      "maintenance_rate": "0.02",
+      "tier": 11,
+      "initial_rate": "0.04",
+      "leverage_max": "25",
+      "risk_limit": "50000000",
+      "deduction": "260400"
+    },
+    {
+      "maintenance_rate": "0.025",
+      "tier": 12,
+      "initial_rate": "0.05",
+      "leverage_max": "20",
+      "risk_limit": "70000000",
+      "deduction": "510400"
+    },
+    {
+      "maintenance_rate": "0.03",
+      "tier": 13,
+      "initial_rate": "0.066666",
+      "leverage_max": "15",
+      "risk_limit": "100000000",
+      "deduction": "860400"
+    },
+    {
+      "maintenance_rate": "0.05",
+      "tier": 14,
+      "initial_rate": "0.1",
+      "leverage_max": "10",
+      "risk_limit": "200000000",
+      "deduction": "2860400"
+    },
+    {
+      "maintenance_rate": "0.07",
+      "tier": 15,
+      "initial_rate": "0.133333",
+      "leverage_max": "7.5",
+      "risk_limit": "300000000",
+      "deduction": "6860400"
+    },
+    {
+      "maintenance_rate": "0.1",
+      "tier": 16,
+      "initial_rate": "0.2",
+      "leverage_max": "5",
+      "risk_limit": "500000000",
+      "deduction": "15860400"
+    },
+    {
+      "maintenance_rate": "0.12",
+      "tier": 17,
+      "initial_rate": "0.25",
+      "leverage_max": "4",
+      "risk_limit": "700000000",
+      "deduction": "25860400"
+    },
+    {
+      "maintenance_rate": "0.25",
+      "tier": 18,
+      "initial_rate": "0.5",
+      "leverage_max": "2",
+      "risk_limit": "1000000000",
+      "deduction": "116860400"
+    },
+    {
+      "maintenance_rate": "0.5",
+      "tier": 19,
+      "initial_rate": "0.95",
+      "leverage_max": "1.05",
+      "risk_limit": "1500000000",
+      "deduction": "366860400"
+    }
+  ],
+  "contract_snapshot_asof": "2026-10-27T07:16:05.542349+00:00",
+  "expected_return_pct": -7.1200851031201635,
+  "expected_final_equity": 9287.991489687984,
+  "expected_executions": 64,
+  "expected_execution_sha256": "c305f8477860be4b3fddbfef1b52113b163caa8b7a6fd5c39c689dcbdcafda1e",
+  "source": "Prior public/simulated ETH research replay; not account/config data"
+}

@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "state": "PROPOSED_FOR_QD_WITHIN_CURRENT_DATA_TASK",
+  "manifest_sha256": "5f5319175c42ba4a82e25ca128ac58ae3b71be4b82911fd7935cfa3678407cfd",
+  "selection": "fixed discrepancy categories and earliest affected dates, plus last funding offset cluster; no return/performance selection",
+  "requests": [
+    {
+      "id": 1,
+      "kind": "archive",
+      "symbol": "BTC_USDT",
+      "interval": "4h",
+      "month": "202301",
+      "reason": "earliest BTC volume-only discrepancy2023-01-22",
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_4h/202301/BTC_USDT-202301.csv.gz"
+    },
+    {
+      "id": 2,
+      "kind": "archive",
+      "symbol": "ETH_USDT",
+      "interval": "4h",
+      "month": "202301",
+      "reason": "earliest ETH volume-only discrepancy2023-01-22",
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_4h/202301/ETH_USDT-202301.csv.gz"
+    },
+    {
+      "id": 3,
+      "kind": "archive",
+      "symbol": "ETH_USDT",
+      "interval": "4h",
+      "month": "202302",
+      "reason": "only ETH4h price discrepancy2023-02-24T20:00 low",
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_4h/202302/ETH_USDT-202302.csv.gz"
+    },
+    {
+      "id": 4,
+      "kind": "archive",
+      "symbol": "BTC_USDT",
+      "interval": "1d",
+      "month": "202512",
+      "reason": "earliest BTC daily close discrepancy2025-12-11",
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_1d/202512/BTC_USDT-202512.csv.gz"
+    },
+    {
+      "id": 5,
+      "kind": "archive",
+      "symbol": "ETH_USDT",
+      "interval": "1d",
+      "month": "202512",
+      "reason": "earliest ETH daily close discrepancy2025-12-10",
+      "url": "https://download.gatedata.org/futures_usdt/candlesticks_1d/202512/ETH_USDT-202512.csv.gz"
+    },
+    {
+      "id": 6,
+      "kind": "api",
+      "symbol": "BTC_USDT",
+      "interval": "1h",
+      "reason": "first October daily-close discrepancy per coin; isolates REST-vs-REST repeatability",
+      "params": {
+        "contract": "BTC_USDT",
+        "interval": "1h",
+        "from": 1792886400,
+        "to": 1792972799
+      },
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=BTC_USDT&interval=1h&from=1792886400&to=1792972799"
+    },
+    {
+      "id": 7,
+      "kind": "api",
+      "symbol": "BTC_USDT",
+      "interval": "1d",
+      "reason": "first October daily-close discrepancy per coin; isolates REST-vs-REST repeatability",
+      "params": {
+        "contract": "BTC_USDT",
+        "interval": "1d",
+        "from": 1792886400,
+        "to": 1792972799
+      },
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=BTC_USDT&interval=1d&from=1792886400&to=1792972799"
+    },
+    {
+      "id": 8,
+      "kind": "api",
+      "symbol": "ETH_USDT",
+      "interval": "1h",
+      "reason": "first October daily-close discrepancy per coin; isolates REST-vs-REST repeatability",
+      "params": {
+        "contract": "ETH_USDT",
+        "interval": "1h",
+        "from": 1792281600,
+        "to": 1792367999
+      },
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=ETH_USDT&interval=1h&from=1792281600&to=1792367999"
+    },
+    {
+      "id": 9,
+      "kind": "api",
+      "symbol": "ETH_USDT",
+      "interval": "1d",
+      "reason": "first October daily-close discrepancy per coin; isolates REST-vs-REST repeatability",
+      "params": {
+        "contract": "ETH_USDT",
+        "interval": "1d",
+        "from": 1792281600,
+        "to": 1792367999
+      },
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/candlesticks?contract=ETH_USDT&interval=1d&from=1792281600&to=1792367999"
+    },
+    {
+      "id": 10,
+      "kind": "api",
+      "symbol": "BTC_USDT",
+      "reason": "last nonzero-offset funding cluster shared across coins; exact archive-vs-API timestamp/rate check",
+      "params": {
+        "contract": "BTC_USDT",
+        "from": 1789948800,
+        "to": 1790064003,
+        "limit": 10
+      },
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&from=1789948800&to=1790064003&limit=10"
+    },
+    {
+      "id": 11,
+      "kind": "api",
+      "symbol": "ETH_USDT",
+      "reason": "last nonzero-offset funding cluster shared across coins; exact archive-vs-API timestamp/rate check",
+      "params": {
+        "contract": "ETH_USDT",
+        "from": 1789948800,
+        "to": 1790064003,
+        "limit": 10
+      },
+      "url": "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=ETH_USDT&from=1789948800&to=1790064003&limit=10"
+    }
+  ],
+  "budget": {
+    "planned_requests": 11,
+    "maximum_total_attempts": 14,
+    "maximum_retries_per_request": 1,
+    "shared_attempts_used_before_checks": 222,
+    "shared_maximum": 450,
+    "max_concurrent": 1,
+    "max_compressed_bytes_per_file": 10485760,
+    "max_total_additional_bytes": 26214400,
+    "max_expanded_bytes_per_file": 104857600
+  },
+  "stop_rules": [
+    "retain every response and failedattempt; no access restriction bypass",
+    "no retries beyond total14 or perrequest1",
+    "retain v1 immutably; write separate ignored verification evidence and metadata",
+    "no substitute sources, normalization changes, tolerance relaxation or baseline/model run"
+  ],
+  "acceptance": "Compare exact raw values and source row references. Confirmation of persistent differences is not automatic resolution; report which route agrees or changes and which semantic claims remain unproven. Return SHA256 manifest and code/report commit to QR through coordinator."
+}

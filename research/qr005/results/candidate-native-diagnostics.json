@@ -1,0 +1,345 @@
+{
+  "schema_version": 1,
+  "manifest_sha256": "cbe95174e6eca704353a06f89e68294ec58a81cc6a59f370bb424c51d1177808",
+  "data_status": "PASS_WITH_LIMITATIONS",
+  "native_fixture_sha256": "fd179a1d36fd1286ba2feddb960393844cfca729a9615d8d27a6b60fd2ba177d",
+  "native_source_sha256": {
+    "research/qr003/feasibility_audit.py": "c0abc405bc4ce40f0eaaf71a5628b4f4defe3b8040d88ad5d8ba8d9b55e15083",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/backtest.py": "9183091e85c4354720118c53f0d97b72022f018afa03d9e9479f4929f5a8540c",
+    "src/backtest_reporting.py": "9d62a2f01a4c08f330384772ddd05b8cb379af4e389f2cffbf6363a4805af9ed",
+    "src/backtest_runner.py": "66471743433cffef93b5534ef4794bdf53661963e61578bb775322a0a6d1841c",
+    "src/carry.py": "81b370e9b84384be578db2163f7f4397b3edf41ebf78ffc56567522ead5e016f",
+    "src/config.py": "29eed6a35c7ecb8b079b21616754c49774fa0bb9034dbba3fc2112734c968709",
+    "src/contracts.py": "d8f4d208bef3683739273c571e71d889b279b8ed88a3b0012e08d3ec3d96c73d",
+    "src/costs.py": "356d3f5a29df9a64caeb40948fe4408dad81982fa5255cba051deb578b70621e",
+    "src/credentials.py": "3a76992f850a9e0f87abf1e654d1056c195341677792a69d9d0b667c8248ca4c",
+    "src/crypto_ml.py": "63d0d9569cb261c83867b18cde03f9f74c7b54626172eeb5bb36eac09c19a7f6",
+    "src/dashboard_web.py": "4b9c3df5e8142156faa8868d5198dd8ed954d3d12ebe9f9d0ce2d8ae0ddb9f6d",
+    "src/data_fetcher.py": "0cba049063d1df0e0aa32da06516bb60f16b3b52c2125662ac088b0f8ed5c5fe",
+    "src/engine.py": "8bb7aa3eb0dad23c323233be1d114c4d77802e3bc31ff07ae0d68e5a86589b42",
+    "src/exchange_gate.py": "19a0e3760cbb9030c18b4c88da718027ba51679cc073b7852d7a371a5b934015",
+    "src/exchange_paper.py": "499e9e9e0260e63b3c0bf3916007a65d1bd2942fe1380755e86bb8e36e71c498",
+    "src/execution_timing.py": "41d4593eaf345cdc8d26759605651e3e7bcfcb679604416b29fef80b821d9344",
+    "src/indicators.py": "232a22a778a94eb0a101991474788a637078bea3f9832d8383683056878ef828",
+    "src/json_utils.py": "4ac13e59c1b3814ee23afe16d1fd66977d0f6e379f678869f79d73c3af7504ae",
+    "src/ml_training.py": "7c558de68e5225301ea14ac907766ddd027fbc1e7d91cc10dbb21970e8279158",
+    "src/models.py": "01c28b7c42e00fcd6b5fcc6415246a5c73af5348fd5301d11b116f1064a8c20e",
+    "src/ownership.py": "38a79d0b081d0ac7c0c7a1ebcb26115ee953dc3f94ea4c18581bbb7092a48407",
+    "src/performance.py": "13c3a0e6ea749319bd8e8886156b31996a492b0a9a85e40335580f985d8631e3",
+    "src/portfolio.py": "1837e2601c2255515644394b6934f45a933d11c758f93aafae926d9bb120397d",
+    "src/position_sizing.py": "e80773ec1bf0ec88fdf8128f368649cf123d3ad92b615b46d3ce3e754c20efad",
+    "src/risk.py": "95410f4adf88f25e1030d108c43f3a4069c162523ba91bdff91e7462966826ad",
+    "src/state.py": "a2d8989fc15b2d532023c6a95873c3ced10d906f00cc948351cf937b43ce429c",
+    "src/strategy_execution.py": "e1eaa17ea1292c7e906d4634b274fe72f2a415dfa409054674a33c22b9b1f5bb",
+    "src/strategy_signals.py": "aa3b9e71512008ff43f49639d8d2cf113e81def7ab031e41676453def86e78dc",
+    "src/systematic_engine.py": "ac583f50daa3bf0f2c4f77a0efcb54ece3cbfa5acb68a7bd013e840887282b7f",
+    "src/trend.py": "5234e1d35b7da34b8dd3429a6811b5ea5036d1e20a3af51fe70e34e56063a361",
+    "src/universe.py": "1f19c427288fd8860053083ea3ab8682cbed97ab711e7c5a9df7d0323320f4df",
+    "src/updater.py": "299862a8e693bdd703a807ca4f05f28f7d3e85aafe8328a95fb85a90d6caad52",
+    "src/vol.py": "8ed00ac4df7b86ffd2abcf80bcf55c201a631f7ac31d1e786f8e7cf95713ed3a",
+    "src/walkforward.py": "9794ca2798993ad3fa6cad64b4cf99b2f88b62512fea4fac01de22467a3efd16"
+  },
+  "assets": {
+    "BTC_USDT": {
+      "warmup": {
+        "decision_at": 1704067200,
+        "full_windows_at_start": true,
+        "findings": {
+          "1h": {
+            "closed_bars": 8760,
+            "last_open": 1704063600,
+            "trend_raw_counts": [
+              {
+                "fast": 8,
+                "slow": 32,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 16,
+                "slow": 64,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 32,
+                "slow": 128,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 64,
+                "slow": 256,
+                "finite_prior_raw": 1500
+              }
+            ],
+            "required_raw": 1500,
+            "fdm_prior_complete_rows": 500,
+            "required_fdm": 500,
+            "native_trend_finite": true,
+            "contiguous": true,
+            "exactly_closed_at_start": true
+          },
+          "4h": {
+            "closed_bars": 2190,
+            "last_open": 1704052800,
+            "trend_raw_counts": [
+              {
+                "fast": 8,
+                "slow": 32,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 16,
+                "slow": 64,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 32,
+                "slow": 128,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 64,
+                "slow": 256,
+                "finite_prior_raw": 1500
+              }
+            ],
+            "required_raw": 1500,
+            "fdm_prior_complete_rows": 500,
+            "required_fdm": 500,
+            "native_trend_finite": true,
+            "contiguous": true,
+            "exactly_closed_at_start": true
+          },
+          "carry": {
+            "finite_prior_raw": 1000,
+            "required": 1000,
+            "native_finite": true,
+            "interval_assumption_seconds": 28800,
+            "schedule_proven": false
+          },
+          "daily": {
+            "closed_bars": 365,
+            "required": 205,
+            "contiguous": true
+          },
+          "ml_features": {
+            "native_last_vector_finite": true,
+            "fits": 0
+          }
+        },
+        "training_permission": false,
+        "limitations": [
+          "EMA initialization approximate",
+          "funding schedule requires independent evidence",
+          "first decision only; all scored inputs checked separately"
+        ]
+      },
+      "closed_hour_feature_rows_from_start": 24729,
+      "decision_range": {
+        "start": 1704067200,
+        "end_exclusive": 1793091600
+      },
+      "feature_columns": [
+        "return_1h",
+        "return_4h",
+        "return_12h",
+        "return_24h",
+        "return_72h",
+        "return_168h",
+        "volatility_6h",
+        "volatility_24h",
+        "volatility_72h",
+        "volume_relative_6h",
+        "volume_relative_24h",
+        "volume_relative_168h",
+        "range_pct",
+        "body_pct",
+        "upper_wick_pct",
+        "lower_wick_pct",
+        "efficiency_24h",
+        "hour_sin",
+        "hour_cos",
+        "weekday_sin",
+        "weekday_cos"
+      ],
+      "all_features_finite": true,
+      "nonconstant_features": [
+        "return_1h",
+        "return_4h",
+        "return_12h",
+        "return_24h",
+        "return_72h",
+        "return_168h",
+        "volatility_6h",
+        "volatility_24h",
+        "volatility_72h",
+        "volume_relative_6h",
+        "volume_relative_24h",
+        "volume_relative_168h",
+        "range_pct",
+        "body_pct",
+        "upper_wick_pct",
+        "lower_wick_pct",
+        "efficiency_24h",
+        "hour_sin",
+        "hour_cos",
+        "weekday_sin",
+        "weekday_cos"
+      ],
+      "fitting_performed": false,
+      "new_position_labels": 0
+    },
+    "ETH_USDT": {
+      "warmup": {
+        "decision_at": 1704067200,
+        "full_windows_at_start": true,
+        "findings": {
+          "1h": {
+            "closed_bars": 8760,
+            "last_open": 1704063600,
+            "trend_raw_counts": [
+              {
+                "fast": 8,
+                "slow": 32,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 16,
+                "slow": 64,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 32,
+                "slow": 128,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 64,
+                "slow": 256,
+                "finite_prior_raw": 1500
+              }
+            ],
+            "required_raw": 1500,
+            "fdm_prior_complete_rows": 500,
+            "required_fdm": 500,
+            "native_trend_finite": true,
+            "contiguous": true,
+            "exactly_closed_at_start": true
+          },
+          "4h": {
+            "closed_bars": 2190,
+            "last_open": 1704052800,
+            "trend_raw_counts": [
+              {
+                "fast": 8,
+                "slow": 32,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 16,
+                "slow": 64,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 32,
+                "slow": 128,
+                "finite_prior_raw": 1500
+              },
+              {
+                "fast": 64,
+                "slow": 256,
+                "finite_prior_raw": 1500
+              }
+            ],
+            "required_raw": 1500,
+            "fdm_prior_complete_rows": 500,
+            "required_fdm": 500,
+            "native_trend_finite": true,
+            "contiguous": true,
+            "exactly_closed_at_start": true
+          },
+          "carry": {
+            "finite_prior_raw": 1000,
+            "required": 1000,
+            "native_finite": true,
+            "interval_assumption_seconds": 28800,
+            "schedule_proven": false
+          },
+          "daily": {
+            "closed_bars": 365,
+            "required": 205,
+            "contiguous": true
+          },
+          "ml_features": {
+            "native_last_vector_finite": true,
+            "fits": 0
+          }
+        },
+        "training_permission": false,
+        "limitations": [
+          "EMA initialization approximate",
+          "funding schedule requires independent evidence",
+          "first decision only; all scored inputs checked separately"
+        ]
+      },
+      "closed_hour_feature_rows_from_start": 24729,
+      "decision_range": {
+        "start": 1704067200,
+        "end_exclusive": 1793091600
+      },
+      "feature_columns": [
+        "return_1h",
+        "return_4h",
+        "return_12h",
+        "return_24h",
+        "return_72h",
+        "return_168h",
+        "volatility_6h",
+        "volatility_24h",
+        "volatility_72h",
+        "volume_relative_6h",
+        "volume_relative_24h",
+        "volume_relative_168h",
+        "range_pct",
+        "body_pct",
+        "upper_wick_pct",
+        "lower_wick_pct",
+        "efficiency_24h",
+        "hour_sin",
+        "hour_cos",
+        "weekday_sin",
+        "weekday_cos"
+      ],
+      "all_features_finite": true,
+      "nonconstant_features": [
+        "return_1h",
+        "return_4h",
+        "return_12h",
+        "return_24h",
+        "return_72h",
+        "return_168h",
+        "volatility_6h",
+        "volatility_24h",
+        "volatility_72h",
+        "volume_relative_6h",
+        "volume_relative_24h",
+        "volume_relative_168h",
+        "range_pct",
+        "body_pct",
+        "upper_wick_pct",
+        "lower_wick_pct",
+        "efficiency_24h",
+        "hour_sin",
+        "hour_cos",
+        "weekday_sin",
+        "weekday_cos"
+      ],
+      "fitting_performed": false,
+      "new_position_labels": 0
+    }
+  },
+  "baseline_replays": 0,
+  "model_fits": 0,
+  "training_status": "NOT_READY",
+  "limitation": "Native warmup assumes constant 28800s annualization for computation only; G3 cashflow policy remains blocked. Indicator and causal-feature calculation is not a trained scaler or model."
+}

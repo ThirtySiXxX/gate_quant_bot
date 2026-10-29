@@ -1,0 +1,15 @@
+{
+  "status": "PASS_EVIDENCE_BINDING_ONLY_NOT_DATA_ACCEPTANCE",
+  "base_manifest_sha256": "5f5319175c42ba4a82e25ca128ac58ae3b71be4b82911fd7935cfa3678407cfd",
+  "reviewed_manifest_sha256": "16035c8f9065ea79e4c572ce444b7af6a6b038f2526e5bda9273bf6580274dac",
+  "quarantine_sha256": "b154d32d8e1f4ef67c42b633dc0850363baa7d5120c8a450877fdcc344603529",
+  "rows": 2068,
+  "hourly_components_checked": 18012,
+  "exactly_matches_independent_discrepancy_keys": true,
+  "all_native_and_hourly_references_equal_original_raw": true,
+  "original_raw_and_normalized_hashes_unchanged": true,
+  "postprocessor_sha256": "79e35285ec03afa4b346cb41b441d7919a3489584f20f511dfbce2fe750b9afd",
+  "training_status": "NOT_READY",
+  "baseline_replays": 0,
+  "model_fits": 0
+}

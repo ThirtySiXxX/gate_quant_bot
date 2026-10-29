@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "source": "Frozen Gate public research CSVs, previously downloaded; no new network retrieval",
+  "volume_representation": "public candlestick v field; numeric representation preserved, not converted between units",
+  "original_source_manifest_sha256": "9099d50055e39fceba0d3d2e65940c016f75e997577bbe9f8a93276f98f7198e",
+  "files": [
+    {
+      "role": "classification",
+      "file": "classification/BTC_USDT_1h.csv",
+      "symbol": "BTC_USDT",
+      "interval_seconds": 3600,
+      "rows": 9600,
+      "start_ts": 1758531600,
+      "end_ts": 1793088000,
+      "sha256": "f7e607751584c0d5f24273340000642b643230f5b0a693ff2a0ab24872458e58"
+    },
+    {
+      "role": "classification",
+      "file": "classification/ETH_USDT_1h.csv",
+      "symbol": "ETH_USDT",
+      "interval_seconds": 3600,
+      "rows": 9600,
+      "start_ts": 1758531600,
+      "end_ts": 1793088000,
+      "sha256": "e3b799053d4c729f0d660c74f6ce50f688b0b59878392d6e3bfc9aeb83a2c87b"
+    },
+    {
+      "role": "classification",
+      "file": "classification/SOL_USDT_1h.csv",
+      "symbol": "SOL_USDT",
+      "interval_seconds": 3600,
+      "rows": 9600,
+      "start_ts": 1758531600,
+      "end_ts": 1793088000,
+      "sha256": "ccc32a608deb55378ab618684b2f1c34e534a610763dd5f0fa5dd1e7c434fbc9"
+    },
+    {
+      "role": "classification",
+      "file": "classification/DOGE_USDT_1h.csv",
+      "symbol": "DOGE_USDT",
+      "interval_seconds": 3600,
+      "rows": 9600,
+      "start_ts": 1758531600,
+      "end_ts": 1793088000,
+      "sha256": "77bc09754721a3e42453609a8b21b0439a3cf69ba655c9a956bbf690e6b68b4e"
+    },
+    {
+      "role": "classification",
+      "file": "classification/ZEC_USDT_1h.csv",
+      "symbol": "ZEC_USDT",
+      "interval_seconds": 3600,
+      "rows": 8491,
+      "start_ts": 1762524000,
+      "end_ts": 1793088000,
+      "sha256": "3b8f3c6175a8fc3a7f99bcb9e86917008fab25be77d953823500c06409ad54bd"
+    },
+    {
+      "role": "replay",
+      "file": "replay/1h.csv",
+      "symbol": "ETH_USDT",
+      "interval_seconds": 3600,
+      "rows": 3659,
+      "start_ts": 1779919200.0,
+      "end_ts": 1793088000.0,
+      "sha256": "8fac19a74ec2421f539e1f88a3cfc63e1bed1c50688abec4642925a46848e336"
+    },
+    {
+      "role": "replay",
+      "file": "replay/4h.csv",
+      "symbol": "ETH_USDT",
+      "interval_seconds": 14400,
+      "rows": 2039,
+      "start_ts": 1763726400.0,
+      "end_ts": 1793073600.0,
+      "sha256": "80094c6ad49398bdd8aac8dc00ec7421e3c87c41dfda846f619dafae345b3dd6"
+    },
+    {
+      "role": "replay",
+      "file": "replay/1d.csv",
+      "symbol": "ETH_USDT",
+      "interval_seconds": 86400,
+      "rows": 333,
+      "start_ts": 1764288000.0,
+      "end_ts": 1792972800.0,
+      "sha256": "d3055bb3d125d27e527f0ea98b3760eada9a11741369765f73ee5de162282692"
+    },
+    {
+      "role": "funding",
+      "file": "replay/funding.csv",
+      "symbol": "ETH_USDT",
+      "rows": 768,
+      "start_ts": 1770998400.0,
+      "end_ts": 1793088000.0,
+      "sha256": "f7fec7e61222c7031010bca0027a005bd4ec78eea42b75af02d57ce09717e41c"
+    }
+  ],
+  "replay_fixture_sha256": "e7ab2cfabfe09ec233ed64a809b1584255265254b572dce0427a74fac751879b"
+}

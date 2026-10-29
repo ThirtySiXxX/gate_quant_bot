@@ -1,0 +1,3360 @@
+{
+  "artifacts": {
+    "calibrated_gbt": {
+      "file": "calibrated_gbt.json",
+      "sha256": "3d00fce3aceff2ee2986f4d522094500726298b8669489226b2a957643392f28",
+      "status": "research_only_historical_windows"
+    },
+    "legacy_gbt": {
+      "file": "legacy_gbt.json",
+      "sha256": "db3aa4c2fd6b54ff45110f443622de5a05d7c51053f7f99eeb7c1bec58bab11f",
+      "status": "research_only_historical_windows"
+    },
+    "legacy_logistic": {
+      "file": "legacy_logistic.json",
+      "sha256": "739e4a6da8da2700a678f2c5da11943fd85a470f1c76e20d252713ca3718f486",
+      "status": "research_only_historical_windows"
+    },
+    "matched_raw_gbt": {
+      "file": "matched_raw_gbt.json",
+      "sha256": "e1e463c35284e3573237cb675fa70caae0062197dd4caaaa6e1a8d96673032a0",
+      "status": "research_only_historical_windows"
+    }
+  },
+  "experiment_id": "qr001-temperature-calibration-v1",
+  "folds": [
+    {
+      "end": 1787911200,
+      "fold": 1,
+      "models": {
+        "calibrated_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.4231843575418994,
+              "balanced_accuracy": 0.40740567618993656,
+              "brier": 0.6397156527519954,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4004914004914005,
+                  "confidence": 0.3787745632566618,
+                  "count": 407
+                },
+                {
+                  "accuracy": 0.367816091954023,
+                  "confidence": 0.4379575812402214,
+                  "count": 261
+                },
+                {
+                  "accuracy": 0.9166666666666666,
+                  "confidence": 0.5237118127059348,
+                  "count": 48
+                }
+              ],
+              "direction_only_auc": 0.45693848354792554,
+              "log_loss": 1.0590219579721523,
+              "macro_auc": 0.6096720144471522,
+              "rows": 716,
+              "top_label_ece": 0.06425630509546305
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.4134078212290503,
+              "balanced_accuracy": 0.4154846928395199,
+              "brier": 0.6460331601389054,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3935643564356436,
+                  "confidence": 0.37243096245780966,
+                  "count": 404
+                },
+                {
+                  "accuracy": 0.44039735099337746,
+                  "confidence": 0.4514364638440903,
+                  "count": 302
+                },
+                {
+                  "accuracy": 0.4,
+                  "confidence": 0.5134505576428212,
+                  "count": 10
+                }
+              ],
+              "direction_only_auc": 0.5364553813212418,
+              "log_loss": 1.0620583287156067,
+              "macro_auc": 0.6036898596570606,
+              "rows": 716,
+              "top_label_ece": 0.018165096123447484
+            },
+            "ETH_USDT": {
+              "accuracy": 0.43435754189944137,
+              "balanced_accuracy": 0.4452562374646856,
+              "brier": 0.6358700205847981,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.40369393139841686,
+                  "confidence": 0.37608793591223394,
+                  "count": 379
+                },
+                {
+                  "accuracy": 0.397212543554007,
+                  "confidence": 0.4443419976557839,
+                  "count": 287
+                },
+                {
+                  "accuracy": 0.88,
+                  "confidence": 0.5229179352757797,
+                  "count": 50
+                }
+              ],
+              "direction_only_auc": 0.5125966721349894,
+              "log_loss": 1.052042879977906,
+              "macro_auc": 0.6314704237674967,
+              "rows": 716,
+              "top_label_ece": 0.05843984476631889
+            },
+            "SOL_USDT": {
+              "accuracy": 0.3924581005586592,
+              "balanced_accuracy": 0.40691364207428915,
+              "brier": 0.6517285811123038,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4065656565656566,
+                  "confidence": 0.3693625596445497,
+                  "count": 396
+                },
+                {
+                  "accuracy": 0.369281045751634,
+                  "confidence": 0.4578587963651127,
+                  "count": 306
+                },
+                {
+                  "accuracy": 0.5,
+                  "confidence": 0.5077631483881356,
+                  "count": 14
+                }
+              ],
+              "direction_only_auc": 0.513957666171991,
+              "log_loss": 1.071422332674463,
+              "macro_auc": 0.5950456048701681,
+              "rows": 716,
+              "top_label_ece": 0.058583662214967434
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.41899441340782123,
+              "balanced_accuracy": 0.3531173363516318,
+              "brier": 0.6273861960625803,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.39267015706806285,
+                  "confidence": 0.3791146786351297,
+                  "count": 191
+                },
+                {
+                  "accuracy": 0.4297029702970297,
+                  "confidence": 0.44773954336046506,
+                  "count": 505
+                },
+                {
+                  "accuracy": 0.4,
+                  "confidence": 0.5053469039132382,
+                  "count": 20
+                }
+              ],
+              "direction_only_auc": 0.5179379111842105,
+              "log_loss": 1.0287354502497665,
+              "macro_auc": 0.5574659896433211,
+              "rows": 716,
+              "top_label_ece": 0.019280033318421586
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.39658848614072495,
+              "balanced_accuracy": 0.3519438444924406,
+              "brier": 0.6282071046557647,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.5238095238095238,
+                  "confidence": 0.3903638691902204,
+                  "count": 21
+                },
+                {
+                  "accuracy": 0.3961187214611872,
+                  "confidence": 0.4649573710493523,
+                  "count": 876
+                },
+                {
+                  "accuracy": 0.34146341463414637,
+                  "confidence": 0.5050128514279542,
+                  "count": 41
+                }
+              ],
+              "direction_only_auc": 0.4748253080929996,
+              "log_loss": 1.0233422194337065,
+              "macro_auc": 0.5152163061095582,
+              "rows": 938,
+              "top_label_ece": 0.07442488560211527
+            },
+            "low": {
+              "accuracy": 0.42354277062831186,
+              "balanced_accuracy": 0.4249282166527135,
+              "brier": 0.6443856930578009,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.39863325740318906,
+                  "confidence": 0.3745111160448235,
+                  "count": 1756
+                },
+                {
+                  "accuracy": 0.4152866242038217,
+                  "confidence": 0.42939808682464925,
+                  "count": 785
+                },
+                {
+                  "accuracy": 0.9207920792079208,
+                  "confidence": 0.5240461841312337,
+                  "count": 101
+                }
+              ],
+              "direction_only_auc": 0.5425606904614538,
+              "log_loss": 1.0657737161535004,
+              "macro_auc": 0.6094912446579216,
+              "rows": 2642,
+              "top_label_ece": 0.035392624445641535
+            }
+          },
+          "overall": {
+            "accuracy": 0.4164804469273743,
+            "balanced_accuracy": 0.42635878230737084,
+            "brier": 0.6401467221301166,
+            "calibration_bins": [
+              {
+                "accuracy": 0.4001125492402926,
+                "confidence": 0.37469845865374485,
+                "count": 1777
+              },
+              {
+                "accuracy": 0.40517760385310053,
+                "confidence": 0.4481518092694656,
+                "count": 1661
+              },
+              {
+                "accuracy": 0.7535211267605634,
+                "confidence": 0.5185506444070472,
+                "count": 142
+              }
+            ],
+            "direction_only_auc": 0.5093036800580585,
+            "log_loss": 1.054656189917979,
+            "macro_auc": 0.6176017120582722,
+            "rows": 3580,
+            "top_label_ece": 0.0418734085651053
+          }
+        },
+        "legacy_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.41899441340782123,
+              "balanced_accuracy": 0.40389799351895134,
+              "brier": 0.6378130017010678,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.37595907928388744,
+                  "confidence": 0.37540379754991976,
+                  "count": 391
+                },
+                {
+                  "accuracy": 0.3927272727272727,
+                  "confidence": 0.4366151809862671,
+                  "count": 275
+                },
+                {
+                  "accuracy": 0.9,
+                  "confidence": 0.5307904000815991,
+                  "count": 50
+                }
+              ],
+              "direction_only_auc": 0.4539580352885073,
+              "log_loss": 1.056459272546147,
+              "macro_auc": 0.6127558055409644,
+              "rows": 716,
+              "top_label_ece": 0.042942416096543125
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.41201117318435754,
+              "balanced_accuracy": 0.41357953667581066,
+              "brier": 0.645212655033433,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3802469135802469,
+                  "confidence": 0.37005640307827276,
+                  "count": 405
+                },
+                {
+                  "accuracy": 0.4503311258278146,
+                  "confidence": 0.44841473730729653,
+                  "count": 302
+                },
+                {
+                  "accuracy": 0.5555555555555556,
+                  "confidence": 0.5173707695148647,
+                  "count": 9
+                }
+              ],
+              "direction_only_auc": 0.5409975439259399,
+              "log_loss": 1.0616339941884636,
+              "macro_auc": 0.6079943898183783,
+              "rows": 716,
+              "top_label_ece": 0.007052470895058956
+            },
+            "ETH_USDT": {
+              "accuracy": 0.4329608938547486,
+              "balanced_accuracy": 0.44392821621634565,
+              "brier": 0.633515191566067,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3877005347593583,
+                  "confidence": 0.3730987235888366,
+                  "count": 374
+                },
+                {
+                  "accuracy": 0.42214532871972316,
+                  "confidence": 0.4429689158937054,
+                  "count": 289
+                },
+                {
+                  "accuracy": 0.8113207547169812,
+                  "confidence": 0.5286760081035619,
+                  "count": 53
+                }
+              ],
+              "direction_only_auc": 0.5143055230060152,
+              "log_loss": 1.0486926022532639,
+              "macro_auc": 0.6390342821069859,
+              "rows": 716,
+              "top_label_ece": 0.03695428162230056
+            },
+            "SOL_USDT": {
+              "accuracy": 0.39106145251396646,
+              "balanced_accuracy": 0.4086267822237333,
+              "brier": 0.6502233012507551,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.40253164556962023,
+                  "confidence": 0.3687035506228567,
+                  "count": 395
+                },
+                {
+                  "accuracy": 0.36507936507936506,
+                  "confidence": 0.455933911436256,
+                  "count": 315
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.520932106923758,
+                  "count": 6
+                }
+              ],
+              "direction_only_auc": 0.5180973209404045,
+              "log_loss": 1.069330903044331,
+              "macro_auc": 0.6036372871525294,
+              "rows": 716,
+              "top_label_ece": 0.06264760749280683
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4259776536312849,
+              "balanced_accuracy": 0.35884345720933153,
+              "brier": 0.6266325362355112,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.450261780104712,
+                  "confidence": 0.37873028404355774,
+                  "count": 191
+                },
+                {
+                  "accuracy": 0.4143968871595331,
+                  "confidence": 0.44404557006852036,
+                  "count": 514
+                },
+                {
+                  "accuracy": 0.5454545454545454,
+                  "confidence": 0.5053405447152598,
+                  "count": 11
+                }
+              ],
+              "direction_only_auc": 0.5257332785087719,
+              "log_loss": 1.0282508716246335,
+              "macro_auc": 0.5606409650039799,
+              "rows": 716,
+              "top_label_ece": 0.040982112808703994
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.39552238805970147,
+              "balanced_accuracy": 0.35096345233557785,
+              "brier": 0.6260653200443281,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.625,
+                  "confidence": 0.3870327231615953,
+                  "count": 24
+                },
+                {
+                  "accuracy": 0.38926174496644295,
+                  "confidence": 0.46055038860733466,
+                  "count": 894
+                },
+                {
+                  "accuracy": 0.4,
+                  "confidence": 0.50484861330535,
+                  "count": 20
+                }
+              ],
+              "direction_only_auc": 0.4948608817176979,
+              "log_loss": 1.021167151169855,
+              "macro_auc": 0.5270609156955564,
+              "rows": 938,
+              "top_label_ece": 0.07626890653004895
+            },
+            "low": {
+              "accuracy": 0.42354277062831186,
+              "balanced_accuracy": 0.42556584090241273,
+              "brier": 0.6431577429302777,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3903002309468822,
+                  "confidence": 0.3723332864338416,
+                  "count": 1732
+                },
+                {
+                  "accuracy": 0.43196004993757803,
+                  "confidence": 0.42900749042945174,
+                  "count": 801
+                },
+                {
+                  "accuracy": 0.8899082568807339,
+                  "confidence": 0.5303032268486781,
+                  "count": 109
+                }
+              ],
+              "direction_only_auc": 0.5384652304976733,
+              "log_loss": 1.0641303728466969,
+              "macro_auc": 0.6133471962612963,
+              "rows": 2642,
+              "top_label_ece": 0.02750972609238817
+            }
+          },
+          "overall": {
+            "accuracy": 0.41620111731843573,
+            "balanced_accuracy": 0.4269687101008269,
+            "brier": 0.6386793371573667,
+            "calibration_bins": [
+              {
+                "accuracy": 0.3935079726651481,
+                "confidence": 0.3725341898970911,
+                "count": 1756
+              },
+              {
+                "accuracy": 0.40943952802359884,
+                "confidence": 0.44564427566309617,
+                "count": 1695
+              },
+              {
+                "accuracy": 0.813953488372093,
+                "confidence": 0.5263567751365342,
+                "count": 129
+              }
+            ],
+            "direction_only_auc": 0.5104852927835838,
+            "log_loss": 1.0528735287313677,
+            "macro_auc": 0.6231284919032214,
+            "rows": 3580,
+            "top_label_ece": 0.03779245413325227
+          }
+        },
+        "legacy_logistic": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.4371508379888268,
+              "balanced_accuracy": 0.4216017381423407,
+              "brier": 0.6390710300140324,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.37193763919821826,
+                  "confidence": 0.3702210212116281,
+                  "count": 449
+                },
+                {
+                  "accuracy": 0.49783549783549785,
+                  "confidence": 0.4373121922134992,
+                  "count": 231
+                },
+                {
+                  "accuracy": 0.8611111111111112,
+                  "confidence": 0.52508411973191,
+                  "count": 36
+                }
+              ],
+              "direction_only_auc": 0.48073438245112066,
+              "log_loss": 1.0611288918799997,
+              "macro_auc": 0.6228203777609703,
+              "rows": 716,
+              "top_label_ece": 0.03749806810658089
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.39385474860335196,
+              "balanced_accuracy": 0.4002504326011274,
+              "brier": 0.6503587392204098,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.39858490566037735,
+                  "confidence": 0.37062277623960976,
+                  "count": 424
+                },
+                {
+                  "accuracy": 0.3670886075949367,
+                  "confidence": 0.4419303338914288,
+                  "count": 237
+                },
+                {
+                  "accuracy": 0.4528301886792453,
+                  "confidence": 0.535302298354054,
+                  "count": 53
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.6130182525092696,
+                  "count": 2
+                }
+              ],
+              "direction_only_auc": 0.5341488758737956,
+              "log_loss": 1.069945956684253,
+              "macro_auc": 0.5911203432608478,
+              "rows": 716,
+              "top_label_ece": 0.04851734261790558
+            },
+            "ETH_USDT": {
+              "accuracy": 0.43575418994413406,
+              "balanced_accuracy": 0.44306733699264994,
+              "brier": 0.6446364454589812,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.37767220902612825,
+                  "confidence": 0.37178663337229234,
+                  "count": 421
+                },
+                {
+                  "accuracy": 0.5263157894736842,
+                  "confidence": 0.43724968898165356,
+                  "count": 247
+                },
+                {
+                  "accuracy": 0.5,
+                  "confidence": 0.5288108721361697,
+                  "count": 46
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.6045490935411636,
+                  "count": 2
+                }
+              ],
+              "direction_only_auc": 0.49367236934614483,
+              "log_loss": 1.0659359948839457,
+              "macro_auc": 0.6253143812234662,
+              "rows": 716,
+              "top_label_ece": 0.0377256319513165
+            },
+            "SOL_USDT": {
+              "accuracy": 0.39106145251396646,
+              "balanced_accuracy": 0.4133735506230923,
+              "brier": 0.6513869030716751,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3538083538083538,
+                  "confidence": 0.36995881545207443,
+                  "count": 407
+                },
+                {
+                  "accuracy": 0.42424242424242425,
+                  "confidence": 0.4421508841215505,
+                  "count": 297
+                },
+                {
+                  "accuracy": 0.8333333333333334,
+                  "confidence": 0.5238164808595397,
+                  "count": 12
+                }
+              ],
+              "direction_only_auc": 0.5133640552995392,
+              "log_loss": 1.072101848700844,
+              "macro_auc": 0.5883808039594989,
+              "rows": 716,
+              "top_label_ece": 0.021796442322318886
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.40502793296089384,
+              "balanced_accuracy": 0.344368986983588,
+              "brier": 0.6357483776359292,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3709677419354839,
+                  "confidence": 0.37217145360354176,
+                  "count": 248
+                },
+                {
+                  "accuracy": 0.42318840579710143,
+                  "confidence": 0.43823425369579116,
+                  "count": 345
+                },
+                {
+                  "accuracy": 0.4166666666666667,
+                  "confidence": 0.5489259431721102,
+                  "count": 96
+                },
+                {
+                  "accuracy": 0.4230769230769231,
+                  "confidence": 0.6314044526520888,
+                  "count": 26
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.7309281863160966,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.473078855994152,
+              "log_loss": 1.0397885917663072,
+              "macro_auc": 0.5416001344804808,
+              "rows": 716,
+              "top_label_ece": 0.03334052534341774
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.40298507462686567,
+              "balanced_accuracy": 0.3497522551137085,
+              "brier": 0.6315223887402134,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4583333333333333,
+                  "confidence": 0.3872303250152251,
+                  "count": 48
+                },
+                {
+                  "accuracy": 0.3844984802431611,
+                  "confidence": 0.449681418455324,
+                  "count": 658
+                },
+                {
+                  "accuracy": 0.4427860696517413,
+                  "confidence": 0.5405937810508451,
+                  "count": 201
+                },
+                {
+                  "accuracy": 0.43333333333333335,
+                  "confidence": 0.628388348701839,
+                  "count": 30
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.7309281863160966,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.4908652013721255,
+              "log_loss": 1.0313805783697254,
+              "macro_auc": 0.5247767476421065,
+              "rows": 938,
+              "top_label_ece": 0.07684796376208032
+            },
+            "low": {
+              "accuracy": 0.41597274791824373,
+              "balanced_accuracy": 0.41587392862549005,
+              "brier": 0.6487555904878182,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3729615991583377,
+                  "confidence": 0.3704261815261928,
+                  "count": 1901
+                },
+                {
+                  "accuracy": 0.5021459227467812,
+                  "confidence": 0.42972322672045865,
+                  "count": 699
+                },
+                {
+                  "accuracy": 0.9285714285714286,
+                  "confidence": 0.5219687753570147,
+                  "count": 42
+                }
+              ],
+              "direction_only_auc": 0.5184836554111363,
+              "log_loss": 1.072573178187959,
+              "macro_auc": 0.5988625565059279,
+              "rows": 2642,
+              "top_label_ece": 0.027449131293002395
+            }
+          },
+          "overall": {
+            "accuracy": 0.41256983240223466,
+            "balanced_accuracy": 0.4247107873339411,
+            "brier": 0.6442402990802054,
+            "calibration_bins": [
+              {
+                "accuracy": 0.375064135454079,
+                "confidence": 0.37084003421345474,
+                "count": 1949
+              },
+              {
+                "accuracy": 0.44509948415622697,
+                "confidence": 0.43940081711216195,
+                "count": 1357
+              },
+              {
+                "accuracy": 0.5267489711934157,
+                "confidence": 0.5373746442642571,
+                "count": 243
+              },
+              {
+                "accuracy": 0.43333333333333335,
+                "confidence": 0.628388348701839,
+                "count": 30
+              },
+              {
+                "accuracy": 1.0,
+                "confidence": 0.7309281863160966,
+                "count": 1
+              }
+            ],
+            "direction_only_auc": 0.49814491732326427,
+            "log_loss": 1.06178025678307,
+            "macro_auc": 0.6137069053995524,
+            "rows": 3580,
+            "top_label_ece": 0.006890677465845386
+          }
+        },
+        "matched_raw_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.4231843575418994,
+              "balanced_accuracy": 0.40740567618993656,
+              "brier": 0.6399143026431748,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4009546539379475,
+                  "confidence": 0.37852898349464875,
+                  "count": 419
+                },
+                {
+                  "accuracy": 0.3715415019762846,
+                  "confidence": 0.43871150032287287,
+                  "count": 253
+                },
+                {
+                  "accuracy": 0.9318181818181818,
+                  "confidence": 0.5220133425465011,
+                  "count": 44
+                }
+              ],
+              "direction_only_auc": 0.45693848354792554,
+              "log_loss": 1.0592821090887266,
+              "macro_auc": 0.6097246293832053,
+              "rows": 716,
+              "top_label_ece": 0.06204158997958513
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.4134078212290503,
+              "balanced_accuracy": 0.4154846928395199,
+              "brier": 0.6459800440045596,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3946078431372549,
+                  "confidence": 0.37196206083262134,
+                  "count": 408
+                },
+                {
+                  "accuracy": 0.4395973154362416,
+                  "confidence": 0.4501085495154592,
+                  "count": 298
+                },
+                {
+                  "accuracy": 0.4,
+                  "confidence": 0.5101358091706216,
+                  "count": 10
+                }
+              ],
+              "direction_only_auc": 0.5364553813212418,
+              "log_loss": 1.062056593070309,
+              "macro_auc": 0.6038148005045579,
+              "rows": 716,
+              "top_label_ece": 0.018817297524585965
+            },
+            "ETH_USDT": {
+              "accuracy": 0.43435754189944137,
+              "balanced_accuracy": 0.4452562374646856,
+              "brier": 0.6360721673569308,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4072164948453608,
+                  "confidence": 0.3758404224428966,
+                  "count": 388
+                },
+                {
+                  "accuracy": 0.4014084507042254,
+                  "confidence": 0.4448826225073263,
+                  "count": 284
+                },
+                {
+                  "accuracy": 0.8863636363636364,
+                  "confidence": 0.5221539533515339,
+                  "count": 44
+                }
+              ],
+              "direction_only_auc": 0.5125966721349894,
+              "log_loss": 1.052310344172514,
+              "macro_auc": 0.6316066427484903,
+              "rows": 716,
+              "top_label_ece": 0.05662822197872805
+            },
+            "SOL_USDT": {
+              "accuracy": 0.3924581005586592,
+              "balanced_accuracy": 0.40691364207428915,
+              "brier": 0.6515827149852476,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.40648379052369077,
+                  "confidence": 0.36906490956789023,
+                  "count": 401
+                },
+                {
+                  "accuracy": 0.3639344262295082,
+                  "confidence": 0.45715558953351654,
+                  "count": 305
+                },
+                {
+                  "accuracy": 0.7,
+                  "confidence": 0.5068501579504529,
+                  "count": 10
+                }
+              ],
+              "direction_only_auc": 0.5139420448332422,
+              "log_loss": 1.0712701856872404,
+              "macro_auc": 0.5951570561348319,
+              "rows": 716,
+              "top_label_ece": 0.06336441968085757
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.41899441340782123,
+              "balanced_accuracy": 0.3531173363516318,
+              "brier": 0.6273902939208711,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3888888888888889,
+                  "confidence": 0.37902918635290556,
+                  "count": 198
+                },
+                {
+                  "accuracy": 0.4294234592445328,
+                  "confidence": 0.4470410835937761,
+                  "count": 503
+                },
+                {
+                  "accuracy": 0.4666666666666667,
+                  "confidence": 0.5038686590798745,
+                  "count": 15
+                }
+              ],
+              "direction_only_auc": 0.5179322002923976,
+              "log_loss": 1.028882039022041,
+              "macro_auc": 0.5576293840646837,
+              "rows": 716,
+              "top_label_ece": 0.015882564296078493
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.39658848614072495,
+              "balanced_accuracy": 0.3519438444924406,
+              "brier": 0.627849285430056,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.5,
+                  "confidence": 0.38981011392115444,
+                  "count": 22
+                },
+                {
+                  "accuracy": 0.3945885005636979,
+                  "confidence": 0.4633507986590684,
+                  "count": 887
+                },
+                {
+                  "accuracy": 0.3793103448275862,
+                  "confidence": 0.5035341984017688,
+                  "count": 29
+                }
+              ],
+              "direction_only_auc": 0.4748221318765087,
+              "log_loss": 1.0230542672104264,
+              "macro_auc": 0.5154210606496304,
+              "rows": 938,
+              "top_label_ece": 0.07144864355861362
+            },
+            "low": {
+              "accuracy": 0.42354277062831186,
+              "balanced_accuracy": 0.4249282166527135,
+              "brier": 0.644568534697475,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.39955357142857145,
+                  "confidence": 0.37425068858267035,
+                  "count": 1792
+                },
+                {
+                  "accuracy": 0.41798941798941797,
+                  "confidence": 0.4295965391192759,
+                  "count": 756
+                },
+                {
+                  "accuracy": 0.925531914893617,
+                  "confidence": 0.5220080725879906,
+                  "count": 94
+                }
+              ],
+              "direction_only_auc": 0.5425599740962336,
+              "log_loss": 1.066016959660051,
+              "macro_auc": 0.6094878743091656,
+              "rows": 2642,
+              "top_label_ece": 0.03484064754381387
+            }
+          },
+          "overall": {
+            "accuracy": 0.4164804469273743,
+            "balanced_accuracy": 0.42635878230737084,
+            "brier": 0.6401879045821568,
+            "calibration_bins": [
+              {
+                "accuracy": 0.4007717750826902,
+                "confidence": 0.3744393916463123,
+                "count": 1814
+              },
+              {
+                "accuracy": 0.40535605599513086,
+                "confidence": 0.4478193195281596,
+                "count": 1643
+              },
+              {
+                "accuracy": 0.7967479674796748,
+                "confidence": 0.5176524437148163,
+                "count": 123
+              }
+            ],
+            "direction_only_auc": 0.509303022693538,
+            "log_loss": 1.0547602542081662,
+            "macro_auc": 0.617723880989363,
+            "rows": 3580,
+            "top_label_ece": 0.04241978630207636
+          }
+        },
+        "prior": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.25139664804469275,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.7154367696803686,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.25139664804469275,
+                  "confidence": 0.3963999886075589,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1809348160515292,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.14500334056286612
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.33100558659217877,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6727867955918077,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.33100558659217877,
+                  "confidence": 0.3963999886075589,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1097342840429785,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.0653944020153801
+            },
+            "ETH_USDT": {
+              "accuracy": 0.2849162011173184,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6960611868321024,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.2849162011173184,
+                  "confidence": 0.3963999886075589,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1485527464530705,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.11148378749024046
+            },
+            "SOL_USDT": {
+              "accuracy": 0.30307262569832405,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6706859562584818,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.30307262569832405,
+                  "confidence": 0.3963999886075589,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1057917164820643,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.09332736290923481
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4022346368715084,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6325912083806821,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4022346368715084,
+                  "confidence": 0.3963999886075589,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.0425792232298052,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.005834648263949527
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.3624733475479744,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6248274855711479,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3624733475479744,
+                  "confidence": 0.396399988607559,
+                  "count": 938
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.028876801190124,
+              "macro_auc": 0.5,
+              "rows": 938,
+              "top_label_ece": 0.033926641059584595
+            },
+            "low": {
+              "accuracy": 0.2975018925056775,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6962173167761424,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.2975018925056775,
+                  "confidence": 0.396399988607559,
+                  "count": 2642
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1489894002442953,
+              "macro_auc": 0.5,
+              "rows": 2642,
+              "top_label_ece": 0.0988980961018815
+            }
+          },
+          "overall": {
+            "accuracy": 0.31452513966480444,
+            "balanced_accuracy": 0.3333333333333333,
+            "brier": 0.6775123833486887,
+            "calibration_bins": [
+              {
+                "accuracy": 0.31452513966480444,
+                "confidence": 0.396399988607559,
+                "count": 3580
+              }
+            ],
+            "direction_only_auc": 0.5,
+            "log_loss": 1.1175185572518895,
+            "macro_auc": 0.5,
+            "rows": 3580,
+            "top_label_ece": 0.08187484894275454
+          }
+        }
+      },
+      "parity": {
+        "legacy_gbt": {
+          "evaluation_max_abs_error": 4.996003610813204e-16,
+          "fit_seconds": 9.205722667044029
+        },
+        "legacy_logistic": {
+          "evaluation_max_abs_error": 0.0,
+          "fit_seconds": 0.07788541703484952
+        },
+        "matched_raw_gbt": {
+          "evaluation_max_abs_error": 4.440892098500626e-16,
+          "fit_seconds": 8.21167750004679
+        }
+      },
+      "regime_volatility_threshold": 0.006236602868701176,
+      "stages": {
+        "calibration": {
+          "first_feature": 1782727200.0,
+          "last_label": 1785229200.0,
+          "rows": 3460
+        },
+        "evaluation": {
+          "first_feature": 1785319200.0,
+          "last_label": 1787907600.0,
+          "rows": 3580
+        },
+        "fit": {
+          "first_feature": 1759140000.0,
+          "last_label": 1782637200.0,
+          "rows": 31511
+        },
+        "legacy_fit": {
+          "first_feature": 1759140000.0,
+          "last_label": 1785229200.0,
+          "rows": 35111
+        }
+      },
+      "start": 1785319200,
+      "temperature": 0.9807700674114697
+    },
+    {
+      "end": 1790503200,
+      "fold": 2,
+      "models": {
+        "calibrated_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.39664804469273746,
+              "balanced_accuracy": 0.38470420075871714,
+              "brier": 0.6416552528910127,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.30493273542600896,
+                  "confidence": 0.37006089588393676,
+                  "count": 446
+                },
+                {
+                  "accuracy": 0.519650655021834,
+                  "confidence": 0.4376897054039321,
+                  "count": 229
+                },
+                {
+                  "accuracy": 0.7073170731707317,
+                  "confidence": 0.5332579549658424,
+                  "count": 41
+                }
+              ],
+              "direction_only_auc": 0.5015993324525415,
+              "log_loss": 1.0631330457204071,
+              "macro_auc": 0.6052446544203366,
+              "rows": 716,
+              "top_label_ece": 0.07674949842616732
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.4106145251396648,
+              "balanced_accuracy": 0.36431890657473787,
+              "brier": 0.633586127863977,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4482758620689655,
+                  "confidence": 0.37936661063720184,
+                  "count": 174
+                },
+                {
+                  "accuracy": 0.38910505836575876,
+                  "confidence": 0.4423680818064635,
+                  "count": 514
+                },
+                {
+                  "accuracy": 0.5714285714285714,
+                  "confidence": 0.5093370231272256,
+                  "count": 28
+                }
+              ],
+              "direction_only_auc": 0.5085474758520139,
+              "log_loss": 1.040271665972597,
+              "macro_auc": 0.5666032519865599,
+              "rows": 716,
+              "top_label_ece": 0.057410568645372605
+            },
+            "ETH_USDT": {
+              "accuracy": 0.4036312849162011,
+              "balanced_accuracy": 0.4232801406003372,
+              "brier": 0.6470170410190601,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.37027027027027026,
+                  "confidence": 0.3753691927937396,
+                  "count": 370
+                },
+                {
+                  "accuracy": 0.4350453172205438,
+                  "confidence": 0.42685435398510424,
+                  "count": 331
+                },
+                {
+                  "accuracy": 0.5333333333333333,
+                  "confidence": 0.52725651760783,
+                  "count": 15
+                }
+              ],
+              "direction_only_auc": 0.5387704285614084,
+              "log_loss": 1.068593645980819,
+              "macro_auc": 0.6032376651577523,
+              "rows": 716,
+              "top_label_ece": 0.006548830168291471
+            },
+            "SOL_USDT": {
+              "accuracy": 0.388268156424581,
+              "balanced_accuracy": 0.3597925216598267,
+              "brier": 0.6511472428059047,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3972602739726027,
+                  "confidence": 0.3810742036501156,
+                  "count": 219
+                },
+                {
+                  "accuracy": 0.3843058350100604,
+                  "confidence": 0.42945937155384645,
+                  "count": 497
+                }
+              ],
+              "direction_only_auc": 0.5287467700258397,
+              "log_loss": 1.0722051330383588,
+              "macro_auc": 0.5475467103704711,
+              "rows": 716,
+              "top_label_ece": 0.03629337578615413
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4371508379888268,
+              "balanced_accuracy": 0.34685040146777407,
+              "brier": 0.5987427784523227,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4,
+                  "confidence": 0.3855060010864578,
+                  "count": 5
+                },
+                {
+                  "accuracy": 0.4425925925925926,
+                  "confidence": 0.46407109152426423,
+                  "count": 540
+                },
+                {
+                  "accuracy": 0.42105263157894735,
+                  "confidence": 0.5134245526609578,
+                  "count": 171
+                }
+              ],
+              "direction_only_auc": 0.514638284440411,
+              "log_loss": 0.9705310762984941,
+              "macro_auc": 0.534976212992262,
+              "rows": 716,
+              "top_label_ece": 0.03836097475236617
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.4128187456926258,
+              "balanced_accuracy": 0.3725131787766853,
+              "brier": 0.6251185458284318,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.31343283582089554,
+                  "confidence": 0.38038172919946983,
+                  "count": 134
+                },
+                {
+                  "accuracy": 0.41949910554561715,
+                  "confidence": 0.45423069499949636,
+                  "count": 1118
+                },
+                {
+                  "accuracy": 0.44221105527638194,
+                  "confidence": 0.512849422877317,
+                  "count": 199
+                }
+              ],
+              "direction_only_auc": 0.5091700274096964,
+              "log_loss": 1.0207097441575883,
+              "macro_auc": 0.6013759041095055,
+              "rows": 1451,
+              "top_label_ece": 0.042631360354756724
+            },
+            "low": {
+              "accuracy": 0.4034758102395491,
+              "balanced_accuracy": 0.40919341857843844,
+              "brier": 0.6407756107158552,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3685185185185185,
+                  "confidence": 0.37440294448228817,
+                  "count": 1080
+                },
+                {
+                  "accuracy": 0.4269889224572004,
+                  "confidence": 0.4281034318539975,
+                  "count": 993
+                },
+                {
+                  "accuracy": 0.6607142857142857,
+                  "confidence": 0.5316504271020891,
+                  "count": 56
+                }
+              ],
+              "direction_only_auc": 0.522371241686363,
+              "log_loss": 1.0581024477252154,
+              "macro_auc": 0.609952031515708,
+              "rows": 2129,
+              "top_label_ece": 0.006899701246676273
+            }
+          },
+          "overall": {
+            "accuracy": 0.4072625698324022,
+            "balanced_accuracy": 0.40543801988367373,
+            "brier": 0.6344296886064555,
+            "calibration_bins": [
+              {
+                "accuracy": 0.3624382207578254,
+                "confidence": 0.37506287623855034,
+                "count": 1214
+              },
+              {
+                "accuracy": 0.4230222643297016,
+                "confidence": 0.44194060864067103,
+                "count": 2111
+              },
+              {
+                "accuracy": 0.49019607843137253,
+                "confidence": 0.5169782708639338,
+                "count": 255
+              }
+            ],
+            "direction_only_auc": 0.5177870126556179,
+            "log_loss": 1.0429469134021352,
+            "macro_auc": 0.614649126306405,
+            "rows": 3580,
+            "top_label_ece": 0.01734425018557534
+          }
+        },
+        "legacy_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.40502793296089384,
+              "balanced_accuracy": 0.3901100217107449,
+              "brier": 0.6409341015767974,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3282275711159737,
+                  "confidence": 0.3693666442814423,
+                  "count": 457
+                },
+                {
+                  "accuracy": 0.5,
+                  "confidence": 0.43540119844981695,
+                  "count": 218
+                },
+                {
+                  "accuracy": 0.7560975609756098,
+                  "confidence": 0.5425622366298702,
+                  "count": 41
+                }
+              ],
+              "direction_only_auc": 0.49891059963377604,
+              "log_loss": 1.0620622758318439,
+              "macro_auc": 0.6017323250632866,
+              "rows": 716,
+              "top_label_ece": 0.05815369200102563
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.4106145251396648,
+              "balanced_accuracy": 0.3606664835620857,
+              "brier": 0.6330067267720909,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.39631336405529954,
+                  "confidence": 0.37952408770343066,
+                  "count": 217
+                },
+                {
+                  "accuracy": 0.4168336673346693,
+                  "confidence": 0.43424047587247194,
+                  "count": 499
+                }
+              ],
+              "direction_only_auc": 0.5201810339590547,
+              "log_loss": 1.0406108120721431,
+              "macro_auc": 0.5667263057645898,
+              "rows": 716,
+              "top_label_ece": 0.017219651436758465
+            },
+            "ETH_USDT": {
+              "accuracy": 0.39385474860335196,
+              "balanced_accuracy": 0.4131194729775644,
+              "brier": 0.647619797287308,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.36049382716049383,
+                  "confidence": 0.3752945147791023,
+                  "count": 405
+                },
+                {
+                  "accuracy": 0.4280936454849498,
+                  "confidence": 0.42298490260507754,
+                  "count": 299
+                },
+                {
+                  "accuracy": 0.6666666666666666,
+                  "confidence": 0.5344482709915436,
+                  "count": 12
+                }
+              ],
+              "direction_only_auc": 0.5155712983096024,
+              "log_loss": 1.069527814852834,
+              "macro_auc": 0.598010629647986,
+              "rows": 716,
+              "top_label_ece": 0.012721247702122518
+            },
+            "SOL_USDT": {
+              "accuracy": 0.39664804469273746,
+              "balanced_accuracy": 0.3648610477782844,
+              "brier": 0.6500560965968807,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.42160278745644597,
+                  "confidence": 0.38218680000499966,
+                  "count": 287
+                },
+                {
+                  "accuracy": 0.3808411214953271,
+                  "confidence": 0.4210315785976191,
+                  "count": 428
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.50050364230775,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5247900516795866,
+              "log_loss": 1.0709568652444927,
+              "macro_auc": 0.5464094920748871,
+              "rows": 716,
+              "top_label_ece": 0.04052291575510307
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4483240223463687,
+              "balanced_accuracy": 0.35229208177974186,
+              "brier": 0.5968000722923439,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.375,
+                  "confidence": 0.3856906695047313,
+                  "count": 8
+                },
+                {
+                  "accuracy": 0.4497878359264498,
+                  "confidence": 0.4526186662464052,
+                  "count": 707
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.5000857452909822,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.49808636982382765,
+              "log_loss": 0.9711004357613986,
+              "macro_auc": 0.5286465525525745,
+              "rows": 716,
+              "top_label_ece": 0.0036131398568956725
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.4148862853204686,
+              "balanced_accuracy": 0.37284100883268806,
+              "brier": 0.6227732025803935,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.2795031055900621,
+                  "confidence": 0.38033266071080857,
+                  "count": 161
+                },
+                {
+                  "accuracy": 0.4321179208688906,
+                  "confidence": 0.4445134147485063,
+                  "count": 1289
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.5000857452909822,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.49961446021520395,
+              "log_loss": 1.0191027576676064,
+              "macro_auc": 0.6013248903800158,
+              "rows": 1451,
+              "top_label_ece": 0.02254406321885306
+            },
+            "low": {
+              "accuracy": 0.4081728511038046,
+              "balanced_accuracy": 0.4131930066712675,
+              "brier": 0.6411190737135043,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3800494641384996,
+                  "confidence": 0.3748484258341571,
+                  "count": 1213
+                },
+                {
+                  "accuracy": 0.4280742459396752,
+                  "confidence": 0.42378313882425356,
+                  "count": 862
+                },
+                {
+                  "accuracy": 0.7222222222222222,
+                  "confidence": 0.5399802702968696,
+                  "count": 54
+                }
+              ],
+              "direction_only_auc": 0.5204758240348852,
+              "log_loss": 1.0590374694778795,
+              "macro_auc": 0.6085555319462023,
+              "rows": 2129,
+              "top_label_ece": 0.00932309027742129
+            }
+          },
+          "overall": {
+            "accuracy": 0.41089385474860335,
+            "balanced_accuracy": 0.4080277736396536,
+            "brier": 0.6336833589050843,
+            "calibration_bins": [
+              {
+                "accuracy": 0.3682678311499272,
+                "confidence": 0.3754910472425566,
+                "count": 1374
+              },
+              {
+                "accuracy": 0.4304974430497443,
+                "confidence": 0.43620588436881974,
+                "count": 2151
+              },
+              {
+                "accuracy": 0.7090909090909091,
+                "confidence": 0.5392549152967625,
+                "count": 55
+              }
+            ],
+            "direction_only_auc": 0.5142501721571852,
+            "log_loss": 1.0428516407525423,
+            "macro_auc": 0.6148780871169066,
+            "rows": 3580,
+            "top_label_ece": 0.008811322862369303
+          }
+        },
+        "legacy_logistic": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.4329608938547486,
+              "balanced_accuracy": 0.4084076984292546,
+              "brier": 0.6441356154027802,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.37349397590361444,
+                  "confidence": 0.3692054856915607,
+                  "count": 498
+                },
+                {
+                  "accuracy": 0.5645933014354066,
+                  "confidence": 0.435475800407541,
+                  "count": 209
+                },
+                {
+                  "accuracy": 0.6666666666666666,
+                  "confidence": 0.5139854892389913,
+                  "count": 9
+                }
+              ],
+              "direction_only_auc": 0.5381406021834365,
+              "log_loss": 1.0669028873301467,
+              "macro_auc": 0.6106395425692036,
+              "rows": 716,
+              "top_label_ece": 0.04259127994032927
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.41899441340782123,
+              "balanced_accuracy": 0.36748350704025706,
+              "brier": 0.6299583003153749,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.39080459770114945,
+                  "confidence": 0.3730603902029049,
+                  "count": 348
+                },
+                {
+                  "accuracy": 0.4383954154727794,
+                  "confidence": 0.43648747539943344,
+                  "count": 349
+                },
+                {
+                  "accuracy": 0.5789473684210527,
+                  "confidence": 0.516000697251853,
+                  "count": 19
+                }
+              ],
+              "direction_only_auc": 0.5477674503371606,
+              "log_loss": 1.0362956150747336,
+              "macro_auc": 0.5812533343296261,
+              "rows": 716,
+              "top_label_ece": 0.01122463973072854
+            },
+            "ETH_USDT": {
+              "accuracy": 0.40502793296089384,
+              "balanced_accuracy": 0.406935973221068,
+              "brier": 0.649662865120383,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.37398373983739835,
+                  "confidence": 0.3708450016512178,
+                  "count": 492
+                },
+                {
+                  "accuracy": 0.46846846846846846,
+                  "confidence": 0.423881669200922,
+                  "count": 222
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.5019983635735836,
+                  "count": 2
+                }
+              ],
+              "direction_only_auc": 0.5241986392649225,
+              "log_loss": 1.0729032480466982,
+              "macro_auc": 0.6066720781998273,
+              "rows": 716,
+              "top_label_ece": 0.01737225125397901
+            },
+            "SOL_USDT": {
+              "accuracy": 0.39106145251396646,
+              "balanced_accuracy": 0.3502764477884177,
+              "brier": 0.6498281363162229,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3789237668161435,
+                  "confidence": 0.3718867256079978,
+                  "count": 446
+                },
+                {
+                  "accuracy": 0.4111111111111111,
+                  "confidence": 0.4191626730259382,
+                  "count": 270
+                }
+              ],
+              "direction_only_auc": 0.5264723298880275,
+              "log_loss": 1.0708791143877705,
+              "macro_auc": 0.5468892064745973,
+              "rows": 716,
+              "top_label_ece": 0.0074196118656931435
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4134078212290503,
+              "balanced_accuracy": 0.31809991648418134,
+              "brier": 0.6037051973666817,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.39473684210526316,
+                  "confidence": 0.3883984284077531,
+                  "count": 38
+                },
+                {
+                  "accuracy": 0.4080808080808081,
+                  "confidence": 0.4628538856518514,
+                  "count": 495
+                },
+                {
+                  "accuracy": 0.4406779661016949,
+                  "confidence": 0.5322756632548614,
+                  "count": 177
+                },
+                {
+                  "accuracy": 0.16666666666666666,
+                  "confidence": 0.6141667813453972,
+                  "count": 6
+                }
+              ],
+              "direction_only_auc": 0.4631478229990728,
+              "log_loss": 0.9808144381183443,
+              "macro_auc": 0.495442433839093,
+              "rows": 716,
+              "top_label_ece": 0.06459682430496465
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.40248104755341146,
+              "balanced_accuracy": 0.3544406297407055,
+              "brier": 0.6220702387387755,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3559322033898305,
+                  "confidence": 0.37480051118415814,
+                  "count": 354
+                },
+                {
+                  "accuracy": 0.4111731843575419,
+                  "confidence": 0.45071983547345146,
+                  "count": 895
+                },
+                {
+                  "accuracy": 0.45408163265306123,
+                  "confidence": 0.5306999446854799,
+                  "count": 196
+                },
+                {
+                  "accuracy": 0.16666666666666666,
+                  "confidence": 0.6141667813453972,
+                  "count": 6
+                }
+              ],
+              "direction_only_auc": 0.49922601069618305,
+              "log_loss": 1.0168673926868514,
+              "macro_auc": 0.6013769481394368,
+              "rows": 1451,
+              "top_label_ece": 0.041196294661859034
+            },
+            "low": {
+              "accuracy": 0.4189760450915923,
+              "balanced_accuracy": 0.4194830225707486,
+              "brier": 0.6445823417507701,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.38419618528610355,
+                  "confidence": 0.3706310132281178,
+                  "count": 1468
+                },
+                {
+                  "accuracy": 0.49230769230769234,
+                  "confidence": 0.42514252942786734,
+                  "count": 650
+                },
+                {
+                  "accuracy": 0.7272727272727273,
+                  "confidence": 0.5117711468945195,
+                  "count": 11
+                }
+              ],
+              "direction_only_auc": 0.5287967899741659,
+              "log_loss": 1.0651135979939348,
+              "macro_auc": 0.6061464004313071,
+              "rows": 2129,
+              "top_label_ece": 0.030973013544936402
+            }
+          },
+          "overall": {
+            "accuracy": 0.4122905027932961,
+            "balanced_accuracy": 0.4068859447882928,
+            "brier": 0.6354580229042885,
+            "calibration_bins": [
+              {
+                "accuracy": 0.3787047200878156,
+                "confidence": 0.3714411132700708,
+                "count": 1822
+              },
+              {
+                "accuracy": 0.4453074433656958,
+                "confidence": 0.4399591565545973,
+                "count": 1545
+              },
+              {
+                "accuracy": 0.46859903381642515,
+                "confidence": 0.5296940665419989,
+                "count": 207
+              },
+              {
+                "accuracy": 0.16666666666666666,
+                "confidence": 0.6141667813453972,
+                "count": 6
+              }
+            ],
+            "direction_only_auc": 0.5147645077671512,
+            "log_loss": 1.0455590605915386,
+            "macro_auc": 0.615550035839516,
+            "rows": 3580,
+            "top_label_ece": 0.010287448940598982
+          }
+        },
+        "matched_raw_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.39664804469273746,
+              "balanced_accuracy": 0.38470420075871714,
+              "brier": 0.6430459907859636,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.31106471816283926,
+                  "confidence": 0.3683819026540221,
+                  "count": 479
+                },
+                {
+                  "accuracy": 0.5454545454545454,
+                  "confidence": 0.4353806513708249,
+                  "count": 209
+                },
+                {
+                  "accuracy": 0.75,
+                  "confidence": 0.5228249151497807,
+                  "count": 28
+                }
+              ],
+              "direction_only_auc": 0.5015993324525416,
+              "log_loss": 1.064909445369255,
+              "macro_auc": 0.6054781616653787,
+              "rows": 716,
+              "top_label_ece": 0.0793593262717602
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.4106145251396648,
+              "balanced_accuracy": 0.36431890657473787,
+              "brier": 0.6335272810694308,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4125560538116592,
+                  "confidence": 0.37956052191649536,
+                  "count": 223
+                },
+                {
+                  "accuracy": 0.4049079754601227,
+                  "confidence": 0.43880804341936097,
+                  "count": 489
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.5051954176298856,
+                  "count": 4
+                }
+              ],
+              "direction_only_auc": 0.5085474758520139,
+              "log_loss": 1.0408943428298851,
+              "macro_auc": 0.566532609255574,
+              "rows": 716,
+              "top_label_ece": 0.03619323348347698
+            },
+            "ETH_USDT": {
+              "accuracy": 0.4036312849162011,
+              "balanced_accuracy": 0.4232801406003372,
+              "brier": 0.6476121198909239,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3568181818181818,
+                  "confidence": 0.3751170489613111,
+                  "count": 440
+                },
+                {
+                  "accuracy": 0.47191011235955055,
+                  "confidence": 0.4245760684026585,
+                  "count": 267
+                },
+                {
+                  "accuracy": 0.6666666666666666,
+                  "confidence": 0.5184516026147786,
+                  "count": 9
+                }
+              ],
+              "direction_only_auc": 0.5387704285614084,
+              "log_loss": 1.069454460248833,
+              "macro_auc": 0.6033738670001264,
+              "rows": 716,
+              "top_label_ece": 0.030759255385382763
+            },
+            "SOL_USDT": {
+              "accuracy": 0.388268156424581,
+              "balanced_accuracy": 0.3597925216598267,
+              "brier": 0.6505259698311796,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.40625,
+                  "confidence": 0.38114907082580324,
+                  "count": 288
+                },
+                {
+                  "accuracy": 0.37616822429906543,
+                  "confidence": 0.42399603917424994,
+                  "count": 428
+                }
+              ],
+              "direction_only_auc": 0.5287467700258398,
+              "log_loss": 1.0713865858749385,
+              "macro_auc": 0.5475916047314121,
+              "rows": 716,
+              "top_label_ece": 0.038686274258027425
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4371508379888268,
+              "balanced_accuracy": 0.34685040146777407,
+              "brier": 0.5985472777732177,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.5,
+                  "confidence": 0.3859623291138362,
+                  "count": 8
+                },
+                {
+                  "accuracy": 0.43558282208588955,
+                  "confidence": 0.4605105081033472,
+                  "count": 652
+                },
+                {
+                  "accuracy": 0.44642857142857145,
+                  "confidence": 0.5067134599330428,
+                  "count": 56
+                }
+              ],
+              "direction_only_auc": 0.514638284440411,
+              "log_loss": 0.9725100545294577,
+              "macro_auc": 0.5348534809150117,
+              "rows": 716,
+              "top_label_ece": 0.028688696098773878
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.4128187456926258,
+              "balanced_accuracy": 0.3725131787766853,
+              "brier": 0.6241295669168255,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.31351351351351353,
+                  "confidence": 0.3814160358036824,
+                  "count": 185
+                },
+                {
+                  "accuracy": 0.42454394693200664,
+                  "confidence": 0.4512548940636029,
+                  "count": 1206
+                },
+                {
+                  "accuracy": 0.48333333333333334,
+                  "confidence": 0.5066122571128324,
+                  "count": 60
+                }
+              ],
+              "direction_only_auc": 0.5091700274096964,
+              "log_loss": 1.0203366163155216,
+              "macro_auc": 0.6022237427406616,
+              "rows": 1451,
+              "top_label_ece": 0.031820885107619774
+            },
+            "low": {
+              "accuracy": 0.4034758102395491,
+              "balanced_accuracy": 0.40919341857843844,
+              "brier": 0.641823008068952,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3679169992019154,
+                  "confidence": 0.3738588138138011,
+                  "count": 1253
+                },
+                {
+                  "accuracy": 0.44219308700834326,
+                  "confidence": 0.4248429719205436,
+                  "count": 839
+                },
+                {
+                  "accuracy": 0.7297297297297297,
+                  "confidence": 0.5217611364250505,
+                  "count": 37
+                }
+              ],
+              "direction_only_auc": 0.5223712416863628,
+              "log_loss": 1.0598433396639146,
+              "macro_auc": 0.6101345273433477,
+              "rows": 2129,
+              "top_label_ece": 0.013948651113024811
+            }
+          },
+          "overall": {
+            "accuracy": 0.4072625698324022,
+            "balanced_accuracy": 0.40543801988367373,
+            "brier": 0.6346517278701431,
+            "calibration_bins": [
+              {
+                "accuracy": 0.3609179415855355,
+                "confidence": 0.3748310572547802,
+                "count": 1438
+              },
+              {
+                "accuracy": 0.4317848410757946,
+                "confidence": 0.4404189025340055,
+                "count": 2045
+              },
+              {
+                "accuracy": 0.5773195876288659,
+                "confidence": 0.5123906956133693,
+                "count": 97
+              }
+            ],
+            "direction_only_auc": 0.5177870126556179,
+            "log_loss": 1.043830977770474,
+            "macro_auc": 0.6150312701362106,
+            "rows": 3580,
+            "top_label_ece": 0.012279837580982788
+          }
+        },
+        "prior": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.2751396648044693,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.7083351804746267,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.2751396648044693,
+                  "confidence": 0.3887008860530598,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1684582825460148,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.11356122124859053
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.38966480446927376,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6413084854509526,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.38966480446927376,
+                  "confidence": 0.3887008860530598,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.057431129014521,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.0009639184162139602
+            },
+            "ETH_USDT": {
+              "accuracy": 0.29608938547486036,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6812637823228161,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.29608938547486036,
+                  "confidence": 0.3887008860530598,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1234375516396922,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.09261150057819945
+            },
+            "SOL_USDT": {
+              "accuracy": 0.36033519553072624,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6533602617638654,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.36033519553072624,
+                  "confidence": 0.3887008860530598,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.0773329780351293,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.028365690522333564
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4092178770949721,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6142639299574367,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4092178770949721,
+                  "confidence": 0.3887008860530598,
+                  "count": 716
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.0124453607758837,
+              "macro_auc": 0.5,
+              "rows": 716,
+              "top_label_ece": 0.02051699104191229
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.3783597518952447,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.639143203143403,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3783597518952447,
+                  "confidence": 0.38870088605305986,
+                  "count": 1451
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.0537388809896004,
+              "macro_auc": 0.5,
+              "rows": 1451,
+              "top_label_ece": 0.01034113415781518
+            },
+            "low": {
+              "accuracy": 0.3240958196336308,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6737209330470764,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3240958196336308,
+                  "confidence": 0.38870088605305997,
+                  "count": 2129
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1110494504105863,
+              "macro_auc": 0.5,
+              "rows": 2129,
+              "top_label_ece": 0.06460506641942915
+            }
+          },
+          "overall": {
+            "accuracy": 0.34608938547486034,
+            "balanced_accuracy": 0.3333333333333333,
+            "brier": 0.6597063279939395,
+            "calibration_bins": [
+              {
+                "accuracy": 0.34608938547486034,
+                "confidence": 0.38870088605305997,
+                "count": 3580
+              }
+            ],
+            "direction_only_auc": 0.5,
+            "log_loss": 1.0878210604022482,
+            "macro_auc": 0.5,
+            "rows": 3580,
+            "top_label_ece": 0.042611500578199624
+          }
+        }
+      },
+      "parity": {
+        "legacy_gbt": {
+          "evaluation_max_abs_error": 4.440892098500626e-16,
+          "fit_seconds": 10.22990333312191
+        },
+        "legacy_logistic": {
+          "evaluation_max_abs_error": 0.0,
+          "fit_seconds": 0.053315750090405345
+        },
+        "matched_raw_gbt": {
+          "evaluation_max_abs_error": 4.996003610813204e-16,
+          "fit_seconds": 9.217472749995068
+        }
+      },
+      "regime_volatility_threshold": 0.006047748850626464,
+      "stages": {
+        "calibration": {
+          "first_feature": 1785319200.0,
+          "last_label": 1787821200.0,
+          "rows": 3460
+        },
+        "evaluation": {
+          "first_feature": 1787911200.0,
+          "last_label": 1790499600.0,
+          "rows": 3580
+        },
+        "fit": {
+          "first_feature": 1759140000.0,
+          "last_label": 1785229200.0,
+          "rows": 35111
+        },
+        "legacy_fit": {
+          "first_feature": 1759140000.0,
+          "last_label": 1787821200.0,
+          "rows": 38711
+        }
+      },
+      "start": 1787911200,
+      "temperature": 0.8961171398540225
+    },
+    {
+      "end": 1793091600,
+      "fold": 3,
+      "models": {
+        "calibrated_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.406993006993007,
+              "balanced_accuracy": 0.3984904902588818,
+              "brier": 0.6425014820073363,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.360381861575179,
+                  "confidence": 0.3689614045022118,
+                  "count": 419
+                },
+                {
+                  "accuracy": 0.3557692307692308,
+                  "confidence": 0.43145598997257617,
+                  "count": 208
+                },
+                {
+                  "accuracy": 0.6885245901639344,
+                  "confidence": 0.5538998278217815,
+                  "count": 61
+                },
+                {
+                  "accuracy": 0.8888888888888888,
+                  "confidence": 0.6167504953256453,
+                  "count": 27
+                }
+              ],
+              "direction_only_auc": 0.49541799559768207,
+              "log_loss": 1.066050954140246,
+              "macro_auc": 0.5893807263410826,
+              "rows": 715,
+              "top_label_ece": 0.0488077224193028
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.427972027972028,
+              "balanced_accuracy": 0.3723414896431083,
+              "brier": 0.6407974376972084,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3702127659574468,
+                  "confidence": 0.37805964555702026,
+                  "count": 235
+                },
+                {
+                  "accuracy": 0.4549266247379455,
+                  "confidence": 0.4301151364875806,
+                  "count": 477
+                },
+                {
+                  "accuracy": 0.6666666666666666,
+                  "confidence": 0.5151615536105809,
+                  "count": 3
+                }
+              ],
+              "direction_only_auc": 0.5389210900955868,
+              "log_loss": 1.0566447734039768,
+              "macro_auc": 0.5545413345801465,
+              "rows": 715,
+              "top_label_ece": 0.019767289427261643
+            },
+            "ETH_USDT": {
+              "accuracy": 0.40559440559440557,
+              "balanced_accuracy": 0.3999236865567077,
+              "brier": 0.6496083060290192,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3828125,
+                  "confidence": 0.37483510689138017,
+                  "count": 384
+                },
+                {
+                  "accuracy": 0.42671009771986973,
+                  "confidence": 0.43052213403741696,
+                  "count": 307
+                },
+                {
+                  "accuracy": 0.47619047619047616,
+                  "confidence": 0.5287283894152799,
+                  "count": 21
+                },
+                {
+                  "accuracy": 0.6666666666666666,
+                  "confidence": 0.6182827873975575,
+                  "count": 3
+                }
+              ],
+              "direction_only_auc": 0.5163388522345326,
+              "log_loss": 1.073104833091415,
+              "macro_auc": 0.5720560903458648,
+              "rows": 715,
+              "top_label_ece": 0.007667219466748562
+            },
+            "SOL_USDT": {
+              "accuracy": 0.4489510489510489,
+              "balanced_accuracy": 0.40195297740054775,
+              "brier": 0.6366370853182713,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.41007194244604317,
+                  "confidence": 0.375625760590069,
+                  "count": 278
+                },
+                {
+                  "accuracy": 0.47477064220183485,
+                  "confidence": 0.42949028453032045,
+                  "count": 436
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.5836094088085106,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5932192274903272,
+              "log_loss": 1.0516101428010456,
+              "macro_auc": 0.5870373689125078,
+              "rows": 715,
+              "top_label_ece": 0.04182081665671273
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.47692307692307695,
+              "balanced_accuracy": 0.360395328291409,
+              "brier": 0.5930997538194427,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3,
+                  "confidence": 0.3691909027462089,
+                  "count": 10
+                },
+                {
+                  "accuracy": 0.48306332842415317,
+                  "confidence": 0.4569543226804569,
+                  "count": 679
+                },
+                {
+                  "accuracy": 0.38461538461538464,
+                  "confidence": 0.5091834716800415,
+                  "count": 26
+                }
+              ],
+              "direction_only_auc": 0.5345034246575342,
+              "log_loss": 0.9672199605618242,
+              "macro_auc": 0.549847439187709,
+              "rows": 715,
+              "top_label_ece": 0.03029187998757056
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.45241581259150804,
+              "balanced_accuracy": 0.3675021910884871,
+              "brier": 0.6140230173563475,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3469387755102041,
+                  "confidence": 0.37839362167782914,
+                  "count": 98
+                },
+                {
+                  "accuracy": 0.46215780998389694,
+                  "confidence": 0.4454650758075485,
+                  "count": 1242
+                },
+                {
+                  "accuracy": 0.38461538461538464,
+                  "confidence": 0.5091834716800415,
+                  "count": 26
+                }
+              ],
+              "direction_only_auc": 0.5548836235689594,
+              "log_loss": 1.0072286352824247,
+              "macro_auc": 0.5925834837602629,
+              "rows": 1366,
+              "top_label_ece": 0.01980506664358205
+            },
+            "low": {
+              "accuracy": 0.4214576731552739,
+              "balanced_accuracy": 0.4201558469573666,
+              "brier": 0.6439724149724732,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3811074918566775,
+                  "confidence": 0.37329708614469914,
+                  "count": 1228
+                },
+                {
+                  "accuracy": 0.44277456647398844,
+                  "confidence": 0.42929501291402716,
+                  "count": 865
+                },
+                {
+                  "accuracy": 0.627906976744186,
+                  "confidence": 0.5467474388894163,
+                  "count": 86
+                },
+                {
+                  "accuracy": 0.8666666666666667,
+                  "confidence": 0.6169037245328364,
+                  "count": 30
+                }
+              ],
+              "direction_only_auc": 0.5436812388318191,
+              "log_loss": 1.0650007283671983,
+              "macro_auc": 0.6006958817786585,
+              "rows": 2209,
+              "top_label_ece": 0.01617184271761026
+            }
+          },
+          "overall": {
+            "accuracy": 0.4332867132867133,
+            "balanced_accuracy": 0.4165859047008804,
+            "brier": 0.6325288129742557,
+            "calibration_bins": [
+              {
+                "accuracy": 0.37858220211161386,
+                "confidence": 0.37367375317505114,
+                "count": 1326
+              },
+              {
+                "accuracy": 0.4542002847650688,
+                "confidence": 0.43882667789445123,
+                "count": 2107
+              },
+              {
+                "accuracy": 0.5714285714285714,
+                "confidence": 0.5380272322158115,
+                "count": 112
+              },
+              {
+                "accuracy": 0.8666666666666667,
+                "confidence": 0.6169037245328364,
+                "count": 30
+              }
+            ],
+            "direction_only_auc": 0.5385604278673836,
+            "log_loss": 1.0429261327997017,
+            "macro_auc": 0.6103368293893842,
+            "rows": 3575,
+            "top_label_ece": 0.014023673069123749
+          }
+        },
+        "legacy_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.4027972027972028,
+              "balanced_accuracy": 0.3924997112914676,
+              "brier": 0.6418387285282503,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3470715835140998,
+                  "confidence": 0.36666640189608973,
+                  "count": 461
+                },
+                {
+                  "accuracy": 0.39106145251396646,
+                  "confidence": 0.42943663411602284,
+                  "count": 179
+                },
+                {
+                  "accuracy": 0.7301587301587301,
+                  "confidence": 0.552482114282384,
+                  "count": 63
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.6063483420066702,
+                  "count": 12
+                }
+              ],
+              "direction_only_auc": 0.4805489420960424,
+              "log_loss": 1.0643703776682423,
+              "macro_auc": 0.5884835285154194,
+              "rows": 715,
+              "top_label_ece": 0.04450323842936395
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.42937062937062936,
+              "balanced_accuracy": 0.37605310241512374,
+              "brier": 0.6413327898395529,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.41260744985673353,
+                  "confidence": 0.37940782454682764,
+                  "count": 349
+                },
+                {
+                  "accuracy": 0.4453551912568306,
+                  "confidence": 0.42301147008612205,
+                  "count": 366
+                }
+              ],
+              "direction_only_auc": 0.5464714256660566,
+              "log_loss": 1.057683190623888,
+              "macro_auc": 0.5564682105715436,
+              "rows": 715,
+              "top_label_ece": 0.02764261703725382
+            },
+            "ETH_USDT": {
+              "accuracy": 0.406993006993007,
+              "balanced_accuracy": 0.40317569475750714,
+              "brier": 0.6497435717136515,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3875802997858672,
+                  "confidence": 0.3740146402675285,
+                  "count": 467
+                },
+                {
+                  "accuracy": 0.43103448275862066,
+                  "confidence": 0.4275104555731885,
+                  "count": 232
+                },
+                {
+                  "accuracy": 0.6666666666666666,
+                  "confidence": 0.5257024690187999,
+                  "count": 15
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.600471038966767,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5132578115274492,
+              "log_loss": 1.0729510902119603,
+              "macro_auc": 0.5711919790919794,
+              "rows": 715,
+              "top_label_ece": 0.013800938889187701
+            },
+            "SOL_USDT": {
+              "accuracy": 0.45034965034965035,
+              "balanced_accuracy": 0.4082428512096031,
+              "brier": 0.6389303973923106,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4155495978552279,
+                  "confidence": 0.3764537855136214,
+                  "count": 373
+                },
+                {
+                  "accuracy": 0.4897360703812317,
+                  "confidence": 0.42032534542318234,
+                  "count": 341
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.5367439060659405,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5906485671191554,
+              "log_loss": 1.0552002654287131,
+              "macro_auc": 0.5859784953734325,
+              "rows": 715,
+              "top_label_ece": 0.054249705063188776
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4727272727272727,
+              "balanced_accuracy": 0.35584254827529294,
+              "brier": 0.5949212541631984,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.32,
+                  "confidence": 0.38320225345177983,
+                  "count": 25
+                },
+                {
+                  "accuracy": 0.4782608695652174,
+                  "confidence": 0.44440788236829504,
+                  "count": 690
+                }
+              ],
+              "direction_only_auc": 0.5338235294117648,
+              "log_loss": 0.9720254681151832,
+              "macro_auc": 0.5517046654855866,
+              "rows": 715,
+              "top_label_ece": 0.034879185317721585
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.45534407027818447,
+              "balanced_accuracy": 0.37324387493866146,
+              "brier": 0.6147226196420553,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.38565022421524664,
+                  "confidence": 0.38253957213621054,
+                  "count": 223
+                },
+                {
+                  "accuracy": 0.4689413823272091,
+                  "confidence": 0.43535236964135676,
+                  "count": 1143
+                }
+              ],
+              "direction_only_auc": 0.5584991272922046,
+              "log_loss": 1.0094704262349103,
+              "macro_auc": 0.5925029401307677,
+              "rows": 1366,
+              "top_label_ece": 0.028613409160727882
+            },
+            "low": {
+              "accuracy": 0.4182888184698959,
+              "balanced_accuracy": 0.4204125651645689,
+              "brier": 0.644874206355537,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.38705234159779617,
+                  "confidence": 0.37245342478813803,
+                  "count": 1452
+                },
+                {
+                  "accuracy": 0.4421052631578947,
+                  "confidence": 0.4259224125934233,
+                  "count": 665
+                },
+                {
+                  "accuracy": 0.7088607594936709,
+                  "confidence": 0.5471981536852928,
+                  "count": 79
+                },
+                {
+                  "accuracy": 0.9230769230769231,
+                  "confidence": 0.6058962417728314,
+                  "count": 13
+                }
+              ],
+              "direction_only_auc": 0.5334671365256918,
+              "log_loss": 1.0660742997181634,
+              "macro_auc": 0.5982604638865786,
+              "rows": 2209,
+              "top_label_ece": 0.02211585221766056
+            }
+          },
+          "overall": {
+            "accuracy": 0.43244755244755245,
+            "balanced_accuracy": 0.4183837761892366,
+            "brier": 0.6333533483273929,
+            "calibration_bins": [
+              {
+                "accuracy": 0.38686567164179103,
+                "confidence": 0.3737962372410455,
+                "count": 1675
+              },
+              {
+                "accuracy": 0.459070796460177,
+                "confidence": 0.43188393964308475,
+                "count": 1808
+              },
+              {
+                "accuracy": 0.7088607594936709,
+                "confidence": 0.5471981536852928,
+                "count": 79
+              },
+              {
+                "accuracy": 0.9230769230769231,
+                "confidence": 0.6058962417728314,
+                "count": 13
+              }
+            ],
+            "direction_only_auc": 0.5355885976702509,
+            "log_loss": 1.0444460784095972,
+            "macro_auc": 0.6098105638544519,
+            "rows": 3575,
+            "top_label_ece": 0.024598555094368292
+          }
+        },
+        "legacy_logistic": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.38461538461538464,
+              "balanced_accuracy": 0.35940771367662067,
+              "brier": 0.65121922076362,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.31893004115226337,
+                  "confidence": 0.3682773554416289,
+                  "count": 486
+                },
+                {
+                  "accuracy": 0.49038461538461536,
+                  "confidence": 0.43654430377521913,
+                  "count": 208
+                },
+                {
+                  "accuracy": 0.8571428571428571,
+                  "confidence": 0.511019126921743,
+                  "count": 21
+                }
+              ],
+              "direction_only_auc": 0.4768429091235794,
+              "log_loss": 1.0780954524607775,
+              "macro_auc": 0.5696874825539052,
+              "rows": 715,
+              "top_label_ece": 0.059370878173467756
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.393006993006993,
+              "balanced_accuracy": 0.3432545616714586,
+              "brier": 0.6457777398270241,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3602150537634409,
+                  "confidence": 0.37422579144923174,
+                  "count": 372
+                },
+                {
+                  "accuracy": 0.4218289085545723,
+                  "confidence": 0.42485307681774764,
+                  "count": 339
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.5267207616844682,
+                  "count": 4
+                }
+              ],
+              "direction_only_auc": 0.5288158429936953,
+              "log_loss": 1.0652667930306585,
+              "macro_auc": 0.5365455475859905,
+              "rows": 715,
+              "top_label_ece": 0.01137105512390598
+            },
+            "ETH_USDT": {
+              "accuracy": 0.38741258741258744,
+              "balanced_accuracy": 0.3914097068040933,
+              "brier": 0.6568435384897278,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.37627811860940696,
+                  "confidence": 0.36955139466332465,
+                  "count": 489
+                },
+                {
+                  "accuracy": 0.4107142857142857,
+                  "confidence": 0.4268466348054457,
+                  "count": 224
+                },
+                {
+                  "accuracy": 0.5,
+                  "confidence": 0.5225290945470795,
+                  "count": 2
+                }
+              ],
+              "direction_only_auc": 0.4949738578364247,
+              "log_loss": 1.0840380363036595,
+              "macro_auc": 0.5590684780538288,
+              "rows": 715,
+              "top_label_ece": 0.009717583769438118
+            },
+            "SOL_USDT": {
+              "accuracy": 0.386013986013986,
+              "balanced_accuracy": 0.35812121950229364,
+              "brier": 0.6485619845871036,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3614190687361419,
+                  "confidence": 0.3712684847853191,
+                  "count": 451
+                },
+                {
+                  "accuracy": 0.42585551330798477,
+                  "confidence": 0.42241954104820606,
+                  "count": 263
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.5233839252705756,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.530526591907666,
+              "log_loss": 1.0700452659527186,
+              "macro_auc": 0.5466483550000562,
+              "rows": 715,
+              "top_label_ece": 0.008143165618503706
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4433566433566434,
+              "balanced_accuracy": 0.33608648939027663,
+              "brier": 0.5940185667570992,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.6153846153846154,
+                  "confidence": 0.3909308442986618,
+                  "count": 13
+                },
+                {
+                  "accuracy": 0.4395424836601307,
+                  "confidence": 0.4558277465171831,
+                  "count": 612
+                },
+                {
+                  "accuracy": 0.43820224719101125,
+                  "confidence": 0.5228063979415973,
+                  "count": 89
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.6022351088077548,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.51540088638195,
+              "log_loss": 0.9659649511633981,
+              "macro_auc": 0.554479454359215,
+              "rows": 715,
+              "top_label_ece": 0.02910771216871031
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.4084919472913616,
+              "balanced_accuracy": 0.3343394810213376,
+              "brier": 0.6182931533805314,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.34509803921568627,
+                  "confidence": 0.37765632956514167,
+                  "count": 255
+                },
+                {
+                  "accuracy": 0.41773399014778323,
+                  "confidence": 0.44395890205542204,
+                  "count": 1015
+                },
+                {
+                  "accuracy": 0.47368421052631576,
+                  "confidence": 0.5230836408800138,
+                  "count": 95
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.6022351088077548,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5107449261353667,
+              "log_loss": 1.0131221029672295,
+              "macro_auc": 0.5688863304372042,
+              "rows": 1366,
+              "top_label_ece": 0.029290893411535932
+            },
+            "low": {
+              "accuracy": 0.3929379809868719,
+              "balanced_accuracy": 0.4019775494952104,
+              "brier": 0.6522646462361997,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.35732647814910024,
+                  "confidence": 0.36961905188243066,
+                  "count": 1556
+                },
+                {
+                  "accuracy": 0.4659270998415214,
+                  "confidence": 0.42770949128498054,
+                  "count": 631
+                },
+                {
+                  "accuracy": 0.8181818181818182,
+                  "confidence": 0.5110704708936392,
+                  "count": 22
+                }
+              ],
+              "direction_only_auc": 0.5192939731808871,
+              "log_loss": 1.0771451851825629,
+              "macro_auc": 0.5785055072565375,
+              "rows": 2209,
+              "top_label_ece": 0.02263422606092321
+            }
+          },
+          "overall": {
+            "accuracy": 0.3988811188811189,
+            "balanced_accuracy": 0.3938731870273589,
+            "brier": 0.6392842100849149,
+            "calibration_bins": [
+              {
+                "accuracy": 0.3556046383213694,
+                "confidence": 0.3707507502861255,
+                "count": 1811
+              },
+              {
+                "accuracy": 0.4362089914945322,
+                "confidence": 0.43772963219141925,
+                "count": 1646
+              },
+              {
+                "accuracy": 0.5384615384615384,
+                "confidence": 0.5208247542159091,
+                "count": 117
+              },
+              {
+                "accuracy": 1.0,
+                "confidence": 0.6022351088077548,
+                "count": 1
+              }
+            ],
+            "direction_only_auc": 0.5125795250896057,
+            "log_loss": 1.0526820997822424,
+            "macro_auc": 0.594311359859148,
+            "rows": 3575,
+            "top_label_ece": 0.009061217343546916
+          }
+        },
+        "matched_raw_gbt": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.406993006993007,
+              "balanced_accuracy": 0.3984904902588818,
+              "brier": 0.643677697677324,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.36268343815513626,
+                  "confidence": 0.3676664804972016,
+                  "count": 477
+                },
+                {
+                  "accuracy": 0.37575757575757573,
+                  "confidence": 0.4310567050644008,
+                  "count": 165
+                },
+                {
+                  "accuracy": 0.7605633802816901,
+                  "confidence": 0.5471661040297292,
+                  "count": 71
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.6042867598943693,
+                  "count": 2
+                }
+              ],
+              "direction_only_auc": 0.49541799559768207,
+              "log_loss": 1.0672380798043168,
+              "macro_auc": 0.5891671640273615,
+              "rows": 715,
+              "top_label_ece": 0.03838307779984864
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.427972027972028,
+              "balanced_accuracy": 0.3723414896431083,
+              "brier": 0.6413032147133162,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.38837920489296635,
+                  "confidence": 0.3784103253319622,
+                  "count": 327
+                },
+                {
+                  "accuracy": 0.46134020618556704,
+                  "confidence": 0.42315196106525743,
+                  "count": 388
+                }
+              ],
+              "direction_only_auc": 0.5389210900955868,
+              "log_loss": 1.0574778789066135,
+              "macro_auc": 0.5542896582144076,
+              "rows": 715,
+              "top_label_ece": 0.02528232548689297
+            },
+            "ETH_USDT": {
+              "accuracy": 0.40559440559440557,
+              "balanced_accuracy": 0.3999236865567077,
+              "brier": 0.6500850893125621,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.36774193548387096,
+                  "confidence": 0.37345386739354713,
+                  "count": 465
+                },
+                {
+                  "accuracy": 0.4788135593220339,
+                  "confidence": 0.42732698873799885,
+                  "count": 236
+                },
+                {
+                  "accuracy": 0.42857142857142855,
+                  "confidence": 0.5245149818311107,
+                  "count": 14
+                }
+              ],
+              "direction_only_auc": 0.5163388522345326,
+              "log_loss": 1.0736316136082118,
+              "macro_auc": 0.5720173791914348,
+              "rows": 715,
+              "top_label_ece": 0.022587536701352787
+            },
+            "SOL_USDT": {
+              "accuracy": 0.4489510489510489,
+              "balanced_accuracy": 0.40195297740054775,
+              "brier": 0.6381981045883556,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.42032967032967034,
+                  "confidence": 0.37561155776796584,
+                  "count": 364
+                },
+                {
+                  "accuracy": 0.48,
+                  "confidence": 0.4220055474937747,
+                  "count": 350
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.5468072332142854,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5932192274903272,
+              "log_loss": 1.0538821171943855,
+              "macro_auc": 0.5865607384351351,
+              "rows": 715,
+              "top_label_ece": 0.05191924277322176
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.47692307692307695,
+              "balanced_accuracy": 0.360395328291409,
+              "brier": 0.5948418925088986,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3157894736842105,
+                  "confidence": 0.3793411196914156,
+                  "count": 19
+                },
+                {
+                  "accuracy": 0.48201438848920863,
+                  "confidence": 0.44501631024117494,
+                  "count": 695
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.501972444145655,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5345034246575342,
+              "log_loss": 0.9719012872375101,
+              "macro_auc": 0.5507733185019523,
+              "rows": 715,
+              "top_label_ece": 0.038354011329602755
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.45241581259150804,
+              "balanced_accuracy": 0.3675021910884871,
+              "brier": 0.6150795347611895,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.32941176470588235,
+                  "confidence": 0.3819863325413816,
+                  "count": 170
+                },
+                {
+                  "accuracy": 0.4702928870292887,
+                  "confidence": 0.4352943158461977,
+                  "count": 1195
+                },
+                {
+                  "accuracy": 0.0,
+                  "confidence": 0.501972444145655,
+                  "count": 1
+                }
+              ],
+              "direction_only_auc": 0.5548836235689594,
+              "log_loss": 1.0097594609897533,
+              "macro_auc": 0.5932896556542034,
+              "rows": 1366,
+              "top_label_ece": 0.03752777565151847
+            },
+            "low": {
+              "accuracy": 0.4214576731552739,
+              "balanced_accuracy": 0.4201558469573666,
+              "brier": 0.64508698264307,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.3873144399460189,
+                  "confidence": 0.372311435687151,
+                  "count": 1482
+                },
+                {
+                  "accuracy": 0.4616588419405321,
+                  "confidence": 0.4271800569254229,
+                  "count": 639
+                },
+                {
+                  "accuracy": 0.6976744186046512,
+                  "confidence": 0.543474539127449,
+                  "count": 86
+                },
+                {
+                  "accuracy": 1.0,
+                  "confidence": 0.6042867598943693,
+                  "count": 2
+                }
+              ],
+              "direction_only_auc": 0.5436812388318191,
+              "log_loss": 1.0665107400022584,
+              "macro_auc": 0.6006172365031316,
+              "rows": 2209,
+              "top_label_ece": 0.026400639226594653
+            }
+          },
+          "overall": {
+            "accuracy": 0.4332867132867133,
+            "balanced_accuracy": 0.4165859047008804,
+            "brier": 0.6336211997600912,
+            "calibration_bins": [
+              {
+                "accuracy": 0.3813559322033898,
+                "confidence": 0.3733070364530222,
+                "count": 1652
+              },
+              {
+                "accuracy": 0.46728462377317337,
+                "confidence": 0.4324671558405406,
+                "count": 1834
+              },
+              {
+                "accuracy": 0.6896551724137931,
+                "confidence": 0.5429975035529456,
+                "count": 87
+              },
+              {
+                "accuracy": 1.0,
+                "confidence": 0.6042867598943693,
+                "count": 2
+              }
+            ],
+            "direction_only_auc": 0.5385604278673836,
+            "log_loss": 1.0448261953502076,
+            "macro_auc": 0.6102877154079566,
+            "rows": 3575,
+            "top_label_ece": 0.025371372206758273
+          }
+        },
+        "prior": {
+          "by_symbol": {
+            "BTC_USDT": {
+              "accuracy": 0.31608391608391606,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.7037846985985402,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.31608391608391606,
+                  "confidence": 0.3857152986221078,
+                  "count": 715
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1609522234892138,
+              "macro_auc": 0.5,
+              "rows": 715,
+              "top_label_ece": 0.06963138253819173
+            },
+            "DOGE_USDT": {
+              "accuracy": 0.4167832167832168,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6456535078635347,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4167832167832168,
+                  "confidence": 0.3857152986221078,
+                  "count": 715
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.064821328492865,
+              "macro_auc": 0.5,
+              "rows": 715,
+              "top_label_ece": 0.031067918161108987
+            },
+            "ETH_USDT": {
+              "accuracy": 0.38741258741258744,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6677256334642936,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.38741258741258744,
+                  "confidence": 0.3857152986221078,
+                  "count": 715
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1013541808748064,
+              "macro_auc": 0.5,
+              "rows": 715,
+              "top_label_ece": 0.0016972887904796452
+            },
+            "SOL_USDT": {
+              "accuracy": 0.41818181818181815,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6489250537410224,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.41818181818181815,
+                  "confidence": 0.3857152986221078,
+                  "count": 715
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.0702572946677757,
+              "macro_auc": 0.5,
+              "rows": 715,
+              "top_label_ece": 0.03246651955971036
+            },
+            "ZEC_USDT": {
+              "accuracy": 0.4755244755244755,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6162960675444059,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.4755244755244755,
+                  "confidence": 0.3857152986221078,
+                  "count": 715
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.0163021084076358,
+              "macro_auc": 0.5,
+              "rows": 715,
+              "top_label_ece": 0.08980917690236773
+            }
+          },
+          "by_volatility_regime": {
+            "high": {
+              "accuracy": 0.41215226939970717,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6314460400442025,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.41215226939970717,
+                  "confidence": 0.3857152986221078,
+                  "count": 1366
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.041219627574498,
+              "macro_auc": 0.5,
+              "rows": 1366,
+              "top_label_ece": 0.026436970777599374
+            },
+            "low": {
+              "accuracy": 0.397012222725215,
+              "balanced_accuracy": 0.3333333333333333,
+              "brier": 0.6719556163721385,
+              "calibration_bins": [
+                {
+                  "accuracy": 0.397012222725215,
+                  "confidence": 0.3857152986221078,
+                  "count": 2209
+                }
+              ],
+              "direction_only_auc": 0.5,
+              "log_loss": 1.1084111774218326,
+              "macro_auc": 0.5,
+              "rows": 2209,
+              "top_label_ece": 0.011296924103107231
+            }
+          },
+          "overall": {
+            "accuracy": 0.4027972027972028,
+            "balanced_accuracy": 0.3333333333333333,
+            "brier": 0.6564769922423593,
+            "calibration_bins": [
+              {
+                "accuracy": 0.4027972027972028,
+                "confidence": 0.3857152986221078,
+                "count": 3575
+              }
+            ],
+            "direction_only_auc": 0.5,
+            "log_loss": 1.0827374271864596,
+            "macro_auc": 0.5,
+            "rows": 3575,
+            "top_label_ece": 0.01708190417509503
+          }
+        }
+      },
+      "parity": {
+        "legacy_gbt": {
+          "evaluation_max_abs_error": 4.440892098500626e-16,
+          "fit_seconds": 11.261744542047381
+        },
+        "legacy_logistic": {
+          "evaluation_max_abs_error": 0.0,
+          "fit_seconds": 0.06112287496216595
+        },
+        "matched_raw_gbt": {
+          "evaluation_max_abs_error": 4.440892098500626e-16,
+          "fit_seconds": 10.332651458214968
+        }
+      },
+      "regime_volatility_threshold": 0.005895647833033896,
+      "stages": {
+        "calibration": {
+          "first_feature": 1787911200.0,
+          "last_label": 1790413200.0,
+          "rows": 3460
+        },
+        "evaluation": {
+          "first_feature": 1790503200.0,
+          "last_label": 1793088000.0,
+          "rows": 3575
+        },
+        "fit": {
+          "first_feature": 1759140000.0,
+          "last_label": 1787821200.0,
+          "rows": 38711
+        },
+        "legacy_fit": {
+          "first_feature": 1759140000.0,
+          "last_label": 1790413200.0,
+          "rows": 42311
+        }
+      },
+      "start": 1790503200,
+      "temperature": 0.8546409235254199
+    }
+  ],
+  "improved_folds": 3,
+  "intervals": [
+    {
+      "block_days": 7,
+      "day_clusters": 93,
+      "lower_95": -0.0018081608187956028,
+      "mean_difference": -0.0011319408661045812,
+      "method": "paired equal-asset UTC-day circular blocks, resampled within each fold",
+      "repetitions": 1000,
+      "upper_95": -0.0004775351257969704
+    },
+    {
+      "block_days": 1,
+      "day_clusters": 93,
+      "lower_95": -0.0020239247207511396,
+      "mean_difference": -0.0011319408661045812,
+      "method": "paired equal-asset UTC-day circular blocks, resampled within each fold",
+      "repetitions": 1000,
+      "upper_95": -0.00018551300520120248
+    }
+  ],
+  "predictive_gate_passed": true,
+  "recommendation": "No model promotion; await trading diagnostics and genuinely new data"
+}

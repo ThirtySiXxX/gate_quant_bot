@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "tests": [
+    {
+      "scope": "QR004 + QR005 focused offline regression",
+      "passed": 40,
+      "failed": 0,
+      "network": "socket.socket.connect and socket.create_connection patched to raise",
+      "execution": "unittest.defaultTestLoader.discover(\"tests/qr_research\", pattern=\"test_qr00[45]_history.py\")",
+      "interpreter": "/Users/lzh/Development/Project/gate_quant_bot/venv/bin/python",
+      "environment": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "independently_executed_by": "QR",
+      "test_sha256": {
+        "tests/qr_research/test_qr004_history.py": "2442cd98d1c51c9b380f35d0cd495c4e39370d9d3dc3de4aeb309b72fd8a56b4",
+        "tests/qr_research/test_qr005_history.py": "02f11fd52a4afead8f0d6badc2c30d1b7914e95ef4027735dfc8cdebe1f8e512"
+      }
+    },
+    {
+      "scope": "QD005 focused producer regression independently rerun from QD worktree",
+      "passed": 15,
+      "failed": 0,
+      "network": "socket.socket.connect and socket.create_connection patched to raise",
+      "execution": "unittest.defaultTestLoader.discover(\"tests\", pattern=\"test_qd_canonical_history.py\")",
+      "interpreter": "/Users/lzh/Development/Project/gate_quant_bot/venv/bin/python",
+      "environment": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "independently_executed_by": "QR",
+      "test_sha256": {
+        "tests/test_qd_canonical_history.py": "eaeeea1f9d832f1e6354a712fe56559e9a81d0df6101096bdacc124d6eabb37a"
+      }
+    },
+    {
+      "scope": "QD full existing Python regression",
+      "passed": 230,
+      "failed": 0,
+      "independently_executed_by": "QD; QR inspected committed report, did not repeat broad suite",
+      "execution": "PYTHONDONTWRITEBYTECODE=1 /Users/lzh/Development/Project/gate_quant_bot/venv/bin/python research/qd005/run_offline_tests.py",
+      "report_commit": "ba1a507d8b265f29f355a015d5f189178361e611",
+      "limitation": "First stdin full-suite invocation failed 4 existing spawn tests; guarded file runner passed without runtime changes"
+    }
+  ],
+  "actual_candidate_validation": "validate_dataset(candidate,base,spec) with sockets blocked; independent data PASS_WITH_LIMITATIONS, no issues",
+  "conditional_diagnostics": "assess(candidate,base,spec,QR003 fixture) with sockets blocked; 0 replay/labels/fits",
+  "validation_code_sha256": "0d97b71553a8024cae7f0473235095632f7345cbf040b0be3de4b95998fa8e59",
+  "diagnostic_code_sha256": "6f1195a8cefb5163654801b2fcf02fcf9b0b18b85e1751885de069d2d13fdeb5"
+}

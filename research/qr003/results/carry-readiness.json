@@ -1,0 +1,36 @@
+{
+  "BTC_USDT": {
+    "all_scored_carry_finite": true,
+    "configured_lookback": 1000,
+    "decision": "diagnostic_ready_with_incomplete_early_funding_warmup",
+    "decision_points": 2159,
+    "finite_raw_observations_in_scaler_at_start": 528,
+    "first_funding_ts": 1777680001.0,
+    "first_scored_main_bar_with_full_lookback": 1792094400.0,
+    "full_lookback_at_start": false,
+    "future_funding_perturbation_prefix_identical": true,
+    "limitation": "Native min_periods allows a shorter history; this does not reconstruct unavailable historical funding or establish equal-information cross-asset research",
+    "main_bar_at_first_decision": 1785297600.0,
+    "required_min_periods": 100,
+    "scored_funding_fallback_required": false,
+    "signals_available": 2159,
+    "symbol": "BTC_USDT"
+  },
+  "ETH_USDT": {
+    "all_scored_carry_finite": true,
+    "configured_lookback": 1000,
+    "decision": "diagnostic_ready_with_incomplete_early_funding_warmup",
+    "decision_points": 2159,
+    "finite_raw_observations_in_scaler_at_start": 993,
+    "first_funding_ts": 1770998400.0,
+    "first_scored_main_bar_with_full_lookback": 1785398400.0,
+    "full_lookback_at_start": false,
+    "future_funding_perturbation_prefix_identical": true,
+    "limitation": "Native min_periods allows a shorter history; this does not reconstruct unavailable historical funding or establish equal-information cross-asset research",
+    "main_bar_at_first_decision": 1785297600.0,
+    "required_min_periods": 100,
+    "scored_funding_fallback_required": false,
+    "signals_available": 2159,
+    "symbol": "ETH_USDT"
+  }
+}

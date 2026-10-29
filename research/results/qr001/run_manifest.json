@@ -1,0 +1,33 @@
+{
+  "data_manifest_sha256": "2f5ca653101678abdf360a033f74e6dc30d8455e764be234e05818cce594b102",
+  "experiment_id": "qr001-temperature-calibration-v1",
+  "input_rows": 46891,
+  "label": "retrospective, previously inspected history",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.5",
+    "python": "3.13.7",
+    "scipy": "1.18.1",
+    "sklearn": "1.9.1"
+  },
+  "protocol_sha256": "3f8432b6db7700240cdbac7bde5c7abf5e147eccc8313be84533ef89079641a4",
+  "revision": "0ab04c20b9a6eceeb30af3723e273aa9c42f3498",
+  "samples": 46026,
+  "source_sha256": {
+    "research/qr001/__init__.py": "bf19af7ca67d7da42748d3447cebcaa2f57883bb616fc7620979acd655b233e7",
+    "research/qr001/models.py": "cd6fdd093e4866c0c25107c180c16698ab74ca310bb3b39c9d589c81d7150176",
+    "research/qr001/replay.py": "1e9066ee0c39385e12081836bb1f59cbe8f24a6be67e77c00ea2dfd96826fed6",
+    "research/qr001/run.py": "a4572d347eaf8fcf6159fbf1407ab0722281fe1c71b09f38ba7b590cbe1000d4",
+    "research/qr001/validation.py": "cc28cbb8cc1cd3c7cc08fc3d0eba8e6ac9fd240b38c450da94bbb852d8206e2c",
+    "src/backtest.py": "9183091e85c4354720118c53f0d97b72022f018afa03d9e9479f4929f5a8540c",
+    "src/crypto_ml.py": "63d0d9569cb261c83867b18cde03f9f74c7b54626172eeb5bb36eac09c19a7f6",
+    "src/ml_training.py": "7c558de68e5225301ea14ac907766ddd027fbc1e7d91cc10dbb21970e8279158"
+  },
+  "symbols": [
+    "BTC_USDT",
+    "ETH_USDT",
+    "SOL_USDT",
+    "DOGE_USDT",
+    "ZEC_USDT"
+  ]
+}

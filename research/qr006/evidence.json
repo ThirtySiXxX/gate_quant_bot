@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "protocol_id": "qf006-proposal-r2",
+  "status": "DOCUMENT_SUMMARIES_NOT_HISTORICAL_DATA",
+  "sources": [
+    {
+      "id": "S01",
+      "url": "https://www.gate.com/zh/help/futures/futures-logic/27569/funding-rate-and-funding-fee",
+      "title": "Funding rate and funding fee",
+      "displayed_publication": "2022-08-18 06:04 UTC+8",
+      "effective_scope": "Current page as observed only; paragraph revision/effective dates unknown",
+      "claims": [
+        "USDT funding uses snapshot position, mark and multiplier; positive rate long pays short",
+        "Nominal-hour snapshot and asynchronous booking differ; late posting after close may appear only in account flows"
+      ],
+      "not_proven": [
+        "historical snapshot rule start",
+        "exact tied-fill sequence",
+        "source t equals snapshot or booking",
+        "complete BTC/ETH schedule 2023-2026"
+      ],
+      "locator": "Funding fee calculation/settlement sections",
+      "access_note": "find initially missed snapshot text; direct section read confirmed it; no content copied",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S02",
+      "url": "https://www.gate.com/zh/help/futures/futures_logic/22079?category=futures",
+      "title": "Futures trading fee calculation",
+      "displayed_publication": "2022-04-11 10:51 UTC+8",
+      "effective_scope": "Current educational mechanism description; historical paragraph versions unknown",
+      "claims": [
+        "Fees follow filled notional and maker/taker role; unfilled canceled orders have no trading fee",
+        "Tier and point-discount conditions are distinct"
+      ],
+      "not_proven": [
+        "current personal rate",
+        "historical account tier/discount",
+        "that every limit order is maker"
+      ],
+      "locator": "Maker/taker definitions and fee formula",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S03",
+      "url": "https://www.gate.com/zh/announcements/article/50390",
+      "title": "Spot and futures fee structure update",
+      "displayed_publication": "2026-03-25 13:04 UTC+8",
+      "effective_scope": "Announced date 2026-04-09; exact intraday boundary unspecified; subsequent changes not excluded",
+      "claims": [
+        "VIP0 USDT-perpetual taker row 0.0500%; BTC/ETH listed in Group A"
+      ],
+      "not_proven": [
+        "user applicable rate",
+        "rate before this dated rule",
+        "today all-discount fee"
+      ],
+      "locator": "USDT perpetual taker table and effective-date paragraph",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S04",
+      "url": "https://www.gate.com/zh/fee",
+      "title": "Fee overview",
+      "displayed_publication": null,
+      "effective_scope": "Dynamic current page; no historical table obtained",
+      "claims": [
+        "Personal rate requires login; public retrieved table was incomplete"
+      ],
+      "not_proven": [
+        "personal maker/taker fees or discounts"
+      ],
+      "locator": "Login and fee table shell",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S05",
+      "url": "https://www.gate.com/docs/developers/apiv4/en/futures/",
+      "title": "Gate API v4 futures",
+      "displayed_publication": null,
+      "effective_scope": "Current living API reference; not a dated exchange-rule history",
+      "claims": [
+        "Funding history returns t/r; mark candles are a separate request type",
+        "Contract metadata exposes multiplier/interval; private fills have role/fee and account books are separate"
+      ],
+      "not_proven": [
+        "historical coverage",
+        "snapshot/booking/arrival meaning for public t",
+        "instantaneous settlement mark from OHLC",
+        "historical metadata from a current snapshot"
+      ],
+      "locator": "Historical funding; market candles; contract; private fills/account books",
+      "access_note": "Read documentation only; no endpoint request, authentication or account data",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S06",
+      "url": "https://www.gate.com/announcements/article/46849",
+      "title": "Funding interval dynamic adjustment",
+      "displayed_publication": "2025-08-29 11:30 UTC",
+      "effective_scope": "Stated start 2025-08-29 10:00 UTC, all perpetual markets; subsequent rule revisions possible",
+      "claims": [
+        "At-limit settlement can trigger next 1h interval; this version says no automatic return to 4h/8h"
+      ],
+      "not_proven": [
+        "BTC/ETH actually triggered",
+        "earlier history",
+        "availability by stated effective time because displayed publication is later"
+      ],
+      "locator": "Start/scope and important notes",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S07",
+      "url": "https://www.gate.com/announcements/article/50645",
+      "title": "Funding interval automatic reversion update",
+      "displayed_publication": "2026-04-10 09:54 UTC",
+      "effective_scope": "Stated start 2026-04-13 01:00 UTC; USDT and coin-margined perpetual markets",
+      "claims": [
+        "Conditional 1h-to-4h reversion after 16 qualifying settlements; threshold referenced to funding help"
+      ],
+      "not_proven": [
+        "actual BTC/ETH transitions",
+        "historical threshold vintage",
+        "March illustrative date as rule start"
+      ],
+      "locator": "Effective-time paragraph and scope; examples have earlier dates",
+      "access_note": "Chinese URL returned one HTTP502; English canonical page verified",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S08",
+      "url": "https://www.davidhbailey.com/dhbpapers/deflated-sharpe.pdf",
+      "title": "The Deflated Sharpe Ratio",
+      "displayed_publication": "Version 2014-07-31; first version 2014-04-15",
+      "effective_scope": "Methodology, not a market rule",
+      "claims": [
+        "Selection multiplicity, dependent trials and non-normal returns matter to Sharpe assessment"
+      ],
+      "not_proven": [
+        "a guarantee of skill",
+        "applicability without complete trials and needed assumptions"
+      ],
+      "locator": "Sections on DSR and independent trials; no calculation run",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    },
+    {
+      "id": "S09",
+      "url": "https://www.davidhbailey.com/dhbpapers/backtest-prob.pdf",
+      "title": "The Probability of Backtest Overfitting",
+      "displayed_publication": "2015-02-27; revised February2015",
+      "effective_scope": "Methodology, not a market rule",
+      "claims": [
+        "CSCV/PBO evaluates strategy-selection overfitting using a candidate-return design"
+      ],
+      "not_proven": [
+        "substitute for causal chronological training",
+        "validity from one best Sharpe alone"
+      ],
+      "locator": "Abstract and CSCV sections; no calculation run",
+      "accessed_date": "2026-10-28",
+      "access_timezone": "Australia/Melbourne",
+      "evidence_type": "primary_public_document",
+      "source_payload_archived": false
+    }
+  ],
+  "browsing_scope": "Purposeful public documentation only; three targeted search queries, official help/API/announcements and two original papers; irrelevant search hits not used",
+  "limitations": [
+    "No complete raw webpage archive or content hash is claimed; this JSON hashes our summaries only",
+    "No signed-in/private endpoint or market-data download",
+    "Displayed help date is not paragraph effective date",
+    "Search snippets and illustrative examples cannot supply historical rule activation"
+  ],
+  "revision_note": "QD006 R1-R3 document correction only; all nine source summaries and access evidence unchanged; no new browsing or data intake."
+}

@@ -1,0 +1,62 @@
+{
+  "complete_evaluation_inputs": true,
+  "coverage": {
+    "1d": {
+      "available_at_assumption": "bar open plus interval",
+      "closed_or_settled_before_start": 243,
+      "evaluated_invalid_decisions": 0,
+      "first_open_or_settlement": 1764288000.0,
+      "funding_freshness_grace_seconds": 0,
+      "internal_missing_periods": 0,
+      "last_open_or_settlement": 1792972800.0,
+      "observed_gap_seconds_max": 86400.0,
+      "observed_gap_seconds_min": 86400.0,
+      "real_arrival_times_observed": false,
+      "rows": 333
+    },
+    "1h": {
+      "available_at_assumption": "bar open plus interval",
+      "closed_or_settled_before_start": 1500,
+      "evaluated_invalid_decisions": 0,
+      "first_open_or_settlement": 1779919200.0,
+      "funding_freshness_grace_seconds": 0,
+      "internal_missing_periods": 0,
+      "last_open_or_settlement": 1793088000.0,
+      "observed_gap_seconds_max": 3600.0,
+      "observed_gap_seconds_min": 3600.0,
+      "real_arrival_times_observed": false,
+      "rows": 3659
+    },
+    "4h": {
+      "available_at_assumption": "bar open plus interval",
+      "closed_or_settled_before_start": 1499,
+      "evaluated_invalid_decisions": 0,
+      "first_open_or_settlement": 1763726400.0,
+      "funding_freshness_grace_seconds": 0,
+      "internal_missing_periods": 0,
+      "last_open_or_settlement": 1793073600.0,
+      "observed_gap_seconds_max": 14400.0,
+      "observed_gap_seconds_min": 14400.0,
+      "real_arrival_times_observed": false,
+      "rows": 2039
+    },
+    "funding": {
+      "available_at_assumption": "settlement timestamp",
+      "closed_or_settled_before_start": 498,
+      "evaluated_invalid_decisions": 0,
+      "first_open_or_settlement": 1770998400.0,
+      "funding_freshness_grace_seconds": 3600,
+      "internal_missing_periods": null,
+      "last_open_or_settlement": 1793088000.0,
+      "observed_gap_seconds_max": 28803.0,
+      "observed_gap_seconds_min": 28797.0,
+      "real_arrival_times_observed": false,
+      "rows": 768
+    }
+  },
+  "end_exclusive": 1793091600,
+  "invalid_windows": [],
+  "start": 1785319200,
+  "symbol": "ETH_USDT",
+  "volume_units": "raw source v representation preserved; no cross-asset absolute-volume comparison"
+}
