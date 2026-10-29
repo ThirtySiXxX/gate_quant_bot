@@ -52,8 +52,8 @@ the latest export or infer missing bindings. All input file paths are absolute.
 | `schema` | `qr015.import-request.v1` |
 | `training_authorized` | `false` |
 | `input_kind` | `ACTUAL` for a separately authorized real run; `SYNTHETIC` for literal development fixtures |
-| `qd_commit` | `9adcbb01a584b35ba384e1ca6bc461d97a782469` |
-| `qd_manifest_sha256` | `d6d26df2f17b818e1d3a0518c226102a38955ff8c54cf68eba9e82343d18f82a` |
+| `qd_commit` | `577aeed903b9eefdb2c176dac7e3e67f999731ea` |
+| `qd_manifest_sha256` | `a6c03c4f38cc520ebb56491a6f443843724e93734afbf0e3ce91edff4f7c0da2` |
 | `qd_code_sha256` | Exactly the three `QD_CODE` path/hash entries in `dataset.py` for QD013 exports, market and inputs |
 | `source_metadata` | Four kind/hash entries matching `SOURCE_METADATA` for actual inputs; no source payload is opened |
 | `source_binding_ref` | Accepted handoff reference linking the exact export, cache, producer code, source manifests, account and scope |
@@ -70,6 +70,14 @@ literal pins in the consumer. Actual source metadata must match the frozen
 values. The QR014 file hash is checked on enabled imports. The consumer does not
 import QD code, run Git, or load its transitive trading/native dependencies.
 It reads the published storage format with the standard library.
+
+QR017 updates the producer binding to QD015's accepted journal-storage delivery.
+The public QD013 episode/cache schemas and the three direct code hashes remain
+unchanged. QD015's market-producer identity is supplied as the complete opaque
+cache identity in the reviewed handoff; old cache keys are never relabeled or
+silently accepted. This binding update does not execute the full P0 replay or
+authorize an actual import or fit. Historical QR015 test evidence remains tied
+to its original producer pin; only the new identity boundary is checked again.
 
 The producer's `write_bundle(..., identity)` accepts an arbitrary identity object;
 the cache factory likewise accepts caller-supplied sources/code/config objects.
