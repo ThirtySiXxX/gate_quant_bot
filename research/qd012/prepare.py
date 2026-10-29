@@ -79,6 +79,12 @@ def read_funding_prefix(specs,permits=None,*,max_records=10000):
     return {i:tuple(rows) for i,rows in result.items()}
 
 
+def reusable_native_cache(path,identity,**inputs):
+    """QD013 explicit alternative; legacy assembly/evidence remains unchanged."""
+    from research.qd013.inputs import build_cache
+    return build_cache(path,identity,**inputs)
+
+
 def mark_selectors(specs,permits=None):
     if permits is None:raise ActualHistoryOff('ACTUAL_HISTORY_EXECUTION_OFF')
     grouped=defaultdict(list)

@@ -8,6 +8,9 @@ from .ports import INTENT_CONTRACT
 
 
 def controlled_episode(continuous,at_us,episode_id):
+    if any(d['causal_config'].get('native_input_version')==3 for d in continuous.ledger.config['adapters']):
+        from research.qd013.exports import export_all
+        return next(r for r in export_all(continuous,at_us) if r['qr014_episode_fields']['episode_id']==episode_id)
     ledger=continuous.ledger;view=continuous.view(at_us)
     lots=[x for x in scan(ledger,view,'lots') if x['episode_id']==episode_id]
     if not lots:raise InputGap('CONTROLLED_EPISODE_MISSING')

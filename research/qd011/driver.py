@@ -31,6 +31,9 @@ SCHEMAS['native-v2']['fields'] += [dict(name=k,type=t,unit=u) for k,t,u in (
     ('efficiency','D0','ratio'),('range_vol_ratio','D0','ratio'),('cov_btc_btc','D+','annual_covariance'),
     ('cov_eth_eth','D+','annual_covariance'),('cov_available_us','T','UTC_us'),
     ('breakout_long','bool','flag'),('breakout_short','bool','flag'),('bar_seconds','D+','seconds'))]
+SCHEMAS['native-v3']=deepcopy(SCHEMAS['native-v2'])
+SCHEMAS['native-v3']['fields'] += [dict(name=k,type=t,unit=u) for k,t,u in (
+    ('first_open_us','T','UTC_us'),('short_count','I','closed_bars'),('main_count','I','closed_bars'),('regime_count','I','closed_bars'))]
 
 
 @dataclass(frozen=True)
@@ -92,7 +95,8 @@ def pinned_files():
            'src/position_sizing.py','src/trend.py','src/vol.py','src/carry.py','src/risk.py','src/data_fetcher.py',
            'research/qd008/repair_history.py',
            'research/qd010/episode_export.py','research/qd011/export.py','research/qd009/streaming_ledger.py',
-           'research/qd012/sources.py','research/qd012/native.py','research/qd012/queries.py','research/qd012/prepare.py')
+           'research/qd012/sources.py','research/qd012/native.py','research/qd012/queries.py','research/qd012/prepare.py',
+           'research/qd013/compact.py','research/qd013/scenarios.py','research/qd013/market.py','research/qd013/runner.py','research/qd013/exports.py','research/qd013/inputs.py')
     return [dict(relative_path=s,sha256=hashlib.sha256((root/s).read_bytes()).hexdigest()) for s in paths]
 
 
@@ -110,11 +114,11 @@ def definitions(common):
                         selector('episode_slices','06-slices'),selector('episode_obligations','07-obligations')])
         ftypes={'environment':['rate'],'execution':['native','open'],'feedback':['native'],'policy':['native'],'reserve':[]}[kind]
         facts=[dict(selection_id=s,schema_id=common['native_schema_id'] if s=='native' else s,instruments=list(INSTRUMENTS),
-                    mode='latest_available' if kind in ('execution','feedback') else 'available_prefix') for s in ftypes]
+                    mode='latest_available' if kind in ('execution','feedback') or (common['native_input_version']==3 and s=='native') else 'available_prefix') for s in ftypes]
         peers={'policy':['feedback'],'feedback':['policy','execution'],'environment':[],'execution':[],'reserve':[]}[kind]
         causal=deepcopy(common)
         if kind!='policy':causal.pop('native_context',None)
-        result.append(dict(adapter_id=kind,role=ROLE[kind],code_commit='61536c823926fb873f9a4a130778f34e0b87c161' if common['native_input_version']==2 else BASE_COMMIT,source_files=files,
+        result.append(dict(adapter_id=kind,role=ROLE[kind],code_commit='c761d90d65bb33ef4256d26cba1a48163606e41f' if common['native_input_version']==3 else '61536c823926fb873f9a4a130778f34e0b87c161' if common['native_input_version']==2 else BASE_COMMIT,source_files=files,
             entrypoint='research.qd011.ports.ControlledPort',input_contract_sha256=sl.digest(['qd011.packet.v1',kind]),
             output_contract_sha256=sl.digest(['qd011.result.v1',kind]),state_contract_sha256=STATE_CONTRACT,
             causal_config=causal,approval_ref=sl.digest(['QD011_LOCAL_INPUT_V'+str(common['native_input_version']),kind]),
@@ -272,11 +276,11 @@ def create(path,*,initial_us,end_us,native,opens,marks,funding=(),seed_forecast=
     return Continuous(sl.Ledger(path/'store'))
 
 
-def scan(ledger,view,component):
+def scan(ledger,view,component,*,limit=64):
     token=None
     while True:
         page=ledger.scan(dict(view_sha256=view['view_sha256'],component=component,filter=dict(kind='all'),after=token,
-            limit=64,null_reasons={} if token else {'after':'START_OF_COMPONENT'}))
+            limit=limit,null_reasons={} if token else {'after':'START_OF_COMPONENT'}))
         yield from page['items'];token=page['next']
         if token is None:return
 

@@ -19,8 +19,11 @@ from research.qd010.economic_inputs import (INSTRUMENTS, SYMBOLS, MULTIPLIERS, H
     FEE, SLIP, G, exact, text, InputGap, Selection, pending_reserve, execution_boundary)
 from research.qd010.joint_native_bridge import research_config, JointNativeBridge, Order
 from .codec import state, validate, pack, unpack, projection, plan_wire, plan_read, feedback, native_context, validate_context
+from research.qd013 import compact
+from research.qd013.scenarios import costs,scenario,boundary,reserve,validate_basket
 
 INTENT_CONTRACT=sl.digest({'name':'qd011.native-intent.v1','fields':['action','plan','price','native_target','basket','decision_cutoff']})
+INTENT_CONTRACT_V2=sl.digest({'name':'qd013.native-intent.v2','fields':['action','plan','price','native_target','basket','decision_cutoff','scenario_id','policy_id','pre_positions','pre_equity']})
 RUNTIME=dict(python=sys.version,numpy=np.__version__,pandas=pd.__version__)
 
 
@@ -98,10 +101,11 @@ def quantity(lot):
 
 def marks(p):
     at=p['slot']['at_us'];result={}
+    clock=p['causal_config'].get('scenario',scenario())
     for i in INSTRUMENTS:
         q=[s for s in selected(p,'query_status') if s['key']['instrument_id']==i and s['key']['purpose']=='valuation']
         s=max(q,key=lambda s:s['key']['query_at_us']) if q else None
-        supported=s and s['status']=='SUPPORTED' and at-s['source_at_us']<=120*US and at-s['source_available_at_us']<=60*US
+        supported=s and s['status']=='SUPPORTED' and at-s['source_at_us']<=clock['mark_max_age_us'] and at-s['source_available_at_us']<=clock['mark_available_age_us']
         result[i]=Selection(exact(s['mark_price']) if supported else None,at,
             s['source_at_us'] if supported else None,s['source_available_at_us'] if supported else None,
             (s['fact_key'],) if s else (),None if supported else 'MARK_UNKNOWN')
@@ -120,6 +124,7 @@ def order_object(o):
 
 def finance(p,*,ignore_pending=False):
     b=p['before']['balance'];ms=marks(p);positions={i:0 for i in INSTRUMENTS}
+    cfg=p['causal_config'];fee,slip,g=costs(cfg)
     margin=Fraction(0);fees=Fraction(0)
     for l in live(p):
         q=quantity(l);i=l['instrument_id'];positions[i]+=q*(1 if l['direction']=='long' else -1)
@@ -129,9 +134,9 @@ def finance(p,*,ignore_pending=False):
         if q and ms[i].value is None:
             known=False
         elif q:
-            fees+=abs(q)*exact(MULTIPLIERS[i])*ms[i].value*(1+SLIP)*FEE
-    pending=Fraction(0) if ignore_pending else sum((pending_reserve(o['intent']['requested_contracts'],
-        o['intent']['instrument_id'],o['intent']['payload']['price']) for o in active(p) if o['intent']['action']=='open'),Fraction(0))
+            fees+=abs(q)*exact(MULTIPLIERS[i])*ms[i].value*(1+slip)*fee
+    pending=Fraction(0) if ignore_pending else sum((reserve(o['intent']['requested_contracts'],
+        o['intent']['instrument_id'],o['intent']['payload']['price'],cfg) for o in active(p) if o['intent']['action']=='open'),Fraction(0))
     budget=(exact(b['cash_usdt'])-exact(b['liabilities_usdt'])+min(exact(b['unrealized_usdt']),0)-margin-fees-pending) if known else None
     return dict(equity=exact(b['economic_equity_usdt']) if known else None,budget=budget,positions=positions,marks=ms,
                 held_margin=margin,held_fees=fees if known else None)
@@ -160,6 +165,7 @@ def posting(p,id,oid,amount,ranges,inst):
 
 def native_inputs(p):
     """Supplied causal native feature observations, not a constant action script."""
+    if p['causal_config'].get('native_input_version',1)==3:return compact.inputs(p)
     if p['causal_config'].get('native_input_version',1)==2:
         prepared,latest=prepared_v2(p);cfg=research_config();at=p['slot']['at_us']
         signals={}
@@ -220,7 +226,7 @@ class ControlledPort:
         validate(r['next_state']);sl.strict_json(r)
         for b in r['events']:sl.normalize_body(b)
         for o in r['orders']:
-            sl.need(o['payload_contract_sha256']==INTENT_CONTRACT,'INPUT_BINDING_MISMATCH')
+            sl.need(o['payload_contract_sha256'] in (INTENT_CONTRACT,INTENT_CONTRACT_V2),'INPUT_BINDING_MISMATCH')
             plan_read(o['payload']['plan'])
 
     def evaluate(self,p):
@@ -236,11 +242,14 @@ class ControlledPort:
 
 def _policy(p,d,r,episodes):
     at=p['slot']['at_us'];cfg=p['causal_config'];fback=peer(p,'feedback')
+    fee,slip,g=costs(cfg);skip_used=d.get('native_receipt',{}).get('skip_used',False)
+    intent_contract=INTENT_CONTRACT_V2 if cfg.get('native_input_version',1)==3 else INTENT_CONTRACT
     if fback.get('source_policy') not in (None,p['prior_state']['state_sha256']):
         raise InputGap('NATIVE_STATE_HANDOFF_MISMATCH')
     timing=ExecutionTiming();timing.restore(fback.get('timing',d.get('timing',{})))
     d['timing']=timing.dump();d['decisions']=[]
     if cfg.get('native_input_version',1)==2:d.pop('native_receipt',None)
+    if cfg.get('native_input_version',1)==3:d['native_receipt']=dict(skip_used=skip_used)
     economic_end=cfg.get('economic_end_us',cfg['end_us'])
     if at>=economic_end or at%HOUR:
         return
@@ -248,13 +257,13 @@ def _policy(p,d,r,episodes):
     if len(native)==2 and all(latest[i]['cov_cross'] is not None for i in INSTRUMENTS) and f['equity'] is not None and f['equity']>0:
         vols=[native[s].vol_annual for s in SYMBOLS];cross=[exact(latest[i]['cov_cross']) for i in INSTRUMENTS]
         if cross[0]!=cross[1]:raise InputGap('COVARIANCE_CROSS_MISMATCH')
-        if cfg.get('native_input_version',1)==2:
+        if cfg.get('native_input_version',1) in (2,3):
             rows=[latest[i] for i in INSTRUMENTS]
             if any(rows[0][k]!=rows[1][k] for k in ('cov_btc_btc','cov_eth_eth','cov_available_us')):
                 raise InputGap('JOINT_NATIVE_COVARIANCE_MISMATCH')
             a=np.array([[projection(rows[0]['cov_btc_btc']),projection(cross[0])],
                         [projection(cross[0]),projection(rows[0]['cov_eth_eth'])]])
-            d['native_receipt']=dict(version=2,decision_us=at,cov_available_us=rows[0]['cov_available_us'],covariance=a.tolist(),sizing_vol=vols,
+            d['native_receipt']=dict(version=cfg['native_input_version'],decision_us=at,cov_available_us=rows[0]['cov_available_us'],covariance=a.tolist(),sizing_vol=vols,skip_used=skip_used,
                 regime={s:latest[i]['regime'] for i,s in zip(INSTRUMENTS,SYMBOLS)},
                 efficiency={s:native[s].efficiency_ratio for s in SYMBOLS},
                 range_vol_ratio={s:native[s].range_vol_ratio for s in SYMBOLS},
@@ -278,12 +287,12 @@ def _policy(p,d,r,episodes):
             plan=sx.decide_execution(s,allocation.targets[s],sig,projection(current),projection(f['equity']),research_config(),
                                      timing,EntrySizingBook(),allow_increase=f['budget'] is not None)
             actions,_=sx.build_order_plan(s,plan,'long' if held>0 else 'short' if held<0 else None,abs(held),projection(price),
-                dict(quanto_multiplier=projection(MULTIPLIERS[i]),order_size_min=1),projection(FEE),projection(SLIP*10000))
+                dict(quanto_multiplier=projection(MULTIPLIERS[i]),order_size_min=1),projection(fee),projection(slip*10000))
             ratio=Fraction.from_float(plan.target_notional)/(price*exact(MULTIPLIERS[i]))
             if round(abs(ratio))!=sx.notional_to_contracts(plan.target_notional,projection(price),projection(MULTIPLIERS[i])):
                 raise InputGap('NATIVE_QUANTITY_ROUND_DISAGREEMENT')
         for action,side,q in actions:
-            if execution_boundary(at)>=economic_end:continue
+            if boundary(at,cfg)>=economic_end:continue
             if action=='open' and held and held*(1 if side=='long' else -1)<0:continue
             o=Order('', '', i,action,1 if side=='long' else -1,q,at,price,Fraction.from_float(plan.target_notional))
             candidates.append(o);order_plans[i]=plan
@@ -295,7 +304,9 @@ def _policy(p,d,r,episodes):
             r['order_transitions']=[dict(order_id=x['intent']['order_id'],at=p['slot'],status='cancelled',fill_keys=[],reason='OPPOSING_WHOLE_BASKET') for x in pending]
         else:candidates=[o for o in candidates if o.action!='open']
     inc=[o for o in candidates if o.action=='open'];prices={i:exact(v['close']) for i,v in latest.items()}
-    reason=JointNativeBridge._validate(None,inc,f,prices) if inc and len(prices)==2 else 'NO_INCREASE'
+    reason=validate_basket(inc,f,prices,cfg) if inc and len(prices)==2 else 'NO_INCREASE'
+    if reason=='ADMITTED' and cfg.get('scenario',{}).get('policy_id')=='SKIP_FIRST_ADMISSIBLE_BASKET' and not skip_used and not any(f['positions'].values()):
+        reason='SKIPPED_FIRST_ADMISSIBLE_BASKET';d['native_receipt']['skip_used']=True
     d['basket_status']=reason
     candidates=[o for o in candidates if o.action!='open' or reason=='ADMITTED']
     for ordinal,o in enumerate(candidates):
@@ -304,18 +315,22 @@ def _policy(p,d,r,episodes):
         oid=sl.business_id(cfg['scope'],i,'order',at,p['slot_id'],ordinal)
         payload=dict(action=o.action,plan=plan_wire(plan),price=text(o.price),native_target=text(o.native_target),
                      basket='basket:'+str(at),decision_cutoff=dict(at_us=at,slot=p['slot']['slot']-1))
+        if cfg.get('native_input_version',1)==3:
+            payload.update(scenario_id=cfg['scope']['scenario_id'],policy_id=cfg['scenario']['policy_id'],
+                pre_positions=f['positions'],pre_equity=text(f['equity']) if f['equity'] is not None else None)
         r['decisions'].append(dict(decision_id=did,at_us=at,instrument_id=i,order_ids=[oid],
             input_projection_sha256=sl.digest(p),prior_adapter_state_sha256=p['prior_state']['state_sha256'],
-            intent_contract_sha256=INTENT_CONTRACT,intent=payload))
+            intent_contract_sha256=intent_contract,intent=payload))
         r['orders'].append(dict(order_id=oid,decision_id=did,instrument_id=i,action=o.action,direction='long' if o.side>0 else 'short',
-            requested_contracts=o.quantity,submitted_at_us=at,eligible_at_us=execution_boundary(at),expires_at_us=execution_boundary(at)+1,
-            payload_contract_sha256=INTENT_CONTRACT,payload=payload))
+            requested_contracts=o.quantity,submitted_at_us=at,eligible_at_us=boundary(at,cfg),expires_at_us=boundary(at,cfg)+1,
+            payload_contract_sha256=intent_contract,payload=payload))
         d['decisions'].append(dict(instrument=i,decision_id=did,order_id=oid))
     d['timing']=timing.dump()
 
 
 def _execution(p,d,r,episodes):
     at=p['slot']['at_us'];cfg=p['causal_config'];orders=[o for o in active(p) if o['intent']['eligible_at_us']<=at]
+    fee,slip,g=costs(cfg)
     d['fills']=[];d['risk_status']='NO_DUE_BASKET'
     if not orders:return
     if at>=cfg.get('economic_end_us',cfg['end_us']):
@@ -327,9 +342,9 @@ def _execution(p,d,r,episodes):
     closed={f['instrument_id']:f for f in native_facts(p) if f['at']==at-HOUR}
     pending=[order_object(o) for o in orders if o['intent']['action']=='open'];f=finance(p,ignore_pending=True)
     needed={o.instrument_id for o in pending}|{i for i,q in f['positions'].items() if q}
-    status=('EXECUTION_INPUT_MISSING' if needed-set(prices) else JointNativeBridge._validate(None,pending,f,prices,filling=True)) if pending else 'ADMITTED'
+    status=('EXECUTION_INPUT_MISSING' if needed-set(prices) else validate_basket(pending,f,prices,cfg,filling=True)) if pending else 'ADMITTED'
     d['risk_status']=status
-    capacities={i:int(exact(v['volume'])*Fraction('0.001')) for i,v in closed.items()}
+    capacities={i:int(exact(v['volume'])*exact(cfg.get('scenario',scenario())['participation'])) for i,v in closed.items()}
     for ordinal,o in enumerate(sorted(orders,key=lambda o:(o['intent']['action']=='open',INSTRUMENTS.index(o['intent']['instrument_id'])))):
         a=o['intent'];i=a['instrument_id'];opening=a['action']=='open'
         permitted=not opening or status=='ADMITTED'
@@ -338,7 +353,7 @@ def _execution(p,d,r,episodes):
         capacities[i]=capacities.get(i,0)-q;keys=[]
         if q:
             direction=1 if a['direction']=='long' else -1;signed=q*direction*(1 if opening else -1)
-            price=prices[i]*(1+SLIP if signed>0 else 1-SLIP)
+            price=prices[i]*(1+slip if signed>0 else 1-slip)
             id=sl.business_id(cfg['scope'],i,'fill',at,p['slot_id'],len(r['events']))
             if opening:
                 own=next((l for l in live(p) if l['instrument_id']==i),None)
@@ -355,12 +370,12 @@ def _execution(p,d,r,episodes):
                 eid=ranges[0]['episode_id']
             fill=body(p,'Fill',id,i,order_id=a['order_id'],decision_id=a['decision_id'],decision_at_us=a['submitted_at_us'],
                 filled_at_us=at,sequence=ordinal+1,signed_contracts=signed,fill_price=text(price),multiplier=MULTIPLIERS[i],
-                multiplier_rule_id='multiplier:'+i,fee_fraction=text(FEE),fee_rule_id='fee:'+i,liquidity_role='taker',
+                multiplier_rule_id='multiplier:'+i,fee_fraction=text(fee),fee_rule_id='fee:'+i,liquidity_role='taker',
                 role_basis='scenario',fee_currency='USDT',fee_obligation_id='fee:'+id)
             r['events'].append(fill);keys=[sl.key_of(fill)]
-            fee=-q*exact(MULTIPLIERS[i])*price*FEE
+            fee_cash=-q*exact(MULTIPLIERS[i])*price*fee
             pid=sl.business_id(cfg['scope'],i,'posting',at,p['slot_id'],len(r['events']))
-            r['events'].append(posting(p,pid,'fee:'+id,fee,ranges,i))
+            r['events'].append(posting(p,pid,'fee:'+id,fee_cash,ranges,i))
             d['fills'].append(dict(fill=fill,episode_id=eid,plan=a['payload']['plan'],order_payload=a['payload']))
             episodes.add(eid)
         r['order_transitions'].append(dict(order_id=a['order_id'],at=p['slot'],status='filled' if q==a['requested_contracts'] else 'cancelled',
@@ -389,7 +404,7 @@ def _feedback(p,d,r,episodes):
         plan=plan_read(info['plan']);symbol=SYMBOLS[INSTRUMENTS.index(i)];record=None
         feature=latest[i]
         if feature is None or feature['at']!=at-HOUR:raise InputGap('ACTUAL_FILL_CLOSED_FEATURE_MISSING')
-        tf=timing_feature(feature,p['causal_config'].get('native_input_version',1)==2)
+        tf=timing_feature(feature,p['causal_config'].get('native_input_version',1) in (2,3))
         if plan.timing_config.enabled:
             record=feedback(timing,symbol,plan,tf,cash,entry_price=projection(b['fill_price']) if info['order_payload']['action']=='open' else 0.)
             delivered[eid]=text(exact(delivered.get(eid,'0'))+cash)
@@ -419,18 +434,19 @@ def _feedback(p,d,r,episodes):
 
 def _reserve(p,d,r,episodes):
     at=p['slot']['at_us'];cfg=p['causal_config']
+    fee,slip,g=costs(cfg)
     if at>=cfg.get('economic_end_us',cfg['end_us']):return
     ms=marks(p);pending=active(p)
     for i in INSTRUMENTS:
         ls=[l for l in live(p) if l['instrument_id']==i];qs=sum(quantity(l) for l in ls)
         margin=sum((quantity(l)*exact(l['multiplier'])*exact(l['entry_price'])/200 for l in ls),Fraction(0))
-        fees=None if qs and ms[i].value is None else qs*exact(MULTIPLIERS[i])*(ms[i].value or 0)*(1+SLIP)*FEE
+        fees=None if qs and ms[i].value is None else qs*exact(MULTIPLIERS[i])*(ms[i].value or 0)*(1+slip)*fee
         for o in pending:
             a=o['intent']
             if a['instrument_id']==i and a['action']=='open':
                 n=a['requested_contracts']*exact(MULTIPLIERS[i])*exact(a['payload']['price'])
-                margin+=n*(1+G)/200
-                if fees is not None:fees+=2*FEE*n*(1+G)+n*G
+                margin+=n*(1+g)/200
+                if fees is not None:fees+=2*fee*n*(1+g)+n*g
         id='reserve:'+str(at)+':'+i
         rec=body(p,'Reserves',id,i,effective_at_us=at,known_at_us=at,expires_at_us=min(next(t for t in cfg['ticks'] if t>at),cfg['end_us']),
                  reserved_margin_usdt=text(margin),reserved_fees_usdt=text(fees) if fees is not None else None,

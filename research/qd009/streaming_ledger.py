@@ -1205,6 +1205,7 @@ class Ledger:
         d.execute('CREATE TABLE IF NOT EXISTS facts(k TEXT PRIMARY KEY,inst TEXT,schema_id TEXT,at INTEGER,available INTEGER,b BLOB)')
         d.execute('CREATE INDEX IF NOT EXISTS facts_available ON facts(available,k)')
         d.execute('CREATE INDEX IF NOT EXISTS facts_selection ON facts(schema_id,inst,available,k)')
+        d.execute('CREATE INDEX IF NOT EXISTS facts_slot ON facts(schema_id,inst,at,available,k)')
         d.execute('CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,sha TEXT,seq INTEGER)')
         d.execute('CREATE TABLE IF NOT EXISTS commits(seq INTEGER PRIMARY KEY,at INTEGER,prefix TEXT)')
         d.execute('CREATE TABLE IF NOT EXISTS views(h TEXT PRIMARY KEY,b BLOB,roots BLOB)')
@@ -1657,6 +1658,52 @@ class Ledger:
     def readiness(self,request):
         shape(request,'episode_id cutoff');self._assert_active();s=self._at(request['cutoff']);return s.readiness(request['episode_id'],request['cutoff']['at_us'])
 
+    def _fact_candidates(self,selector,schema,at):
+        """Immutable-source selection; fetch only the records the packet exposes.
+
+        Closure legality is checked over newly eligible rows before limiting,
+        including older rows that latest selection will not expose. The memo and
+        operation counts are rebuildable local instrumentation, never evidence.
+        """
+        stats=self.__dict__.setdefault('_fact_selection_work',dict(queries=0,rows=0,closure_queries=0))
+        mode=selector['mode'];insts=sorted(selector['instruments']);sid=selector['schema_id']
+        if at>=self.config['end_exclusive_us'] and schema['view_kind'] in ('closed_bar','execution_open','mark_point','mark_selection','synthetic_price'):
+            return
+        lower=None if sid in self.config['initial_context']['schemas'] else self.config['initial_at_us']
+        base='schema_id=? AND inst=? AND available<=?';args=lambda i:[sid,i,at]
+        if lower is not None:base+=' AND available>=?';args=lambda i:[sid,i,at,lower]
+        if schema['view_kind']=='closed_bar':
+            checked=self.__dict__.setdefault('_fact_closure_checked',{})
+            for i in insts:
+                key=(sid,i,lower);previous=checked.get(key)
+                if previous is not None and previous>=at:continue
+                where=base;values=args(i)
+                if previous is not None:where+=' AND available>?';values.append(previous)
+                stats['closure_queries']+=1
+                bad=self.index.db.execute('SELECT 1 FROM facts WHERE '+where+' AND at>available-? LIMIT 1',values+[schema['interval_us']]).fetchone()
+                need(bad is None,'FUTURE_DEPENDENCY');checked[key]=at
+        selected=[]
+        for i in insts:
+            where=base;values=args(i)
+            if mode=='qualified_at_slot':where+=' AND at=?';values.append(at)
+            stats['queries']+=1
+            order=' ORDER BY available DESC,k DESC LIMIT 1' if mode=='latest_available' else ' ORDER BY available,k'
+            cursor=self.index.db.execute('SELECT available,k,b FROM facts WHERE '+where+order,values)
+            if mode=='latest_available':
+                row=cursor.fetchone()
+                if row:selected.append(row)
+            else:
+                # Per-instrument sorted cursors merge lazily without retaining a
+                # whole prefix; tuple time/key order matches the old global SQL.
+                selected.append(cursor)
+        if mode=='latest_available':records=iter(sorted(selected,key=lambda r:(r[0],r[1])))
+        else:
+            import heapq
+            records=heapq.merge(*selected,key=lambda r:(r[0],r[1]))
+        for _,_,blob in records:
+            stats['rows']+=1
+            yield (blob,)
+
     def _invoke(self,st,slot):
         definition=self.config['_adapters'][slot['adapter_id']];port=_PORTS.get(digest(definition));need(port is not None,'UNSUPPORTED_GENERATOR')
         at=dict(at_us=st.at[0],slot=st.at[1]);before_at=dict(at_us=st.at[0],slot=st.at[1]-1)
@@ -1668,7 +1715,7 @@ class Ledger:
             shape(selector,'selection_id schema_id instruments mode');schema=self.schema(selector['schema_id']);mode=selector['mode'];need(schema['view_kind'] in allow[definition['role']],'FORBIDDEN_INPUT')
             need((mode=='qualified_at_slot')==(schema['view_kind']=='mark_selection'),'FORBIDDEN_INPUT')
             selected=[];selected_bytes=0;selected_reads=0
-            for (blob,) in self.index.db.execute('SELECT b FROM facts WHERE schema_id=? AND available<=? ORDER BY available,k',(selector['schema_id'],at['at_us'])):
+            for (blob,) in self._fact_candidates(selector,schema,at['at_us']):
                 r=load_json(blob)
                 if r['instrument_id'] not in selector['instruments']:continue
                 if at['at_us']>=self.config['end_exclusive_us'] and schema['view_kind'] in ('closed_bar','execution_open','mark_point','mark_selection','synthetic_price'):continue
